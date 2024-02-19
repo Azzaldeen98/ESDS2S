@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">ESDS2S</string>
+    <string name="gemini_api_key">AIzaSyDW35bfhBIy28pH39-vcKOGFRKNd2eo1NU</string>
+    <string name="title_activity_audio_record_test">AudioRecordTestActivity</string>
+    <!-- Strings used for fragments for navigation -->
+    <string name="first_fragment_label">First Fragment</string>
+    <string name="second_fragment_label">Second Fragment</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+
+    <string name="hello_first_fragment">Hello first fragment</string>
+    <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
+
+    <string name="toggle_flash">Toggle Flash</string>
+    <string name="action_settings">Settings</string>
+    <string name="scanned_data">Scanned Data</string>
+    <string name="audio_recorder">Audio Recorder</string>
+    <string name="start_recording">Start Recording</string>
+    <string name="stop_recording">Stop Recording</string>
+    <string name="play_recording">Play Recording</string>
+    <string name="stop_playing">Stop Playing</string>
+    <string name="status">Status</string>
+    <string name="title_activity_record_audio">RecordAudioActivity</string>
+    <string name="tab_text_1">Basic Chat</string>
+    <string name="tab_text_2">Automated Chat</string>
+    <string name="tab_text_3">Text ChatBot</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+
+</resources>

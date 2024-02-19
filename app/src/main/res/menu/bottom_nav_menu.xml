@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/basicChatBot"
+        android:icon="@drawable/baseline_mic_24"
+        android:iconTintMode="src_over"
+        android:iconTint="@color/white"
+        android:title="@string/tab_text_1" />
+
+    <item
+        android:id="@+id/automatedChatBot"
+        android:title="@string/tab_text_2"
+        android:iconTintMode="src_over"
+        android:iconTint="@color/white"
+        android:icon="@drawable/baseline_mic_24"/>
+
+    <item
+        android:id="@+id/textChatBot"
+        android:title="@string/tab_text_3"
+        android:iconTintMode="src_over"
+        android:iconTint="@color/white"
+        android:icon="@drawable/baseline_chat_24"
+        />
+
+</menu>
