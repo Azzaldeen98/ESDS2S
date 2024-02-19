@@ -15,7 +15,10 @@ import java.security.NoSuchAlgorithmException
 import java.security.UnrecoverableKeyException
 import java.util.concurrent.TimeUnit
 
+
 class  ApiClient {
+
+
     companion object {
 
 
@@ -76,15 +79,18 @@ class  ApiClient {
             return null
         }
 
-        public fun getClient(context: Context?, requestMethod: RequestMethod?,BASE_URL:String): Retrofit? {
-            try {
+         fun getClient(context: Context?, requestMethod: RequestMethod?,BASE_URL:String): Retrofit? {
+             try {
+                    return try {
+                            val retrofit by lazy {
+                                Retrofit.Builder()
+                                    .baseUrl(BASE_URL)
+                                    .addConverterFactory(GsonConverterFactory.create())
+                                    .build()
+                            }
+                     retrofit
+                    } finally { }
 
-                val retrofit = Retrofit.Builder()
-                    .baseUrl(BASE_URL)
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build()
-
-                return retrofit
             } catch (e: UnrecoverableKeyException) {
                 e.printStackTrace()
             } catch (e: NoSuchAlgorithmException) {
@@ -97,17 +103,20 @@ class  ApiClient {
             return null
         }
 
-        public fun getClientFile(context: Context?, requestMethod: RequestMethod?,BASE_URL:String,contentType:String?="application/json"): Retrofit? {
+         fun getClientFile(context: Context?, requestMethod: RequestMethod?,BASE_URL:String,contentType:String?="application/json"): Retrofit? {
             try {
-
                 val httpClient = getHttpClientHeader(context,requestMethod,contentType);
-                val retrofit = Retrofit.Builder()
-                    .baseUrl(BASE_URL)
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .client(httpClient)
-                    .build()
-
-                return retrofit
+                return try {
+                    val retrofit by lazy {
+                        Retrofit.Builder()
+                            .baseUrl(BASE_URL)
+                            .addConverterFactory(GsonConverterFactory.create())
+                            .client(httpClient)
+                            .build()
+                    }
+                    retrofit
+                }
+                finally { }
             } catch (e: UnrecoverableKeyException) {
                 e.printStackTrace()
             } catch (e: NoSuchAlgorithmException) {

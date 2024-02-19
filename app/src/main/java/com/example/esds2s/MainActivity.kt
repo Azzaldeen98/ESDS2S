@@ -7,10 +7,8 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.text.format.DateFormat
-import android.util.Log
 import android.view.View
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -111,10 +109,8 @@ class MainActivity : AppCompatActivity() {
     }
     fun sendMessage(v:View ) {
 
-      Log.d("pp","fjjjjjjjjjjjjjjjjjjjjjj")
+
         if(!textInput?.text.isNullOrEmpty()) {
-
-
             runOnUiThread { textResult?.setText("");}
             GlobalScope.launch {
                 val response = chat!!.sendMessage(textInput?.text.toString())

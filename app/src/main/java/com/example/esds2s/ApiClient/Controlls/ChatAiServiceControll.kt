@@ -15,24 +15,33 @@ import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.asRequestBody
 import retrofit2.Call
+import retrofit2.Retrofit
 import java.io.File
 
+class ChatAiServiceControll(private val context: FragmentActivity?) {
 
-public class ChatAiServiceControll(private val context: FragmentActivity?) {
-
-    public  fun  textToGenerateAudio(inputText:String): Call<GeminiResponse?>? {
-
-        fun ChatAiControl(){}
+    fun  textToGenerateAudio(inputText:String): Call<GeminiResponse?>? {
 
         if(inputText!=null) {
 
-            val client = ApiClient.getClient(context, RequestMethod.POST,BuildConfig.GEMINI_BASE_URL_TEXT_TO_GENERATER)?.create(IGeminiApiServices::class.java)
+            val client : IGeminiApiServices  by lazy{
+                ApiClient.getClient(context, RequestMethod.POST,
+                BuildConfig.GEMINI_BASE_URL_TEXT_TO_GENERATER)
+                ?.create(IGeminiApiServices::class.java)!!}
+
             val body = GeminiRequest(_content = inputText)
             Log.d("generateAiAudio",inputText);
-            return client?.generateAudio(body)
+
+            return try{
+                val call by lazy { client?.generateAudio(body)!! }
+                call
+            }catch (e:java.lang.Exception) {
+                throw Exception(e.message)
+            }
         }
-        else
+        else {
             throw java.lang.Exception("inputText is empty !!")
+        }
     }
     fun uploadAudioFile(file_path:String,context: Context?,callBack: IUplaodAudioEventListener) {
 
@@ -47,9 +56,15 @@ public class ChatAiServiceControll(private val context: FragmentActivity?) {
             file.name,
             file.asRequestBody("audio/*".toMediaTypeOrNull()))
 
-        val client = ApiClient.getClientFile(context,RequestMethod.POST,BuildConfig.GEMINI_BASE_URL,"multipart/form-data")?.create(IGeminiApiServices::class.java)
-        val call = client?.uploadAudio(requestBody)
- 
+        val client : IGeminiApiServices?  by lazy{
+            ApiClient.getClientFile(context,RequestMethod.POST,
+                BuildConfig.GEMINI_BASE_URL,"multipart/form-data")
+                ?.create(IGeminiApiServices::class.java)!! }
+
+        val call : Call<GeminiResponse?>  by lazy {
+            client?.uploadAudio(requestBody)!!
+        }
+
         call?.enqueue(object :retrofit2.Callback<GeminiResponse?> {
             override fun onResponse(
                 call: Call<GeminiResponse?>,
