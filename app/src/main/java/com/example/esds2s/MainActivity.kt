@@ -5,6 +5,7 @@ import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.text.format.DateFormat
 import android.view.View
@@ -15,6 +16,7 @@ import androidx.core.content.ContextCompat
 import com.example.esds2s.ApiClient.Controlls.ChatAiServiceControll
 import com.example.esds2s.ApiClient.Controlls.GeminiControll
 import com.example.esds2s.ContentApp.ContentApp
+import com.example.esds2s.Services.RecordVoiceService
 import com.google.ai.client.generativeai.Chat
 import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.GlobalScope
@@ -41,28 +43,26 @@ class MainActivity : AppCompatActivity() {
         textInput=findViewById<TextInputEditText>(R.id.textInput);
 
 
-
-        val  intent = Intent(this, RecordAudioActivity::class.java)
-        startActivity(intent)
-        return
-//        checkMicrophonPermision();
+        checkMicrophonPermision();
         chatAiServiceControll= ChatAiServiceControll(this);
         geminiControll= GeminiControll(this);
         geminiControll?.generatModel();
         chat=geminiControll!!.getChat();
 
+        val  intent = Intent(this, RecordAudioActivity::class.java)
+        startActivity(intent)
 
 
     }
     fun startRecordServicesOnForground(){
 
-//        if(!isRecordServiceRunningInForeground(this, RecordVoiceService::class.java)) {
-//            val  serviceIntent = Intent(this, RecordVoiceService::class.java)
-//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-//                startForegroundService(serviceIntent)
-//            else
-//                startService(serviceIntent)
-//        }
+        if(!isRecordServiceRunningInForeground(this, RecordVoiceService::class.java)) {
+            val  serviceIntent = Intent(this, RecordVoiceService::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                startForegroundService(serviceIntent)
+            else
+                startService(serviceIntent)
+        }
     }
     fun checkMicrophonPermision(){
 

@@ -25,27 +25,30 @@
             android:layout_centerInParent="true"
             android:layout_marginLeft="10dp"
             android:layout_marginRight="10dp"
-
             android:layout_height="wrap_content">
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical"
                 android:gravity="center">
 
-            <EditText
-                android:id="@+id/text"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
-                android:layout_marginRight="15dp"
-                android:clickable="false"
-                android:enabled="false"
-                android:focusable="false"
-                android:hint="Tap to Speak"
-                android:padding="10dp" />
+                <EditText
+                    android:id="@+id/text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_marginRight="0dp"
+                    android:clickable="false"
+                    android:enabled="false"
+                    android:focusable="false"
+                    android:hint="Speaking ..."
+                    android:textSize="30dp"
+                    android:gravity="center"
+                    android:textStyle="bold"
+                    android:paddingVertical="30dp" />
 
-            <ImageView
+                <ImageView
                 android:id="@+id/micButton"
                 android:layout_width="80dp"
                 android:layout_height="80dp"
@@ -53,7 +56,6 @@
                 android:layout_centerVertical="true"
                 android:backgroundTint="@color/purple_200"
                 android:paddingRight="0dp"
-                android:background="@color/purple_500"
                 android:src="@drawable/baseline_mic_24" />
             </LinearLayout>
         </RelativeLayout>

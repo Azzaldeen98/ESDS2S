@@ -69,8 +69,8 @@ class  ApiClient {
                     }
                     val request = requestBuilder.build()
                     chain.proceed(request)
-                }.build() // Add other configurations as needed
-//.callTimeout(100, TimeUnit.SECONDS)
+                }.callTimeout(50, TimeUnit.SECONDS).build() // Add other configurations as needed
+//
             return httpClient
         }
 

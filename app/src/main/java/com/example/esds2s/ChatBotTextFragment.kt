@@ -1,5 +1,7 @@
 package com.example.esds2s
 
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -8,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.TextView
+import androidx.core.text.set
 import com.example.esds2s.ApiClient.Controlls.ChatAiServiceControll
 import com.example.esds2s.ApiClient.Controlls.GeminiControll
 import com.example.esds2s.Helpers.AudioPlayer
@@ -41,6 +44,7 @@ class ChatBotTextFragment : Fragment() {
     private var btnSend: TextView? = null;
     private var textResult: TextView ? = null;
     private var textInput: TextInputEditText? = null;
+    private var text_gchat_message_me: TextView? = null;
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,8 +69,14 @@ class ChatBotTextFragment : Fragment() {
         btnSend=this.activity?.findViewById<TextView>(R.id.btnSend1);
         textResult=this.activity?.findViewById<TextView>(R.id.textResult1);
         textInput=this.activity?.findViewById<TextInputEditText>(R.id.textInput1);
+        text_gchat_message_me=this.activity?.findViewById<TextView>(R.id.text_gchat_message_me);
+
         chatAiServiceControll=ChatAiServiceControll(this.activity)
         btnSend?.setOnClickListener{v->
+            btnSend?.backgroundTintList=ColorStateList.valueOf(Color.GRAY);
+            Thread.sleep(1000)
+            val color = Color.parseColor("#FF6200EE")
+            btnSend?.backgroundTintList=ColorStateList.valueOf(color);
             sendMessage();
         }
     }
@@ -74,8 +84,12 @@ class ChatBotTextFragment : Fragment() {
     fun sendMessage() {
 
         if(textInput!=null && !textInput?.text.isNullOrEmpty()) {
-
-
+            btnSend?.isEnabled=false;
+            textInput?.isEnabled=false;
+            val text:String?=textInput?.text.toString()
+            text_gchat_message_me?.visibility=View.VISIBLE
+            text_gchat_message_me?.text=text
+            textInput?.text?.clear()
             activity?.runOnUiThread{
 
 //                textResult?.setText("")
@@ -101,11 +115,15 @@ class ChatBotTextFragment : Fragment() {
                                     }
                                 }
                             }
+
+                            btnSend?.isEnabled=true;
+                            textInput?.isEnabled=true;
                         }
 
                         override fun onFailure(call: Call<GeminiResponse?>, t: Throwable) {
                             // التعامل مع الأخطاء هنا
-
+                            btnSend?.isEnabled=true;
+                            textInput?.isEnabled=true;
                         }
                     })
 

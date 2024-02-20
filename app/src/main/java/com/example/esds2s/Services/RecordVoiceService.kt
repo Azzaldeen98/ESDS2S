@@ -75,12 +75,12 @@ class RecordVoiceService : Service() ,IUplaodAudioEventListener {
     }
 
      fun startWorker() {
-         Toast.makeText(this@RecordVoiceService, "Start Record ", Toast.LENGTH_SHORT).show()
-         recordingThread = Thread {
-             Log.d("recordingThread", "onStartCommand")
-             startRecord()
-         }
-         recordingThread?.start()
+//         Toast.makeText(this@RecordVoiceService, "Start Record ", Toast.LENGTH_SHORT).show()
+//         recordingThread = Thread {
+//             Log.d("recordingThread", "onStartCommand")
+////             startRecord()
+//         }
+//         recordingThread?.start()
 
 //         myRunnable = object : Runnable {
 //             override fun run() {

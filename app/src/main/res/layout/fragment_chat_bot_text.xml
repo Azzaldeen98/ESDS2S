@@ -15,7 +15,7 @@
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="660dp"
-            android:background="@drawable/border">
+            android:background="@drawable/shadow">
 
             <LinearLayout
                 android:id="@+id/backResult1"
@@ -25,9 +25,10 @@
                 android:orientation="vertical"
                 android:layout_alignParentTop="true"
                 android:layout_marginTop="50dp"
+                android:textDirection="rtl"
                 android:padding="20dp"
                 android:layoutDirection="rtl"
-                android:gravity="top">
+                android:gravity="right">
 
                 <TextView
                     android:id="@+id/textResult1"
@@ -42,6 +43,73 @@
                     android:layout_margin="5dp"
                     android:text="" />
 
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:layoutDirection="rtl"
+                    android:padding="10dp"
+                    android:layout_marginTop="16dp">
+                    <TextView
+                        android:id="@+id/text_gchat_date_me"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="32dp"
+                        android:paddingStart="8dp"
+                        android:paddingTop="4dp"
+                        android:paddingEnd="8dp"
+                        android:paddingBottom="4dp"
+                        android:text=""
+                        android:visibility="gone"
+                        android:textColor="#C0C0C0"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+                    <androidx.cardview.widget.CardView
+                        android:id="@+id/card_gchat_message_me"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:cardBackgroundColor="#774df2"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="0dp"
+                        android:padding="20dp"
+                        app:cardPreventCornerOverlap="false"
+                        app:cardUseCompatPadding="true"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/text_gchat_date_me">
+                        <LinearLayout
+                            android:id="@+id/layout_gchat_container_me"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+                            <TextView
+                                android:id="@+id/text_gchat_message_me"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="8dp"
+                                android:maxWidth="260dp"
+                                android:paddingLeft="20dp"
+                                android:paddingTop="8dp"
+                                android:paddingRight="20dp"
+                                android:text="msg"
+                                android:visibility="gone"
+                                android:textColor="#ffffff"
+                                android:textSize="16sp" />
+                        </LinearLayout>
+                    </androidx.cardview.widget.CardView>
+                    <TextView
+                        android:id="@+id/text_gchat_timestamp_me"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="10:00"
+                        android:textColor="#C0C0C0"
+                        android:textSize="10sp"
+                        android:visibility="gone"
+                        app:layout_constraintBottom_toBottomOf="@+id/card_gchat_message_me"
+                        app:layout_constraintEnd_toStartOf="@+id/card_gchat_message_me" />
+                </RelativeLayout>
+
             </LinearLayout>
         </ScrollView>
         <LinearLayout
@@ -50,14 +118,14 @@
             android:orientation="horizontal"
             android:gravity="center"
             android:layout_alignParentBottom="true"
-            android:background="@drawable/border_sample"
-            android:backgroundTint="@color/white">
+            android:elevation="2dp"
+            android:background="@color/white">
 
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_alignParentBottom="true"
-                android:background="@color/white"
+                android:backgroundTint="@color/white"
                 android:padding="20dp">
                 <TextView
                     android:id="@+id/btnSend1"
@@ -72,17 +140,19 @@
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/textInput1"
                     android:layout_width="300dp"
-                    android:layout_height="48dp"
+                    android:layout_height="wrap_content"
                     android:layout_alignParentLeft="true"
+                    android:maxWidth="300dp"
                     android:layout_gravity="center"
                     android:layout_marginStart="5dp"
                     android:layout_marginTop="5dp"
                     android:layout_marginEnd="5dp"
                     android:layout_marginBottom="5dp"
                     android:paddingHorizontal="10dp"
-                    android:background="@drawable/border_sample"
+                    android:background="@drawable/border"
                     android:inputType="text|textMultiLine"
                     android:hint="أدخل النص هنا"
+
                     android:textDirection="rtl"
                     android:padding="10dp" />
             </RelativeLayout>

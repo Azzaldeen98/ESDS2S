@@ -18,6 +18,7 @@ import com.example.esds2s.Helpers.AudioPlayer
 import com.example.esds2s.Helpers.Helper
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
 import com.example.esds2s.Services.IUplaodAudioEventListener
+import okhttp3.internal.wait
 import java.util.*
 
 
@@ -63,7 +64,7 @@ class BasicChatBotFragment : Fragment() ,IUplaodAudioEventListener {
     var  editText: EditText?=null
     var isRecord:Boolean?=false
     var reorderCounter:Int?=0;
-
+    var reply_music:MediaPlayer?=null
 
     private var audioPlayer: AudioPlayer? = null
     private var chatAiServiceControll: ChatAiServiceControll? = null
@@ -85,7 +86,26 @@ class BasicChatBotFragment : Fragment() ,IUplaodAudioEventListener {
         return inflater.inflate(com.example.esds2s.R.layout.fragment_basic_chat_bot, container, false)
     }
 
+fun sendRecordAudio()
+{
+    Thread {
+        activity?.runOnUiThread {
+            try {
+                if (audioRecorder != null)
+                    audioRecorder?.stop();
+                chatAiServiceControll?.uploadAudioFile(
+                    file_record_Path!!,
+                    this@BasicChatBotFragment.activity,
+                    this@BasicChatBotFragment
+                );
 
+            } catch (e: Exception) {
+                Log.d("Error ! ", e.message.toString())
+            }
+        }
+    }.start();
+
+}
     override fun onStart() {
         super.onStart()
 
@@ -110,36 +130,17 @@ class BasicChatBotFragment : Fragment() ,IUplaodAudioEventListener {
                 micButton!!.setImageResource(com.example.esds2s.R.drawable.ic_mic_black_off)
                 micButton?.isEnabled=false;
                 Log.d("stopRecorder", "Recorder....");
+                editText?.hint="Wait ...";
 
-                Thread {
-                    activity?.runOnUiThread {
-                        try {
-                            if (audioRecorder != null)
-                                audioRecorder?.stop();
-                            chatAiServiceControll?.uploadAudioFile(
-                                file_record_Path!!,
-                                this@BasicChatBotFragment.activity,
-                                this@BasicChatBotFragment
-                            );
-
-                        } catch (e: Exception) {
-                            Log.d("Error ! ", e.message.toString())
-                        }
-                    }
-                }.start();
-
+                sendRecordAudio();
                 Thread {
                     activity?.runOnUiThread {
 
                         Thread.sleep(1000)
                         val vois: Int = getAutomaticReplyVoice()!!
-                        val music: MediaPlayer =
-                            MediaPlayer.create(this@BasicChatBotFragment.context, vois.toInt())
-                        music.start()
-                        music.setOnCompletionListener { v ->
-                            {
-                                v.stop()
-                            }
+                        reply_music = MediaPlayer.create(this@BasicChatBotFragment.context, vois.toInt())!!
+                        reply_music?.start()
+                        reply_music?.setOnCompletionListener { v -> { v.stop() }
                         }
                     }}.start()
             }
@@ -147,8 +148,76 @@ class BasicChatBotFragment : Fragment() ,IUplaodAudioEventListener {
             isRecord=(!isRecord!!)
         }
 
+    }
+    fun getAutomaticReplyVoice():Int
+    {
+        val randomValues = Random().nextInt(7)!!
+        var sound=com.example.esds2s.R.raw.res1;
+        when(randomValues) {
+            0 -> sound = com.example.esds2s.R.raw.res1
+            1 -> sound = com.example.esds2s.R.raw.res2
+            2 -> sound = com.example.esds2s.R.raw.res4
+            3 -> sound = com.example.esds2s.R.raw.res5
+            4 -> sound = com.example.esds2s.R.raw.res6
+            5 -> sound = com.example.esds2s.R.raw.res7
+        }
+        return sound;
+    }
+    override fun onUplaodAudioIsSuccess(response: GeminiResponse) {
 
-//        val speechRecognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+        reorderCounter=0;
+        if(response!=null) {
+            if (response?.description != null) {
+                if (audioPlayer != null) {
+                    if(reply_music!=null && reply_music!!.isPlaying()) {
+                        reply_music!!.stop()
+//                        reply_music!!.
+                        Thread.sleep(1000)
+                    }
+                    Log.d("responseSuccess", "Player....");
+                   editText?.hint="Listen ...";
+                    audioPlayer?.start(response?.description)?.setOnCompletionListener { mPlayer ->
+                        Log.e("onUplaodAudioIsSuccess", "Complate Plyer Museic");
+                        audioPlayer?.stop();
+                        micButton?.isEnabled=true;
+                        editText?.hint="Speaking ...";
+                    }
+                }
+            }
+        } else {
+            // Handle unsuccessful response here
+            Log.e("responseError","!! response is empty or  null");
+        }
+
+        Helper.deleteFile(file_record_Path)
+    }
+
+
+    override fun onUplaodAudioIsFailure(error: String) {
+
+        try {
+            if(reorderCounter!!<3) {
+                chatAiServiceControll?.uploadAudioFile(
+                    file_record_Path!!,
+                    this@BasicChatBotFragment.activity,
+                    this@BasicChatBotFragment
+                );
+            }
+
+//            Helper.deleteFile(file_record_Path)
+//            editText?.hint="!! please try again";
+        }catch (e:java.lang.Exception){}
+        finally {
+            if(reorderCounter!! >=3)
+                micButton?.isEnabled=true;
+
+            reorderCounter = reorderCounter?.plus(1);
+        }
+
+        Log.e("onFailure",error!!);
+    }
+
+    //        val speechRecognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
 //        speechRecognizerIntent.putExtra(
 //            RecognizerIntent.EXTRA_LANGUAGE_MODEL,
 //            RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
@@ -229,68 +298,6 @@ class BasicChatBotFragment : Fragment() ,IUplaodAudioEventListener {
 //            }
 //            false
 //        }
-
-
-    }
-    fun getAutomaticReplyVoice():Int
-    {
-        val randomValues = Random().nextInt(2)!!
-        var sound=com.example.esds2s.R.raw.res1;
-        if(randomValues==1)
-            sound= com.example.esds2s.R.raw.res2
-
-        return sound;
-    }
-    override fun onUplaodAudioIsSuccess(response: GeminiResponse) {
-
-        reorderCounter=0;
-        if(response!=null) {
-            if (response?.description != null) {
-                if (audioPlayer != null) {
-                    Log.d("responseSuccess", "Player....");
-
-                    audioPlayer?.start(response?.description)?.setOnCompletionListener { mPlayer ->
-                        Log.e("onUplaodAudioIsSuccess", "Complate Plyer Museic");
-                        audioPlayer?.stop();
-                        micButton?.isEnabled=true;
-                    }
-                }
-            }
-        } else {
-            // Handle unsuccessful response here
-            Log.e("responseError","!! response is empty or  null");
-        }
-
-        Helper.deleteFile(file_record_Path)
-    }
-
-
-    override fun onUplaodAudioIsFailure(error: String) {
-
-
-        try {
-
-            if(reorderCounter!!<3) {
-                chatAiServiceControll?.uploadAudioFile(
-                    file_record_Path!!,
-                    this@BasicChatBotFragment.activity,
-                    this@BasicChatBotFragment
-                );
-            }
-
-
-//            Helper.deleteFile(file_record_Path)
-//            editText?.hint="!! please try again";
-        }catch (e:java.lang.Exception){}
-        finally {
-            if(reorderCounter!! >=3)
-                micButton?.isEnabled=true;
-
-            reorderCounter = reorderCounter?.plus(1);
-        }
-
-        Log.e("onFailure",error!!);
-    }
 
 
 }
