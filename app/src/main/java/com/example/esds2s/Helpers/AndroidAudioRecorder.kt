@@ -24,16 +24,17 @@ class AndroidAudioRecorder(private val context: Context) {
 
          recorder = MediaRecorder().apply {
              setAudioSource(MediaRecorder.AudioSource.MIC)
-             setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
+             setOutputFormat(MediaRecorder.OutputFormat.OGG)
              setOutputFile(filePath)
-             setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
+             setAudioEncoder(MediaRecorder.AudioEncoder.OPUS)
+             setAudioChannels(2);
+
 
              try {
                  prepare()
              } catch (e: IOException) {
                  Log.e("RecordAudio", "prepare() failed")
              }
-
              start()
              recorder = this
          }

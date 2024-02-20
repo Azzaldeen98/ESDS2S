@@ -1,9 +1,8 @@
 package com.example.esds2s
 
-import android.content.Intent
+import android.R
+import android.media.MediaPlayer
 import android.os.Bundle
-import android.speech.RecognitionListener
-import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.util.Log
 import android.view.LayoutInflater
@@ -20,6 +19,7 @@ import com.example.esds2s.Helpers.Helper
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
 import com.example.esds2s.Services.IUplaodAudioEventListener
 import java.util.*
+
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -62,7 +62,7 @@ class BasicChatBotFragment : Fragment() ,IUplaodAudioEventListener {
     var  micButton: ImageView?=null
     var  editText: EditText?=null
     var isRecord:Boolean?=false
-
+    var reorderCounter:Int?=0;
 
 
     private var audioPlayer: AudioPlayer? = null
@@ -82,7 +82,7 @@ class BasicChatBotFragment : Fragment() ,IUplaodAudioEventListener {
     ): View? {
         // Inflate the layout for this fragment
 
-        return inflater.inflate(R.layout.fragment_basic_chat_bot, container, false)
+        return inflater.inflate(com.example.esds2s.R.layout.fragment_basic_chat_bot, container, false)
     }
 
 
@@ -95,25 +95,25 @@ class BasicChatBotFragment : Fragment() ,IUplaodAudioEventListener {
         audioPlayer = AudioPlayer(this.context!!)
 
         Toast.makeText(this.context,"onStart", Toast.LENGTH_SHORT).show()
-        micButton=activity?.findViewById(R.id.micButton)
-        editText=activity?.findViewById(R.id.text)
+        micButton=activity?.findViewById(com.example.esds2s.R.id.micButton)
+        editText=activity?.findViewById(com.example.esds2s.R.id.text)
         speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this.activity)
+
 
         micButton?.setOnClickListener{v->
 
             if(!isRecord!!){
-                micButton!!.setImageResource(R.drawable.ic_mic_black_24dp)
+                micButton!!.setImageResource(com.example.esds2s.R.drawable.ic_mic_black_24dp)
                 Log.d("startRecorder", "Recorder....");
                 audioRecorder?.start(file_record_Path!!)
             } else{
-                micButton!!.setImageResource(R.drawable.ic_mic_black_off)
+                micButton!!.setImageResource(com.example.esds2s.R.drawable.ic_mic_black_off)
                 micButton?.isEnabled=false;
                 Log.d("stopRecorder", "Recorder....");
 
-//                Thread {
-//                    activity?.runOnUiThread {
+                Thread {
+                    activity?.runOnUiThread {
                         try {
-
                             if (audioRecorder != null)
                                 audioRecorder?.stop();
                             chatAiServiceControll?.uploadAudioFile(
@@ -122,70 +122,95 @@ class BasicChatBotFragment : Fragment() ,IUplaodAudioEventListener {
                                 this@BasicChatBotFragment
                             );
 
-//                            if (audioPlayer != null) {
-//                                Log.d("audioPlayer", "Player....");
-//                                audioPlayer?.start(file_record_Path)?.setOnCompletionListener { mPlayer ->
-//                                    audioPlayer?.stop();
-//                                }
-//                            }
-
                         } catch (e: Exception) {
                             Log.d("Error ! ", e.message.toString())
                         }
-//                    }
-//                }.start()
+                    }
+                }.start();
+
+                Thread {
+                    activity?.runOnUiThread {
+
+                        Thread.sleep(1000)
+                        val vois: Int = getAutomaticReplyVoice()!!
+                        val music: MediaPlayer =
+                            MediaPlayer.create(this@BasicChatBotFragment.context, vois.toInt())
+                        music.start()
+                        music.setOnCompletionListener { v ->
+                            {
+                                v.stop()
+                            }
+                        }
+                    }}.start()
             }
+
             isRecord=(!isRecord!!)
         }
-        val speechRecognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-        speechRecognizerIntent.putExtra(
-            RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-            RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-        speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
-        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this.context)
-        speechRecognizer?.setRecognitionListener(object : RecognitionListener {
-            override fun onReadyForSpeech(bundle: Bundle) {}
-            override fun onBeginningOfSpeech() {
-                Log.d("Tag", "Beginning Of Speech")
-                editText!!.setText("")
-                editText!!.hint = "Listening..."
-
-            }
-            override fun onRmsChanged(v: Float) {}
-            override fun onBufferReceived(bytes: ByteArray) {}
-            override fun onEndOfSpeech() {
-
-                Log.d("Tag", "End Of Speech")
-            }
-            override fun onError(i: Int) {
-
-                Log.e("Tag", i.toString())
-                editText!!.hint="Sorry, talking again"
-            }
-            override fun onResults(bundle: Bundle) {
-
-                micButton!!.setImageResource(R.drawable.ic_mic_black_off)
-                val data = bundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                Log.d("Tag-Result", data!![0])
-                editText!!.setText(data!![0])
-//                audioRecorder?.stop()
-
-                if(data!![0]!=null) {
-                    // Start a background thread
 
 
-                }
-
-            }
-            override fun onPartialResults(bundle: Bundle) {}
-            override fun onEvent(i: Int, bundle: Bundle) {}
-        })
+//        val speechRecognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+//        speechRecognizerIntent.putExtra(
+//            RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+//            RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+//        speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+//
+//        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this.context)
+//        speechRecognizer?.setRecognitionListener(object : RecognitionListener {
+//            override fun onReadyForSpeech(bundle: Bundle) {
+//
+//                Log.d("Tag-onReadyForSpeech", "Beginning Of Speech")
+//            }
+//            override fun onBeginningOfSpeech() {
+//                Log.d("Tag", "Beginning Of Speech")
+//                editText!!.setText("")
+//                editText!!.hint = "Listening..."
+//
+//            }
+//            override fun onRmsChanged(v: Float) {
+//                Log.d("Tag-onRmsChanged",v.toString())
+//            }
+//            override fun onBufferReceived(bytes: ByteArray) {
+//                Log.d("Buffer_Size",bytes?.size.toString())
+//
+//            }
+//            override fun onEndOfSpeech() {
+//
+//                Log.d("Tag", "End Of Speech")
+//            }
+//            override fun onError(i: Int) {
+//
+//                Log.e("Tag", i.toString())
+//                editText!!.hint="Sorry, talking again"
+//            }
+//            override fun onResults(bundle: Bundle) {
+//
+//                micButton!!.setImageResource(R.drawable.ic_mic_black_off)
+//                val data = bundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+//                Log.d("Tag-Result", data!![0])
+//                editText!!.setText(data!![0])
+////                audioRecorder?.stop()
+//
+//                if(data!![0]!=null) {
+//                    // Start a background thread
+//
+//
+//                }
+//
+//            }
+//            override fun onPartialResults(bundle: Bundle) {
+//
+//                Log.e("Tag-onPartialResults", "error")
+//            }
+//            override fun onEvent(i: Int, bundle: Bundle) {
+//
+//                Log.e("Tag-onEvent", i.toString())
+//            }
+//        })
 
 //        micButton!!.setOnTouchListener { view, motionEvent ->
 //            if (motionEvent.action == MotionEvent.ACTION_UP) {
 //
-//
-////              speechRecognizer?.stopListening()
+//              speechRecognizer?.stopListening()
 //
 //            }
 //            if (motionEvent.action == MotionEvent.ACTION_DOWN) {
@@ -199,7 +224,7 @@ class BasicChatBotFragment : Fragment() ,IUplaodAudioEventListener {
 ////                        } catch (e: Exception) { Log.d("Error ! ", e.message.toString()) }
 ////                    }
 ////                }.start()
-////                speechRecognizer?.startListening(speechRecognizerIntent)
+//                speechRecognizer?.startListening(speechRecognizerIntent)
 //
 //            }
 //            false
@@ -207,16 +232,23 @@ class BasicChatBotFragment : Fragment() ,IUplaodAudioEventListener {
 
 
     }
+    fun getAutomaticReplyVoice():Int
+    {
+        val randomValues = Random().nextInt(2)!!
+        var sound=com.example.esds2s.R.raw.res1;
+        if(randomValues==1)
+            sound= com.example.esds2s.R.raw.res2
 
-
-
+        return sound;
+    }
     override fun onUplaodAudioIsSuccess(response: GeminiResponse) {
 
-
+        reorderCounter=0;
         if(response!=null) {
             if (response?.description != null) {
                 if (audioPlayer != null) {
                     Log.d("responseSuccess", "Player....");
+
                     audioPlayer?.start(response?.description)?.setOnCompletionListener { mPlayer ->
                         Log.e("onUplaodAudioIsSuccess", "Complate Plyer Museic");
                         audioPlayer?.stop();
@@ -232,14 +264,30 @@ class BasicChatBotFragment : Fragment() ,IUplaodAudioEventListener {
         Helper.deleteFile(file_record_Path)
     }
 
+
     override fun onUplaodAudioIsFailure(error: String) {
 
 
         try {
-            micButton?.isEnabled=true;
-            Helper.deleteFile(file_record_Path)
-            editText?.hint="!! please try again";
+
+            if(reorderCounter!!<3) {
+                chatAiServiceControll?.uploadAudioFile(
+                    file_record_Path!!,
+                    this@BasicChatBotFragment.activity,
+                    this@BasicChatBotFragment
+                );
+            }
+
+
+//            Helper.deleteFile(file_record_Path)
+//            editText?.hint="!! please try again";
         }catch (e:java.lang.Exception){}
+        finally {
+            if(reorderCounter!! >=3)
+                micButton?.isEnabled=true;
+
+            reorderCounter = reorderCounter?.plus(1);
+        }
 
         Log.e("onFailure",error!!);
     }

@@ -74,8 +74,9 @@ class ChatAiServiceControll(private val context: FragmentActivity?) {
                 if (response!!.isSuccessful) {
                     val responseData: GeminiResponse? = response.body()
                    Log.d("response file",Gson().toJson(responseData));
-                    if (callBack != null)
+                    if (callBack != null) {
                         callBack.onUplaodAudioIsSuccess(responseData!!)
+                    }
                 } else
                     if (callBack != null)
                         callBack.onUplaodAudioIsFailure(response?.message()!!)
