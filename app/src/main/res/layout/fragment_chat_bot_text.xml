@@ -126,6 +126,7 @@
                 android:layout_height="match_parent"
                 android:layout_alignParentBottom="true"
                 android:backgroundTint="@color/white"
+                android:gravity="center"
                 android:padding="20dp">
                 <TextView
                     android:id="@+id/btnSend1"
@@ -143,6 +144,7 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentLeft="true"
                     android:maxWidth="300dp"
+                    android:maxHeight="150dp"
                     android:layout_gravity="center"
                     android:layout_marginStart="5dp"
                     android:layout_marginTop="5dp"
