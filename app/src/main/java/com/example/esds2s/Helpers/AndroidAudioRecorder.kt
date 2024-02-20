@@ -35,6 +35,7 @@ class AndroidAudioRecorder(private val context: Context) {
              } catch (e: IOException) {
                  Log.e("RecordAudio", "prepare() failed")
              }
+
              start()
              recorder = this
          }
@@ -55,6 +56,7 @@ class AndroidAudioRecorder(private val context: Context) {
      fun stop() {
         recorder?.stop()
         recorder?.reset()
+        recorder?.release()
         recorder = null
     }
 }

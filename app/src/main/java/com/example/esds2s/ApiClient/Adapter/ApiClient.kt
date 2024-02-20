@@ -22,7 +22,8 @@ class  ApiClient {
     companion object {
 
 
-        private fun getHttpClientHeader(context: Context?, requestMethod: RequestMethod?,contentType:String?="application/json", token:String? = null): OkHttpClient {
+        private fun getHttpClientHeader(context: Context?, requestMethod: RequestMethod?,
+                    contentType:String?="application/json", token:String? = null): OkHttpClient {
 
             val interceptor = HttpLoggingInterceptor()
             if (!BuildConfig.DEBUG)
@@ -90,6 +91,8 @@ class  ApiClient {
                             }
                      retrofit
                     } finally { }
+
+
 
             } catch (e: UnrecoverableKeyException) {
                 e.printStackTrace()

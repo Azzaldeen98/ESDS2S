@@ -15,6 +15,7 @@ import androidx.core.app.NotificationManagerCompat
 import com.example.esds2s.ApiClient.Controlls.ChatAiServiceControll
 import com.example.esds2s.Helpers.AndroidAudioRecorder
 import com.example.esds2s.Helpers.AudioPlayer
+import com.example.esds2s.Interface.IUplaodAudioEventListener
 import com.example.esds2s.MainActivity
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
 import com.example.esds2s.R
@@ -26,7 +27,7 @@ interface IUplaodAudioEventListener0 {
     fun onUplaodAudioIsFailure(error: String)
 }
 
-class RecordVoiceService0 : Service() ,IUplaodAudioEventListener {
+class RecordVoiceService0 : Service() , IUplaodAudioEventListener {
 
     companion object {
         const val LOG_TAG = "AudioRecordService"
@@ -182,7 +183,7 @@ class RecordVoiceService0 : Service() ,IUplaodAudioEventListener {
         TODO("Return the communication channel to the service.")
     }
 
-    override fun onUplaodAudioIsSuccess(response:GeminiResponse) {
+    override fun onRequestIsSuccess(response:GeminiResponse) {
 
         deleteFile();
              if(response!=null) {
@@ -205,7 +206,7 @@ class RecordVoiceService0 : Service() ,IUplaodAudioEventListener {
 
     }
 
-    override fun onUplaodAudioIsFailure(error: String) {
+    override fun onRequestIsFailure(error: String) {
         deleteFile();
         try {
             recordingThread?.destroy()
@@ -235,4 +236,6 @@ class RecordVoiceService0 : Service() ,IUplaodAudioEventListener {
             Log.e("Error",e.message.toString())
         }
     }
+
+
 }

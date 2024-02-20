@@ -42,7 +42,6 @@ class MainActivity : AppCompatActivity() {
         textResult=findViewById<TextView>(R.id.textResult);
         textInput=findViewById<TextInputEditText>(R.id.textInput);
 
-
         checkMicrophonPermision();
         chatAiServiceControll= ChatAiServiceControll(this);
         geminiControll= GeminiControll(this);
@@ -51,8 +50,6 @@ class MainActivity : AppCompatActivity() {
 
         val  intent = Intent(this, RecordAudioActivity::class.java)
         startActivity(intent)
-
-
     }
     fun startRecordServicesOnForground(){
 

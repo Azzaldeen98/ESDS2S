@@ -14,6 +14,7 @@ import androidx.core.text.set
 import com.example.esds2s.ApiClient.Controlls.ChatAiServiceControll
 import com.example.esds2s.ApiClient.Controlls.GeminiControll
 import com.example.esds2s.Helpers.AudioPlayer
+import com.example.esds2s.Interface.IUplaodAudioEventListener
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
 import com.google.ai.client.generativeai.Chat
 import com.google.android.material.textfield.TextInputEditText
@@ -32,7 +33,7 @@ private const val ARG_PARAM2 = "param2"
  * Use the [ChatBotTextFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class ChatBotTextFragment : Fragment() {
+class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener {
     // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
@@ -57,8 +58,7 @@ class ChatBotTextFragment : Fragment() {
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+        savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_chat_bot_text, container, false)
     }
@@ -91,42 +91,8 @@ class ChatBotTextFragment : Fragment() {
             text_gchat_message_me?.text=text
             textInput?.text?.clear()
             activity?.runOnUiThread{
-
-//                textResult?.setText("")
-
                 GlobalScope.launch {
-
-                    val call = chatAiServiceControll?.textToGenerateAudio(textInput?.text!!.toString())
-
-                    call?.enqueue(object : retrofit2.Callback<GeminiResponse?> {
-                        override fun onResponse(
-                            call: Call<GeminiResponse?>,
-                            response: retrofit2.Response<GeminiResponse?>
-                        ) {
-                            // التعامل مع الاستجابة هنا
-                            if (response!!.isSuccessful) {
-                                val responseData: GeminiResponse? = response.body()
-
-                                if (response != null) {
-                                    Log.d("res",responseData!!.description)
-                                    val aud=AudioPlayer((this@ChatBotTextFragment).context!!)
-                                    aud.start(responseData?.description)?.setOnCompletionListener { v->
-                                        aud.stop()
-                                    }
-                                }
-                            }
-
-                            btnSend?.isEnabled=true;
-                            textInput?.isEnabled=true;
-                        }
-
-                        override fun onFailure(call: Call<GeminiResponse?>, t: Throwable) {
-                            // التعامل مع الأخطاء هنا
-                            btnSend?.isEnabled=true;
-                            textInput?.isEnabled=true;
-                        }
-                    })
-
+                 chatAiServiceControll?.textToGeneratorAudio(textInput?.text!!.toString(),this@ChatBotTextFragment)
                 }
             }
 
@@ -151,4 +117,24 @@ class ChatBotTextFragment : Fragment() {
                 }
             }
     }
+
+    override fun onRequestIsSuccess(response: GeminiResponse) {
+
+
+        if (response != null) {
+            Log.d("res",response!!.description)
+            val aud=AudioPlayer((this@ChatBotTextFragment).context!!)
+            aud.start(response?.description)?.setOnCompletionListener { v->
+                aud.stop()
+            }
+        }
+    }
+
+    override fun onRequestIsFailure(error: String) {
+        // التعامل مع الأخطاء هنا
+        btnSend?.isEnabled=true;
+        textInput?.isEnabled=true;
+    }
+
+
 }

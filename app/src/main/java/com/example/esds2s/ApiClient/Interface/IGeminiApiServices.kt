@@ -16,10 +16,10 @@ interface IGeminiApiServices {
 
     @Headers("Content-Type: application/json")
     @POST("/todos/api")
-    fun generateAudio(@Body body: GeminiRequest): Call<GeminiResponse?>?
+    fun audioToGenerator(@Body body: GeminiRequest): Call<GeminiResponse?>?
 
     @POST("/todos/api/text")
-    fun generateAiText(@Body body: GeminiRequest): Call<GeminiResponse?>?
+    fun textToGenerator(@Body body: GeminiRequest): Call<GeminiResponse?>?
 
     @Multipart
     @POST("/todos/upload-fileresulit/")

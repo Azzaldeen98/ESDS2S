@@ -16,10 +16,11 @@ import com.example.esds2s.ApiClient.Controlls.ChatAiServiceControll
 import com.example.esds2s.Helpers.AndroidAudioRecorder
 import com.example.esds2s.Helpers.AudioPlayer
 import com.example.esds2s.Helpers.Helper
+import com.example.esds2s.Interface.IUplaodAudioEventListener
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
-import com.example.esds2s.Services.IUplaodAudioEventListener
 import okhttp3.internal.wait
 import java.util.*
+import java.util.concurrent.ThreadPoolExecutor
 
 
 // TODO: Rename parameter arguments, choose names that match
@@ -32,7 +33,7 @@ private const val ARG_PARAM2 = "param2"
  * Use the [BasicChatBotFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class BasicChatBotFragment : Fragment() ,IUplaodAudioEventListener {
+class BasicChatBotFragment : Fragment() , IUplaodAudioEventListener {
 
     companion object {
         val RecordAudioRequestCode: Int? = 1
@@ -88,7 +89,7 @@ class BasicChatBotFragment : Fragment() ,IUplaodAudioEventListener {
 
 fun sendRecordAudio()
 {
-    Thread {
+//    ThreadPoolExecutor {
         activity?.runOnUiThread {
             try {
                 if (audioRecorder != null)
@@ -103,7 +104,7 @@ fun sendRecordAudio()
                 Log.d("Error ! ", e.message.toString())
             }
         }
-    }.start();
+//    }.start();
 
 }
     override fun onStart() {
@@ -132,17 +133,17 @@ fun sendRecordAudio()
                 Log.d("stopRecorder", "Recorder....");
                 editText?.hint="Wait ...";
 
-                sendRecordAudio();
-                Thread {
-                    activity?.runOnUiThread {
-
-                        Thread.sleep(1000)
-                        val vois: Int = getAutomaticReplyVoice()!!
-                        reply_music = MediaPlayer.create(this@BasicChatBotFragment.context, vois.toInt())!!
-                        reply_music?.start()
-                        reply_music?.setOnCompletionListener { v -> { v.stop() }
-                        }
-                    }}.start()
+//                sendRecordAudio();
+//                Thread {
+//                    activity?.runOnUiThread {
+//
+//                        Thread.sleep(1000)
+//                        val vois: Int = getAutomaticReplyVoice()!!
+//                        reply_music = MediaPlayer.create(this@BasicChatBotFragment.context, vois.toInt())!!
+//                        reply_music?.start()
+//                        reply_music?.setOnCompletionListener { v -> { v.stop() }
+//                        }
+//                    }}.start()
             }
 
             isRecord=(!isRecord!!)
@@ -163,7 +164,7 @@ fun sendRecordAudio()
         }
         return sound;
     }
-    override fun onUplaodAudioIsSuccess(response: GeminiResponse) {
+    override fun onRequestIsSuccess(response: GeminiResponse) {
 
         reorderCounter=0;
         if(response!=null) {
@@ -193,7 +194,7 @@ fun sendRecordAudio()
     }
 
 
-    override fun onUplaodAudioIsFailure(error: String) {
+    override fun onRequestIsFailure(error: String) {
 
         try {
             if(reorderCounter!!<3) {
