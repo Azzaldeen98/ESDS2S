@@ -46,31 +46,30 @@ class ChatAiServiceControll(private val context: FragmentActivity?) {
             throw java.lang.Exception("inputText is empty !!")
         }
     }
-    fun  textToGeneratorAudio(inputText:String,callBack: IUplaodAudioEventListener) {
+    fun  textToGeneratorAudio(inputText:String?,callBack: IUplaodAudioEventListener) {
 
+        Log.d("inputText", inputText!!);
         if(inputText!=null) {
 
             val client: IGeminiApiServices by lazy {
                 ApiClient.getClient(context, RequestMethod.POST,
                     BuildConfig.GEMINI_BASE_URL_TEXT_TO_GENERATOR)
                     ?.create(IGeminiApiServices::class.java)!! }
-
-            val body = GeminiRequest(_content = inputText)
-
+            Log.d("inputText2", inputText!!);
+            val body = GeminiRequest(_content = inputText!!)
             val call: Call<GeminiResponse?> by lazy { client?.textToGenerator(body)!! }
-
                 call?.enqueue(object : retrofit2.Callback<GeminiResponse?> {
                     override fun onResponse(
                         call: Call<GeminiResponse?>,
-                        response: retrofit2.Response<GeminiResponse?>
-                    ) {
+                        response: retrofit2.Response<GeminiResponse?>) {
                         if (response!!.isSuccessful) {
                             val responseData: GeminiResponse? = response.body()
                             Log.d("response", Gson().toJson(responseData));
                             if (callBack != null) {
                                 callBack.onRequestIsSuccess(responseData!!)
                             }
-                        } else
+                        }
+                        else
                             if (callBack != null)
                                 callBack.onRequestIsFailure(response?.message()!!)
                     }
@@ -79,8 +78,7 @@ class ChatAiServiceControll(private val context: FragmentActivity?) {
                         // التعامل مع الأخطاء هنا
                         if (callBack != null)
                             callBack?.onRequestIsFailure(t.message!!)
-                    }
-                })
+                    } })
         } else {
             throw java.lang.Exception("inputText is empty !!")
         }

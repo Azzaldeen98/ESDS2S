@@ -1,6 +1,7 @@
 package com.example.esds2s
 
 import android.app.ActivityManager
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -16,6 +17,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.esds2s.ContentApp.ContentApp
+import com.example.esds2s.Helpers.Helper
 import com.example.esds2s.Services.RecordVoiceService
 import com.example.esds2s.databinding.FragmentAutomatedChatBotBinding
 import java.util.*
@@ -47,34 +49,25 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let {
-
-        }
+        arguments?.let {}
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-    ): View? {
-
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = FragmentAutomatedChatBotBinding.inflate(inflater, container, false)
         return binding.getRoot()
-
     }
-
 
     override fun onStart() {
         super.onStart()
 
         languageCodes = resources.getStringArray(R.array.language_codes)
         languageNames = resources.getStringArray(R.array.language_names)
-
         notify_layout_back = activity?.findViewById(R.id.background_notify_dialog1)
         alert_msg = activity?.findViewById(R.id.alert_title)
         alert_btn_ok = activity?.findViewById(R.id.alert_btn_ok)
         alert_notify = activity?.findViewById(R.id.alert_notify)
         alert_btn_cancel = activity?.findViewById(R.id.alert_btn_cancel)
         intiolizationEvent();
-
 
         val adapter: ArrayAdapter<String> = ArrayAdapter<String>(
             this@AutomatedChatBotFragment?.getContext()!!, android.R.layout.simple_spinner_item, languageNames?.toList()!!)
@@ -83,10 +76,17 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
         binding.spinnerCarsPlate.setOnItemSelectedListener(this@AutomatedChatBotFragment)
     }
 
+
     private fun intiolizationEvent() {
 
+        if(Helper.isRecordServiceRunningInForeground(this?.activity!!, RecordVoiceService::class.java))
+            setStartRecordForGroundServiceMode();
+        else
+            setStopRecordForGroundServiceMode()
+
         alert_btn_cancel?.setOnClickListener{v-> notify_layout_back?.setVisibility(View.GONE)}
-        binding?.btnAutomatedChat?.setOnClickListener{v-> generateAutomatedChat(v) }
+        binding?.btnAutomatedChat?.setOnClickListener{v-> onClickGenerateAutomatedChatService(v) }
+        binding?.btnCloseService?.setOnClickListener{v-> stopRecordForGroundService() }
         alert_btn_ok?.setOnClickListener{v->
             if(selectedLanguageCode!=null)
                 checkMicrophonPermision()
@@ -94,13 +94,96 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
         }
 
     }
+    fun onClickGenerateAutomatedChatService(v:View) {
 
-    fun generateAutomatedChat(v:View) {
+//        if(!isRecordServiceRunningInForeground(this?.activity!!, RecordVoiceService::class.java)) {
+            notify_layout_back?.visibility = View.VISIBLE;
+            val animation = AnimationUtils.loadAnimation(this.context, R.anim.entry_to_top_animation)
+            alert_msg?.text = getString(R.string.notify1_Automated_msg)
+            alert_notify?.startAnimation(animation)
 
-        notify_layout_back?.visibility=View.VISIBLE;
-        val animation = AnimationUtils.loadAnimation(this.context, R.anim.entry_to_top_animation)
-        alert_msg?.text=getString(R.string.notify1_Automated_msg)
-        alert_notify?.startAnimation(animation)
+//        }
+    }
+    fun onClickStopService(v:View) {
+        AlertDialog.Builder(this.context)
+            .setTitle("Alert")
+            .setIcon(R.drawable.baseline_info_24)
+            .setMessage(getString(R.string.msg_stop_record_service))
+            .setPositiveButton(getString(R.string.btn_ok)) { dialog, which ->
+                if(!Helper.isRecordServiceRunningInForeground(this.context, RecordVoiceService::class.java)) {
+                    stopRecordForGroundService()
+                }
+            }
+            .create()
+            .show()
+    }
+    private  fun  setStartRecordForGroundServiceMode(){
+        binding?.btnAutomatedChat?.visibility = View.GONE
+        binding?.btnCloseService?.visibility = View.VISIBLE
+    }
+    private  fun  setStopRecordForGroundServiceMode(){
+        binding?.btnAutomatedChat?.visibility = View.VISIBLE
+        binding?.btnCloseService?.visibility = View.GONE
+    }
+    private  fun stopRecordForGroundService(){
+        setStopRecordForGroundServiceMode()
+        val  serviceIntent = Intent(this?.context!!, RecordVoiceService::class.java)
+        activity?.stopService(serviceIntent)
+    }
+
+    override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+        selectedLanguageCode = languageCodes?.get(position)
+        Toast.makeText(this?.context,selectedLanguageCode, Toast.LENGTH_SHORT).show();
+    }
+
+    override fun onNothingSelected(parent: AdapterView<*>?) {
+
+    }
+
+    fun startRecordServicesOnForground(){
+
+        setStartRecordForGroundServiceMode()
+        if(!Helper.isRecordServiceRunningInForeground(this?.activity!!, RecordVoiceService::class.java)) {
+            val  serviceIntent = Intent(this?.context!!, RecordVoiceService::class.java)
+            serviceIntent.putExtra("Lang",selectedLanguageCode)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                this?.activity?.startForegroundService(serviceIntent)
+            else
+                this?.activity?.startService(serviceIntent)
+        }
+    }
+    fun checkMicrophonPermision(){
+
+
+        // Check if the permission has been granted
+        if (ContextCompat.checkSelfPermission(this?.context!!, android.Manifest.permission.RECORD_AUDIO)
+            != PackageManager.PERMISSION_GRANTED) {
+            // Permission is not granted, request it from the user
+            ActivityCompat.requestPermissions(this?.activity!!,
+                arrayOf(android.Manifest.permission.RECORD_AUDIO),
+                ContentApp.REQUEST_MICROPHONE_PERMISSION_CODE)
+        } else {
+            // Permission has already been granted, proceed with your app logic
+            // ------------------------------------
+            // start ForGround Service
+            startRecordServicesOnForground();
+        }
+    }
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            ContentApp.REQUEST_MICROPHONE_PERMISSION_CODE -> {
+                // If request is cancelled, the result arrays are empty
+                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                    // Permission granted, proceed with your app logic
+                    startRecordServicesOnForground();
+                } else {
+                    // Permission denied, handle accordingly (e.g., show explanation, disable functionality, etc.)
+                }
+                return
+            }
+            // Add more cases for other permissions if needed
+        }
     }
 
     companion object {
@@ -122,70 +205,6 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
                 }
             }
 
-    }
-
-    override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-        selectedLanguageCode = languageCodes?.get(position)
-        Toast.makeText(this?.context,selectedLanguageCode, Toast.LENGTH_SHORT).show();
-
-    }
-
-    override fun onNothingSelected(parent: AdapterView<*>?) {
-
-    }
-
-    fun startRecordServicesOnForground(){
-
-        if(!isRecordServiceRunningInForeground(this?.activity!!, RecordVoiceService::class.java)) {
-            val  serviceIntent = Intent(this?.context!!, RecordVoiceService::class.java)
-            serviceIntent.putExtra("Lang",selectedLanguageCode)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                this?.activity?.startForegroundService(serviceIntent)
-            else
-                this?.activity?.startService(serviceIntent)
-        }
-    }
-    fun checkMicrophonPermision(){
-
-
-        // Check if the permission has been granted
-        if (ContextCompat.checkSelfPermission(this?.context!!, android.Manifest.permission.RECORD_AUDIO)
-            != PackageManager.PERMISSION_GRANTED) {
-            // Permission is not granted, request it from the user
-            ActivityCompat.requestPermissions(this?.activity!!,
-                arrayOf(android.Manifest.permission.RECORD_AUDIO),
-                ContentApp.REQUEST_MICROPHONE_PERMISSION_CODE)
-        } else {
-            // Permission has already been granted, proceed with your app logic
-            startRecordServicesOnForground();
-        }
-    }
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when (requestCode) {
-            ContentApp.REQUEST_MICROPHONE_PERMISSION_CODE -> {
-                // If request is cancelled, the result arrays are empty
-                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                    // Permission granted, proceed with your app logic
-                    startRecordServicesOnForground();
-                } else {
-                    // Permission denied, handle accordingly (e.g., show explanation, disable functionality, etc.)
-                }
-                return
-            }
-            // Add more cases for other permissions if needed
-        }
-    }
-    fun isRecordServiceRunningInForeground(context: Context, serviceClass: Class<*>): Boolean {
-        val manager = context.getSystemService(AppCompatActivity.ACTIVITY_SERVICE) as ActivityManager
-        for (service in manager.getRunningServices(Int.MAX_VALUE)) {
-            if (serviceClass.name == service.service.className) {
-                if (service.foreground) {
-                    return true
-                }
-            }
-        }
-        return false
     }
 
 }

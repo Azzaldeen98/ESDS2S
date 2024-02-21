@@ -93,7 +93,7 @@ class BasicChatBotFragment : Fragment() , IUplaodAudioEventListener {
 
 fun sendRecordAudio()
 {
-//    ThreadPoolExecutor {
+    Thread {
         activity?.runOnUiThread {
             try {
                 if (audioRecorder != null)
@@ -108,7 +108,7 @@ fun sendRecordAudio()
                 Log.d("Error ! ", e.message.toString())
             }
         }
-//    }.start();
+    }.start();
 
 }
     override fun onStart() {
@@ -119,7 +119,7 @@ fun sendRecordAudio()
         audioRecorder = AndroidAudioRecorder(this.context!!)
         audioPlayer = AudioPlayer(this.context!!)
 
-        Toast.makeText(this.context,"onStart", Toast.LENGTH_SHORT).show()
+//        Toast.makeText(this.context,"onStart", Toast.LENGTH_SHORT).show()
         micButton=activity?.findViewById(com.example.esds2s.R.id.micButton)
         editText=activity?.findViewById(com.example.esds2s.R.id.text)
         speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this.activity)
@@ -135,6 +135,7 @@ fun sendRecordAudio()
                 micButton?.isEnabled=false;
                 Log.d("stopRecorder", "Recorder....");
                 editText?.hint="Wait ...";
+                sendRecordAudio();
 
             }
 

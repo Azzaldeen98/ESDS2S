@@ -54,18 +54,12 @@ class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener {
             param2 = it.getString(ARG_PARAM2)
         }
     }
-
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_chat_bot_text, container, false)
     }
-
     override fun onStart() {
         super.onStart()
-//
         btnSend=this.activity?.findViewById<TextView>(R.id.btnSend1);
         textResult=this.activity?.findViewById<TextView>(R.id.textResult1);
         textInput=this.activity?.findViewById<TextInputEditText>(R.id.textInput1);
@@ -77,33 +71,41 @@ class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener {
             Thread.sleep(1000)
             val color = Color.parseColor("#FF6200EE")
             btnSend?.backgroundTintList=ColorStateList.valueOf(color);
+
             sendMessage();
         }
     }
-
     fun sendMessage() {
 
-        Log.d("inputText", textInput?.text.toString());
-        if(textInput!=null && !textInput?.text.isNullOrEmpty()) {
+        val message:String= textInput?.text.toString()
+
+        if(message!=null && !message.isNullOrEmpty()) {
+
             btnSend?.isEnabled=false;
             textInput?.isEnabled=false;
-            val text:String?=textInput?.text.toString()
             text_gchat_message_me?.visibility=View.VISIBLE
-            text_gchat_message_me?.text=text
+            text_gchat_message_me?.text=message
             textInput?.text?.clear()
-            Thread{
-            activity?.runOnUiThread {
-                GlobalScope.launch {
-                    chatAiServiceControll?.textToGeneratorAudio(
-                        textInput?.text.toString(),
-                        this@ChatBotTextFragment
-                    )
-                }
-            }
-            }.start()
 
+            Thread{ activity?.runOnUiThread { GlobalScope.launch {
+                    chatAiServiceControll?.textToGeneratorAudio(message, this@ChatBotTextFragment)
+                } } }.start()
         }
     }
+
+    override fun onRequestIsSuccess(response: GeminiResponse) {
+        if (response != null) {
+            Log.d("res",response!!.description)
+            val aud=AudioPlayer((this@ChatBotTextFragment).context!!)
+            aud.start(response?.description)?.setOnCompletionListener { v-> aud.stop() }
+        }
+    }
+    override fun onRequestIsFailure(error: String) {
+        Log.e("Error33",error)
+        btnSend?.isEnabled=true;
+        textInput?.isEnabled=true;
+    }
+
     companion object {
         /**
          * Use this factory method to create a new instance of
@@ -123,25 +125,4 @@ class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener {
                 }
             }
     }
-
-    override fun onRequestIsSuccess(response: GeminiResponse) {
-
-
-        if (response != null) {
-
-            Log.d("res",response!!.description)
-            val aud=AudioPlayer((this@ChatBotTextFragment).context!!)
-            aud.start(response?.description)?.setOnCompletionListener { v->
-                aud.stop()
-            }
-        }
-    }
-
-    override fun onRequestIsFailure(error: String) {
-        Log.e("Error33",error)
-        btnSend?.isEnabled=true;
-        textInput?.isEnabled=true;
-    }
-
-
 }

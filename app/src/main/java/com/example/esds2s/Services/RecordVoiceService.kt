@@ -23,6 +23,7 @@ import com.example.esds2s.Interface.IUplaodAudioEventListener
 import com.example.esds2s.MainActivity
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
 import com.example.esds2s.R
+import okhttp3.internal.notify
 import java.util.*
 
 
@@ -164,51 +165,6 @@ class RecordVoiceService : Service() , IUplaodAudioEventListener {
              startSpeechRecognizerListening();
          }
      }
-
-     fun startWorker() {
-//         Toast.makeText(this@RecordVoiceService, "Start Record ", Toast.LENGTH_SHORT).show()
-//         recordingThread = Thread {
-//             Log.d("recordingThread", "onStartCommand")
-////             startRecord()
-//         }
-//         recordingThread?.start()
-
-//         myRunnable = object : Runnable {
-//             override fun run() {
-//                        // Place your repeating task here
-//                 starRecord();
-//                        // Reschedule the Runnable
-//                        handler!!.postDelayed(this, 1000) // Example: repeat every 1 second
-//                    }
-//                }
-//                // Post the Runnable
-//                handler!!.post(myRunnable)
-
-    }
-     fun startRecord() {
-         Log.d("starRecord","starRecord")
-         if(!isRecording)
-             return;
-//         audioRecorder = AndroidAudioRecorder(this)
-//         audioRecorder?.start(record_audio_path)
-
-        val timer = Timer()
-        val task = object : TimerTask() {
-            override fun run() {
-                    try {
-                            if (audioRecorder != null)
-                                audioRecorder?.stop();
-                           chatAiServiceControll?.uploadAudioFile(record_audio_path, this@RecordVoiceService,this@RecordVoiceService);
-                        } catch (e: Exception) {
-                            Log.d("Error ! ", e.message.toString())
-                        }
-                Log.d("Timer", "Timer expired after 10 seconds")
-                timer.cancel() // Stop the timer after 10 seconds
-            }
-        }
-        timer.schedule(task, 5000)
-    }
-
     // Method to create the notification channel
     private fun createNotificationChannel(context: Context) {
         val notificationManager = NotificationManagerCompat.from(context)
@@ -245,9 +201,7 @@ class RecordVoiceService : Service() , IUplaodAudioEventListener {
         // Start the foreground service with the notification
         startForeground(NOTIFICATION_ID, notification)
     }
-    private  fun startMediaRecorder(){
-
-    }
+    private  fun startMediaRecorder(){}
     override fun onRequestIsSuccess(response:GeminiResponse) {
 
              if(response!=null) {
@@ -333,6 +287,49 @@ class RecordVoiceService : Service() , IUplaodAudioEventListener {
         //            if (audioRecorder != null) audioRecorder!!.stop();
         //            if (audioPlayer != null) audioPlayer!!.stop();
 
+    }
+    fun startWorker() {
+//         Toast.makeText(this@RecordVoiceService, "Start Record ", Toast.LENGTH_SHORT).show()
+//         recordingThread = Thread {
+//             Log.d("recordingThread", "onStartCommand")
+////             startRecord()
+//         }
+//         recordingThread?.start()
+
+//         myRunnable = object : Runnable {
+//             override fun run() {
+//                        // Place your repeating task here
+//                 starRecord();
+//                        // Reschedule the Runnable
+//                        handler!!.postDelayed(this, 1000) // Example: repeat every 1 second
+//                    }
+//                }
+//                // Post the Runnable
+//                handler!!.post(myRunnable)
+
+    }
+    fun startRecord() {
+        Log.d("starRecord","starRecord")
+        if(!isRecording)
+            return;
+//         audioRecorder = AndroidAudioRecorder(this)
+//         audioRecorder?.start(record_audio_path)
+
+        val timer = Timer()
+        val task = object : TimerTask() {
+            override fun run() {
+                try {
+                    if (audioRecorder != null)
+                        audioRecorder?.stop();
+                    chatAiServiceControll?.uploadAudioFile(record_audio_path, this@RecordVoiceService,this@RecordVoiceService);
+                } catch (e: Exception) {
+                    Log.d("Error ! ", e.message.toString())
+                }
+                Log.d("Timer", "Timer expired after 10 seconds")
+                timer.cancel() // Stop the timer after 10 seconds
+            }
+        }
+        timer.schedule(task, 5000)
     }
 
 }
