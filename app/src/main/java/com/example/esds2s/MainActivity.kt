@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat
 import com.example.esds2s.ApiClient.Controlls.ChatAiServiceControll
 import com.example.esds2s.ApiClient.Controlls.GeminiControll
 import com.example.esds2s.ContentApp.ContentApp
+import com.example.esds2s.Helpers.Helper
 import com.example.esds2s.Services.RecordVoiceService
 import com.google.ai.client.generativeai.Chat
 import com.google.android.material.textfield.TextInputEditText
@@ -52,13 +53,12 @@ class MainActivity : AppCompatActivity() {
         startActivity(intent)
     }
     fun startRecordServicesOnForground(){
-
-        if(!isRecordServiceRunningInForeground(this, RecordVoiceService::class.java)) {
+        if(!Helper.isRecordServiceRunningInForeground(this, RecordVoiceService::class.java)) {
             val  serviceIntent = Intent(this, RecordVoiceService::class.java)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                startForegroundService(serviceIntent)
-            else
-                startService(serviceIntent)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){}
+//                startForegroundService(serviceIntent)
+//            else
+//                startService(serviceIntent)
         }
     }
     fun checkMicrophonPermision(){
@@ -93,17 +93,7 @@ class MainActivity : AppCompatActivity() {
             // Add more cases for other permissions if needed
         }
     }
-    fun isRecordServiceRunningInForeground(context: Context, serviceClass: Class<*>): Boolean {
-        val manager = context.getSystemService(ACTIVITY_SERVICE) as ActivityManager
-        for (service in manager.getRunningServices(Int.MAX_VALUE)) {
-            if (serviceClass.name == service.service.className) {
-                if (service.foreground) {
-                    return true
-                }
-            }
-        }
-        return false
-    }
+
     fun sendMessage(v:View ) {
 
 

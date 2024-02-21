@@ -56,7 +56,6 @@ class ChatAiServiceControll(private val context: FragmentActivity?) {
                     ?.create(IGeminiApiServices::class.java)!! }
 
             val body = GeminiRequest(_content = inputText)
-            Log.d("inputText", inputText);
 
             val call: Call<GeminiResponse?> by lazy { client?.textToGenerator(body)!! }
 
@@ -86,7 +85,7 @@ class ChatAiServiceControll(private val context: FragmentActivity?) {
             throw java.lang.Exception("inputText is empty !!")
         }
     }
-    fun uploadAudioFile(file_path:String,context: Context?,callBack: IUplaodAudioEventListener) {
+    fun  uploadAudioFile(file_path:String,context: Context?,callBack: IUplaodAudioEventListener) {
 
 //        mOnCompletionListener.o
         Log.e("file_path", file_path);
@@ -106,7 +105,7 @@ class ChatAiServiceControll(private val context: FragmentActivity?) {
                 ?.create(IGeminiApiServices::class.java)!! }
 
         val call : Call<GeminiResponse?>  by lazy {
-            client?.uploadAudio(requestBody)!!
+            client?.uploadFileAudio(requestBody)!!
         }
 
         call?.enqueue(object :retrofit2.Callback<GeminiResponse?> {

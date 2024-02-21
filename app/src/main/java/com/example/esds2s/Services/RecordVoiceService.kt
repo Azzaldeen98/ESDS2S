@@ -130,9 +130,7 @@ class RecordVoiceService : Service() , IUplaodAudioEventListener {
             override fun onResults(bundle: Bundle) {
                 val data = bundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                 textSpeachResult=data!![0]
-                Log.d("onResults", data!![0])
                 Toast.makeText(this@RecordVoiceService,textSpeachResult, Toast.LENGTH_SHORT).show()
-
                 if(textSpeachResult?.length!!>1)
                     sendRequestToGenerator(textSpeachResult!!);
                 else

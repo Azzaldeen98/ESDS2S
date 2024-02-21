@@ -2,7 +2,11 @@ package com.example.esds2s.Helpers;
 
 import static java.sql.DriverManager.println;
 
+import android.app.ActivityManager;
+import android.content.Context;
 import android.util.Log;
+import java.util.List;
+
 
 import java.io.File;
 
@@ -28,4 +32,21 @@ public static  void  deleteFile(String filePath)
             Log.e("Error",e.getMessage().toString());
         }
     }
+
+    public static boolean isRecordServiceRunningInForeground(Context context, Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.RunningServiceInfo> runningServices = manager.getRunningServices(Integer.MAX_VALUE);
+
+        for (ActivityManager.RunningServiceInfo service : runningServices) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                if (service.foreground) {
+
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
 }

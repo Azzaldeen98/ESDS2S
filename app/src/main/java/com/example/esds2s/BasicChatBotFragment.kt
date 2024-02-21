@@ -1,7 +1,10 @@
 package com.example.esds2s
 
 import android.R
+import android.app.AlertDialog
+import android.content.Intent
 import android.media.MediaPlayer
+import android.os.Build
 import android.os.Bundle
 import android.speech.SpeechRecognizer
 import android.util.Log
@@ -18,6 +21,7 @@ import com.example.esds2s.Helpers.AudioPlayer
 import com.example.esds2s.Helpers.Helper
 import com.example.esds2s.Interface.IUplaodAudioEventListener
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
+import com.example.esds2s.Services.RecordVoiceService
 import okhttp3.internal.wait
 import java.util.*
 import java.util.concurrent.ThreadPoolExecutor
@@ -120,10 +124,9 @@ fun sendRecordAudio()
         editText=activity?.findViewById(com.example.esds2s.R.id.text)
         speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this.activity)
 
-
         micButton?.setOnClickListener{v->
-
             if(!isRecord!!){
+
                 micButton!!.setImageResource(com.example.esds2s.R.drawable.ic_mic_black_24dp)
                 Log.d("startRecorder", "Recorder....");
                 audioRecorder?.start(file_record_Path!!)
@@ -133,23 +136,25 @@ fun sendRecordAudio()
                 Log.d("stopRecorder", "Recorder....");
                 editText?.hint="Wait ...";
 
-//                sendRecordAudio();
-//                Thread {
-//                    activity?.runOnUiThread {
-//
-//                        Thread.sleep(1000)
-//                        val vois: Int = getAutomaticReplyVoice()!!
-//                        reply_music = MediaPlayer.create(this@BasicChatBotFragment.context, vois.toInt())!!
-//                        reply_music?.start()
-//                        reply_music?.setOnCompletionListener { v -> { v.stop() }
-//                        }
-//                    }}.start()
             }
 
             isRecord=(!isRecord!!)
         }
 
     }
+
+//    val builder = AlertDialog.Builder(this.context)
+//        .setTitle("Info")
+//        .setMessage("The Automated Chat service will be stopped")
+//        .setPositiveButton("OK") { dialog, which ->
+//            if(!Helper.isRecordServiceRunningInForeground(this.context, RecordVoiceService::class.java)) {
+////                activity?.stopService(RecordVoiceService::class)
+//            }
+//        }
+//        .setNegativeButton("Cancel") { dialog, which -> }
+//        .create()
+//        .show()
+
     fun getAutomaticReplyVoice():Int
     {
         val randomValues = Random().nextInt(7)!!

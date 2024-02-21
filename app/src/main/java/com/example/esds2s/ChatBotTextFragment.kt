@@ -83,6 +83,7 @@ class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener {
 
     fun sendMessage() {
 
+        Log.d("inputText", textInput?.text.toString());
         if(textInput!=null && !textInput?.text.isNullOrEmpty()) {
             btnSend?.isEnabled=false;
             textInput?.isEnabled=false;
@@ -90,11 +91,16 @@ class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener {
             text_gchat_message_me?.visibility=View.VISIBLE
             text_gchat_message_me?.text=text
             textInput?.text?.clear()
-            activity?.runOnUiThread{
+            Thread{
+            activity?.runOnUiThread {
                 GlobalScope.launch {
-                 chatAiServiceControll?.textToGeneratorAudio(textInput?.text!!.toString(),this@ChatBotTextFragment)
+                    chatAiServiceControll?.textToGeneratorAudio(
+                        textInput?.text.toString(),
+                        this@ChatBotTextFragment
+                    )
                 }
             }
+            }.start()
 
         }
     }
@@ -122,6 +128,7 @@ class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener {
 
 
         if (response != null) {
+
             Log.d("res",response!!.description)
             val aud=AudioPlayer((this@ChatBotTextFragment).context!!)
             aud.start(response?.description)?.setOnCompletionListener { v->
@@ -131,7 +138,7 @@ class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener {
     }
 
     override fun onRequestIsFailure(error: String) {
-        // التعامل مع الأخطاء هنا
+        Log.e("Error33",error)
         btnSend?.isEnabled=true;
         textInput?.isEnabled=true;
     }

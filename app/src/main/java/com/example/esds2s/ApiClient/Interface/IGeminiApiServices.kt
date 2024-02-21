@@ -9,7 +9,6 @@ import retrofit2.http.*
 
 interface IGeminiApiServices {
 
-//    @Headers("Content-Type: application/json",/*"User-Agent: Retrofit-Sample-App"*/)
 
 //    @GET("users/{id}")
 //    fun getUser(@Path("id") userId: String): Call<User>
@@ -23,5 +22,5 @@ interface IGeminiApiServices {
 
     @Multipart
     @POST("/todos/upload-fileresulit/")
-    fun uploadAudio(@Part file :MultipartBody.Part?): Call<GeminiResponse?>?
+    fun uploadFileAudio(@Part file :MultipartBody.Part?): Call<GeminiResponse?>?
 }

@@ -26,6 +26,36 @@
     <string name="tab_text_3">Text ChatBot</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <!--==================================================-->
+    <string name="atomated_chat_btn"> Generate </string>
 
+    <!--=======================[public]===========================-->
+
+    <string name="btn_yes"> yes </string>
+    <string name="btn_no"> no </string>
+    <string name="btn_ok"> ok </string>
+    <string name="btn_cancel"> no </string>
+
+    <!--==================================================-->
+    <string name="notify1_Automated_msg"> This service will work continuously without stopping, even when the application is closed </string>
+
+
+    <string-array name="language_names">
+        <item>Arabic</item>
+        <item>English</item>
+        <item>Spanish</item>
+        <item>French</item>
+        <item>German</item>
+        <item>Chinese</item>
+    </string-array>
+
+    <string-array name="language_codes">
+        <item>ar</item>
+        <item>en-us</item>
+        <item>es</item>
+        <item>fr</item>
+        <item>de</item>
+        <item>zh</item>
+    </string-array>
 
 </resources>
