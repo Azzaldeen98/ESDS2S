@@ -8,11 +8,9 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
 import android.widget.TextView
 import androidx.core.text.set
 import com.example.esds2s.ApiClient.Controlls.ChatAiServiceControll
-import com.example.esds2s.ApiClient.Controlls.GeminiControll
 import com.example.esds2s.Helpers.AudioPlayer
 import com.example.esds2s.Interface.IUplaodAudioEventListener
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
@@ -37,11 +35,9 @@ class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener {
     // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
-
-
-    private  var chat: Chat? = null
+    private var message:String?=null
     private  var chatAiServiceControll: ChatAiServiceControll? = null
-    private  var geminiControll: GeminiControll? = null
+    private var count: Int? = 0;
     private var btnSend: TextView? = null;
     private var textResult: TextView ? = null;
     private var textInput: TextInputEditText? = null;
@@ -77,7 +73,7 @@ class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener {
     }
     fun sendMessage() {
 
-        val message:String= textInput?.text.toString()
+         message= textInput?.text.toString()
 
         if(message!=null && !message.isNullOrEmpty()) {
 
@@ -87,14 +83,20 @@ class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener {
             text_gchat_message_me?.text=message
             textInput?.text?.clear()
 
+
             Thread{ activity?.runOnUiThread { GlobalScope.launch {
-                    chatAiServiceControll?.textToGeneratorAudio(message, this@ChatBotTextFragment)
+                    chatAiServiceControll?.messageToGeneratorAudio(
+                        message,
+                        this@ChatBotTextFragment)
                 } } }.start()
         }
     }
 
     override fun onRequestIsSuccess(response: GeminiResponse) {
+        count=0
         if (response != null) {
+            btnSend?.isEnabled=true;
+            textInput?.isEnabled=true;
             Log.d("res",response!!.description)
             val aud=AudioPlayer((this@ChatBotTextFragment).context!!)
             aud.start(response?.description)?.setOnCompletionListener { v-> aud.stop() }
@@ -104,6 +106,13 @@ class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener {
         Log.e("Error33",error)
         btnSend?.isEnabled=true;
         textInput?.isEnabled=true;
+
+        if(count!!<3 && message!=null){
+            sendMessage();
+            count?.plus(1)
+        }
+        else
+            count=0
     }
 
     companion object {

@@ -1,6 +1,7 @@
 package com.example.esds2s.ApiClient.Interface
 
 import com.example.esds2s.Models.RequestModels.GeminiRequest
+import com.example.esds2s.Models.RequestModels.GeminiRequestMessage
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
 import okhttp3.MultipartBody
 import retrofit2.Call
@@ -19,6 +20,9 @@ interface IGeminiApiServices {
 
     @POST("/todos/api/text")
     fun textToGenerator(@Body body: GeminiRequest): Call<GeminiResponse?>?
+
+    @POST("/todos/chat/message/")
+    fun messageToGenerator(@Body body: GeminiRequestMessage): Call<GeminiResponse?>?
 
     @Multipart
     @POST("/todos/upload-fileresulit/")

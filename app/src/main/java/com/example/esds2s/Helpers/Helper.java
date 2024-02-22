@@ -36,11 +36,9 @@ public static  void  deleteFile(String filePath)
     public static boolean isRecordServiceRunningInForeground(Context context, Class<?> serviceClass) {
         ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         List<ActivityManager.RunningServiceInfo> runningServices = manager.getRunningServices(Integer.MAX_VALUE);
-
         for (ActivityManager.RunningServiceInfo service : runningServices) {
             if (serviceClass.getName().equals(service.service.getClassName())) {
                 if (service.foreground) {
-
                     return true;
                 }
             }

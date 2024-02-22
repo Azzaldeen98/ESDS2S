@@ -1,8 +1,6 @@
 package com.example.esds2s
 
 import android.annotation.SuppressLint
-import android.app.ActivityManager
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -14,7 +12,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.esds2s.ApiClient.Controlls.ChatAiServiceControll
-import com.example.esds2s.ApiClient.Controlls.GeminiControll
 import com.example.esds2s.ContentApp.ContentApp
 import com.example.esds2s.Helpers.Helper
 import com.example.esds2s.Services.RecordVoiceService
@@ -24,31 +21,14 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
-    private  var chat: Chat? = null
-    private  var chatAiServiceControll: ChatAiServiceControll? = null
-    private  var geminiControll: GeminiControll? = null
-    private var btnSend: TextView? = null;
-    private var textResult: TextView ? = null;
-    private var textInput: TextInputEditText? = null;
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        val dateFormat = DateFormat.getDateFormat(
-            applicationContext
-        )
-
-        btnSend=findViewById<TextView>(R.id.btnSend);
-        textResult=findViewById<TextView>(R.id.textResult);
-        textInput=findViewById<TextInputEditText>(R.id.textInput);
+        val dateFormat = DateFormat.getDateFormat(applicationContext)
 
         checkMicrophonPermision();
-        chatAiServiceControll= ChatAiServiceControll(this);
-        geminiControll= GeminiControll(this);
-        geminiControll?.generatModel();
-        chat=geminiControll!!.getChat();
-
         val  intent = Intent(this, RecordAudioActivity::class.java)
         startActivity(intent)
     }
@@ -76,7 +56,6 @@ class MainActivity : AppCompatActivity() {
             startRecordServicesOnForground();
         }
     }
-
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
@@ -91,26 +70,6 @@ class MainActivity : AppCompatActivity() {
                 return
             }
             // Add more cases for other permissions if needed
-        }
-    }
-
-    fun sendMessage(v:View ) {
-
-
-        if(!textInput?.text.isNullOrEmpty()) {
-            runOnUiThread { textResult?.setText("");}
-            GlobalScope.launch {
-                val response = chat!!.sendMessage(textInput?.text.toString())
-
-                if(response!=null) {
-                    runOnUiThread {
-
-                        textResult?.visibility = View.VISIBLE;
-                        textResult?.setText(response.text);
-                        textInput?.setText("");
-                    }
-                }
-            }
         }
     }
 

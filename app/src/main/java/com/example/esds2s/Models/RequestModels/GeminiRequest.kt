@@ -8,3 +8,5 @@ import kotlinx.serialization.Serializable
 data class GeminiRequest(
     val _content:String
 )
+
+

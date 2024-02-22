@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.media.AudioManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
@@ -23,10 +24,7 @@ import com.example.esds2s.Interface.IUplaodAudioEventListener
 import com.example.esds2s.MainActivity
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
 import com.example.esds2s.R
-import okhttp3.internal.notify
 import java.util.*
-
-
 
 
 class RecordVoiceService : Service() , IUplaodAudioEventListener {
@@ -73,13 +71,23 @@ class RecordVoiceService : Service() , IUplaodAudioEventListener {
     }
 
     private fun InitializeSpeechRecognizer(intent: Intent?) {
-
         speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
         speechRecognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        speechRecognizerIntent?.putExtra(
-            RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-            RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        // Define the language model used for voice recognition
+        speechRecognizerIntent?.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+        // Specify the preferred language for voice recognition
         speechRecognizerIntent?.putExtra(RecognizerIntent.EXTRA_LANGUAGE, LANG);
+        // Specifies how complete silence is required for audio input to be considered complete
+//        speechRecognizerIntent?.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 10000);
+        // Specifies the minimum amount of silence required to be considered audio input
+//        speechRecognizerIntent?.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 5000);
+        // The amount of time that it should take after we stop hearing speech to consider the input possibly complete.
+//        speechRecognizerIntent?.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 5000);
+         //speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+         //speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
+
+
+
         speechRecognizer?.setRecognitionListener(object : RecognitionListener {
             override fun onReadyForSpeech(bundle: Bundle) {
                 Log.d("onReadyForSpeech", "Ready Speech")
@@ -96,6 +104,7 @@ class RecordVoiceService : Service() , IUplaodAudioEventListener {
                 Log.d("EndOfSpeech", "End Speech")
             }
             override fun onError(i: Int) {
+
                 Log.d("onError", i.toString() + "")
                 when(i) {
                     //1

@@ -35,7 +35,7 @@ private const val ARG_PARAM2 = "param2"
 class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener{
     // TODO: Rename and change types of parameters
 
-     var alert_btn_ok: TextView?=null
+    var alert_btn_ok: TextView?=null
     var languageCodes : Array<String>?=null
     var languageNames : Array<String>?=null
 
@@ -86,7 +86,7 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
 
         alert_btn_cancel?.setOnClickListener{v-> notify_layout_back?.setVisibility(View.GONE)}
         binding?.btnAutomatedChat?.setOnClickListener{v-> onClickGenerateAutomatedChatService(v) }
-        binding?.btnCloseService?.setOnClickListener{v-> stopRecordForGroundService() }
+        binding?.btnCloseService?.setOnClickListener{v-> onClickStopService(v) }
         alert_btn_ok?.setOnClickListener{v->
             if(selectedLanguageCode!=null)
                 checkMicrophonPermision()
@@ -110,10 +110,9 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
             .setIcon(R.drawable.baseline_info_24)
             .setMessage(getString(R.string.msg_stop_record_service))
             .setPositiveButton(getString(R.string.btn_ok)) { dialog, which ->
-                if(!Helper.isRecordServiceRunningInForeground(this.context, RecordVoiceService::class.java)) {
-                    stopRecordForGroundService()
-                }
+                stopRecordForGroundService()
             }
+            .setNegativeButton(getString(R.string.btn_no)) { dialog, which ->}
             .create()
             .show()
     }
@@ -125,10 +124,14 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
         binding?.btnAutomatedChat?.visibility = View.VISIBLE
         binding?.btnCloseService?.visibility = View.GONE
     }
+
     private  fun stopRecordForGroundService(){
-        setStopRecordForGroundServiceMode()
-        val  serviceIntent = Intent(this?.context!!, RecordVoiceService::class.java)
-        activity?.stopService(serviceIntent)
+
+        if(Helper.isRecordServiceRunningInForeground(this@AutomatedChatBotFragment?.context, RecordVoiceService::class.java)) {
+            val serviceIntent = Intent(this?.context!!, RecordVoiceService::class.java)
+            activity?.stopService(serviceIntent)
+            setStopRecordForGroundServiceMode()
+        }
     }
 
     override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
