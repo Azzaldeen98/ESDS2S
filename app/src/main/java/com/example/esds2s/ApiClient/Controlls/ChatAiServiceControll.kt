@@ -8,10 +8,12 @@ import com.example.esds2s.ApiClient.Adapter.RequestMethod
 import com.example.esds2s.ApiClient.BuildConfig
 import com.example.esds2s.ApiClient.Interface.IGeminiApiServices
 import com.example.esds2s.Helpers.ExternalStorage
+import com.example.esds2s.Interface.IBaseServiceEventListener
 import com.example.esds2s.Interface.IGeminiServiceEventListener
 import com.example.esds2s.Interface.IUplaodAudioEventListener
 import com.example.esds2s.Models.RequestModels.GeminiRequest
 import com.example.esds2s.Models.RequestModels.GeminiRequestMessage
+import com.example.esds2s.Models.ResponseModels.BaseChat
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
@@ -185,5 +187,40 @@ class ChatAiServiceControll(private val context: Context) {
         } else {
             throw java.lang.Exception("message is empty !!")
         }
+    }
+
+    suspend fun  getAllChats(callBack: IBaseServiceEventListener<ArrayList<BaseChat>>) {
+
+
+            val client: IGeminiApiServices by lazy {
+                ApiClient.getClient(context, RequestMethod.GET,
+                    BuildConfig.BASE_URL_TEXT_TO_GENERATOR)
+                    ?.create(IGeminiApiServices::class.java)!! }
+
+
+            val call: Call<ArrayList<BaseChat>?> by lazy { client?.getAllChats()!! }
+            call?.enqueue(object : retrofit2.Callback<ArrayList<BaseChat>?> {
+                override fun onResponse(
+                    call: Call<ArrayList<BaseChat>?>,
+                    response: retrofit2.Response<ArrayList<BaseChat>?>
+                ) {
+                    if (response!!.isSuccessful) {
+                        val responseData: ArrayList<BaseChat>? = response.body()
+                        Log.d("response", Gson().toJson(responseData));
+                        if (callBack != null) {
+                            callBack.onRequestIsSuccess(responseData!!)
+                        }
+                    } else
+                        if (callBack != null)
+                            callBack.onRequestIsFailure(response?.message()!!)
+                }
+
+                override fun onFailure(call: Call<ArrayList<BaseChat>?>, t: Throwable) {
+                    // التعامل مع الأخطاء هنا
+                    if (callBack != null)
+                        callBack?.onRequestIsFailure(t.message!!)
+
+                }
+            })
     }
 }

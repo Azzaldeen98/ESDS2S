@@ -30,6 +30,7 @@
     <string name="atomated_chat_btn"> Generate </string>
     <string name="btn_close_service"> Close Service </string>
     <string name="dropDown_languages_list_label"> Choose Chat language </string>
+    <string name="dropDown_chats_list_label"> Selected Chat  </string>
 
     <!--========================[Pages title]==========================-->
     <string name="chat_info_page"> Chat Information</string>

@@ -20,6 +20,7 @@ import androidx.core.app.NotificationManagerCompat
 import com.example.esds2s.ApiClient.Controlls.ChatAiServiceControll
 import com.example.esds2s.Helpers.AndroidAudioRecorder
 import com.example.esds2s.Helpers.AudioPlayer
+import com.example.esds2s.Interface.IGeminiServiceEventListener
 import com.example.esds2s.Interface.IUplaodAudioEventListener
 import com.example.esds2s.MainActivity
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
@@ -27,7 +28,7 @@ import com.example.esds2s.R
 import java.util.*
 
 
-class RecordVoiceService : Service() , IUplaodAudioEventListener {
+class RecordVoiceService : Service() , IGeminiServiceEventListener {
 
 
     companion object {
@@ -94,17 +95,6 @@ class RecordVoiceService : Service() , IUplaodAudioEventListener {
         }catch (e:Exception){
             Toast.makeText(this, "SpeechRecognizer:"+e.message.toString(), Toast.LENGTH_SHORT).show()
         }
-        // Specifies how complete silence is required for audio input to be considered complete
-//        speechRecognizerIntent?.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 10000);
-        // Specifies the minimum amount of silence required to be considered audio input
-//        speechRecognizerIntent?.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 5000);
-        // The amount of time that it should take after we stop hearing speech to consider the input possibly complete.
-//        speechRecognizerIntent?.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 5000);
-         //speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
-         //speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
-
-
-
         speechRecognizer?.setRecognitionListener(object : RecognitionListener {
             override fun onReadyForSpeech(bundle: Bundle) {
                 Log.d("onReadyForSpeech", "Ready Speech")
@@ -179,7 +169,7 @@ class RecordVoiceService : Service() , IUplaodAudioEventListener {
     private fun sendRequestToGenerator(speechText:String) {
         try {
             if (chatAiServiceControll != null)
-                 chatAiServiceControll?.textToGeneratorAudio(speechText, this@RecordVoiceService);
+                 chatAiServiceControll?.messageToGeneratorAudio(speechText, this@RecordVoiceService);
         } catch (e: Exception) {
             Log.d("Error ! ", e.message.toString())
         }
@@ -268,14 +258,11 @@ class RecordVoiceService : Service() , IUplaodAudioEventListener {
 
         Log.e("Error",error);
         if(reorderCounter!!<3 && textSpeachResult?.length!!>1){
-            chatAiServiceControll?.textToGeneratorAudio(textSpeachResult!!, this@RecordVoiceService);
+            chatAiServiceControll?.messageToGeneratorAudio(textSpeachResult!!, this@RecordVoiceService);
         }
         else {
             speechRecognizerListenAgain();
         }
-//        try {
-////            Helper.deleteFile(record_audio_path)
-//        } catch (e:java.lang.Exception){ Log.e("Delete File Error",e.message.toString());}
     }
 
     private  fun stopSpeechRecognizer(){
@@ -310,52 +297,6 @@ class RecordVoiceService : Service() , IUplaodAudioEventListener {
     override fun onDestroy() {
         super.onDestroy()
         stopSpeechRecognizer();
-        //            if (audioRecorder != null) audioRecorder!!.stop();
-        //            if (audioPlayer != null) audioPlayer!!.stop();
-
-    }
-    fun startWorker() {
-//         Toast.makeText(this@RecordVoiceService, "Start Record ", Toast.LENGTH_SHORT).show()
-//         recordingThread = Thread {
-//             Log.d("recordingThread", "onStartCommand")
-////             startRecord()
-//         }
-//         recordingThread?.start()
-
-//         myRunnable = object : Runnable {
-//             override fun run() {
-//                        // Place your repeating task here
-//                 starRecord();
-//                        // Reschedule the Runnable
-//                        handler!!.postDelayed(this, 1000) // Example: repeat every 1 second
-//                    }
-//                }
-//                // Post the Runnable
-//                handler!!.post(myRunnable)
-
-    }
-    fun startRecord() {
-        Log.d("starRecord","starRecord")
-        if(!isRecording)
-            return;
-//         audioRecorder = AndroidAudioRecorder(this)
-//         audioRecorder?.start(record_audio_path)
-
-        val timer = Timer()
-        val task = object : TimerTask() {
-            override fun run() {
-                try {
-                    if (audioRecorder != null)
-                        audioRecorder?.stop();
-                    chatAiServiceControll?.uploadAudioFile(record_audio_path, this@RecordVoiceService,this@RecordVoiceService);
-                } catch (e: Exception) {
-                    Log.d("Error ! ", e.message.toString())
-                }
-                Log.d("Timer", "Timer expired after 10 seconds")
-                timer.cancel() // Stop the timer after 10 seconds
-            }
-        }
-        timer.schedule(task, 5000)
     }
 
 }

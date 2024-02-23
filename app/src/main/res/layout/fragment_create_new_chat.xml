@@ -68,26 +68,7 @@
       tools:ignore="HardcodedText"
       android:gravity="center">
 
-
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/InputChatName"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="64dp"
-        android:layout_marginEnd="32dp"
-        android:hint="@string/input_chat_name">
-
-        <!--this is the actual edit text which takes the input-->
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/InputChatNameData"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-    </com.google.android.material.textfield.TextInputLayout>
-
+        <include layout="@layout/drop_down_list_chat" />
       <com.google.android.material.textfield.TextInputLayout
           android:id="@+id/InputChatDescription"
           style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
@@ -106,35 +87,7 @@
 
       </com.google.android.material.textfield.TextInputLayout>
 
-<!--      <com.google.android.material.textfield.TextInputLayout-->
-<!--          android:id="@+id/InputChatLanguage"-->
-<!--          style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"-->
-<!--          android:layout_width="match_parent"-->
-<!--          android:layout_height="wrap_content"-->
-<!--          android:layout_marginStart="32dp"-->
-<!--          android:layout_marginTop="30dp"-->
-<!--          android:layout_marginEnd="32dp"-->
-<!--          android:hint="@string/input_chat_language">-->
-
-<!--          &lt;!&ndash;this is the actual edit text which takes the input&ndash;&gt;-->
-<!--          <com.google.android.material.textfield.TextInputEditText-->
-<!--              android:id="@+id/InputChatLanguageData"-->
-<!--              android:layout_width="match_parent"-->
-<!--              android:layout_height="wrap_content" />-->
-
-<!--      </com.google.android.material.textfield.TextInputLayout>-->
-
         <include layout="@layout/drop_down_list" />
-
-      <!--sample button to submit entered data inside from edit text-->
-    <!--    <Button-->
-    <!--        android:id="@+id/submit_button"-->
-    <!--        android:layout_width="match_parent"-->
-    <!--        android:layout_height="wrap_content"-->
-    <!--        android:layout_marginStart="32dp"-->
-    <!--        android:layout_marginTop="8dp"-->
-    <!--        android:layout_marginEnd="32dp"-->
-    <!--        android:text="Submit" />-->
 
     <Button
         android:id="@+id/btnSubmitChatInfo"
@@ -150,7 +103,7 @@
 
     </LinearLayout>
 
-
+<include layout="@layout/progress_par"/>
 
 
 </FrameLayout>

@@ -2,20 +2,28 @@ package com.example.esds2s.Ui
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
+import android.widget.RelativeLayout
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import com.example.esds2s.ApiClient.Controlls.ChatAiServiceControll
 import com.example.esds2s.Helpers.Helper
 import com.example.esds2s.Helpers.Enums.TypeChat
 import com.example.esds2s.Helpers.ExternalStorage
+import com.example.esds2s.Interface.IBaseServiceEventListener
+import com.example.esds2s.Models.ResponseModels.BaseChat
 import com.example.esds2s.R
 import com.example.esds2s.RecordAudioActivity
 import com.example.esds2s.RegisterActivity
 import com.example.esds2s.databinding.FragmentCreateNewChatBinding
+import com.google.android.material.textfield.TextInputLayout
+import com.google.gson.Gson
+import kotlinx.coroutines.*
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -27,15 +35,20 @@ private const val ARG_PARAM2 = "param2"
  * Use the [CreateNewChatFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class CreateNewChatFragment : Fragment() {
+class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<BaseChat>> {
 
     private var binding: FragmentCreateNewChatBinding?=null
     // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
     private var selectedLanguage: String? = null
+    private var selectedChat: BaseChat? = null
     private var typeChat: TypeChat? = null
-    private var arrayAdapter: ArrayAdapter<String>? =null
+    private var  progressPar: RelativeLayout? = null
+    private var  dropdownChats: TextInputLayout? = null
+    private var arrayAdapterLanguage: ArrayAdapter<String>? =null
+    private var arrayAdapterChats: ArrayAdapter<BaseChat>? =null
+    private var chatAiServiceControll: ChatAiServiceControll? =null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,53 +76,69 @@ class CreateNewChatFragment : Fragment() {
     override fun onStart() {
         super.onStart()
 
+        chatAiServiceControll=ChatAiServiceControll(this.context!!)
+        progressPar=activity?.findViewById(R.id.progressPar1)
+        dropdownChats=activity?.findViewById(R.id.DropDownListChat)
+        progressPar?.visibility=View.VISIBLE
         if(typeChat!=null && typeChat?.ordinal!! > TypeChat.NEWCHAT.ordinal) {
-            binding?.InputChatName?.isEnabled=false
+            dropdownChats?.isEnabled=false
             binding?.InputChatDescription?.isEnabled=false
-            laodChatInformation(typeChat)
         }
+
+        laoudAllChats()
         insilizationLanguagesList()
         binding?.btnSubmitChatInfo?.setOnClickListener{submitChatInfo() }
         binding?.btnChatInfoBack?.setOnClickListener {
             Helper.LoadFragment(MainHomeFragment(),
                 activity?.supportFragmentManager,
                 R.id.main_frame_layout)
-
-
         }
     }
 
+
+    private  fun laoudAllChats(){
+        GlobalScope.launch {
+
+                withContext(Dispatchers.IO) {
+                    chatAiServiceControll?.getAllChats(this@CreateNewChatFragment)
+                }
+
+        }
+    }
+    private  fun insilizationChatsList(chats: ArrayList<BaseChat>){
+
+        progressPar?.visibility=View.GONE
+       var arrayAdapterChats = ArrayAdapter<String>(this?.context!!, R.layout.dropdown_item, chats.map { it.scope })
+        val autocompleteTV = activity?.findViewById<AutoCompleteTextView>(R.id.autoCompleteTextViewChat)
+        autocompleteTV?.setAdapter(arrayAdapterChats)
+        autocompleteTV?.setOnItemClickListener { parent, view, position, id ->
+
+         var selectedChat=arrayAdapterChats?.getItem(position)
+
+            Toast.makeText(requireContext(), "Selected: ", Toast.LENGTH_SHORT).show()
+        }
+    }
     private  fun insilizationLanguagesList(){
 
         val languages = resources.getStringArray(R.array.language_names)
-        // create an array adapter and pass the required parameter
-        // in our case pass the context, drop down layout , and array.
-        arrayAdapter = ArrayAdapter<String>(this?.context!!, R.layout.dropdown_item, languages)
-        // get reference to the autocomplete text view
-        val autocompleteTV = activity?.findViewById<AutoCompleteTextView>(R.id.autoCompleteTextView)
-        // set adapter to the autocomplete tv to the arrayAdapter
-        autocompleteTV?.setAdapter(arrayAdapter)
+        arrayAdapterLanguage = ArrayAdapter<String>(this?.context!!, R.layout.dropdown_item, languages)
+        val autocompleteTV = activity?.findViewById<AutoCompleteTextView>(R.id.autoCompleteTextViewLanguage)
+        autocompleteTV?.setAdapter(arrayAdapterLanguage)
         autocompleteTV?.setOnItemClickListener { parent, view, position, id ->
             val languagesCode =  resources.getStringArray(R.array.language_codes)
             selectedLanguage = languagesCode?.get(position) as String
             ExternalStorage.storage(this?.context,"Lang",selectedLanguage)
-            // Do something with the selected item, for example, show a toast
             Toast.makeText(requireContext(), "Selected: $selectedLanguage", Toast.LENGTH_SHORT).show()
         }
-    }
-
-    private  fun laodChatInformation(typeChat: TypeChat?){
-        binding?.InputChatNameData?.setText("Chat Name")
-        binding?.InputChatDescriptionData?.setText("Chat Description")
     }
 
     private  fun checkInputData():Boolean{
 
         var countEmpty=0
-        if(binding?.InputChatNameData?.text.isNullOrEmpty()) {
-            countEmpty++
-            Helper.setEditTextError(binding?.InputChatNameData,getString(R.string.input_is_empty))
-        }
+//        if(binding?.InputChatNameData?.text.isNullOrEmpty()) {
+//            countEmpty++
+//            Helper.setEditTextError(binding?.InputChatNameData,getString(R.string.input_is_empty))
+//        }
         if(binding?.InputChatDescriptionData?.text.isNullOrEmpty()) {
             countEmpty++
             Helper.setEditTextError(binding?.InputChatDescriptionData,getString(R.string.input_is_empty))
@@ -123,7 +152,6 @@ class CreateNewChatFragment : Fragment() {
         Toast.makeText(this.context, countEmpty?.toString(), Toast.LENGTH_SHORT).show()
         return countEmpty==0
     }
-
     private  fun submitChatInfo(){
 
         if(!checkInputData())
@@ -143,6 +171,18 @@ class CreateNewChatFragment : Fragment() {
 
 
     }
+
+    override fun onRequestIsSuccess(response: ArrayList<BaseChat>) {
+        Log.d("response",Gson().toJson(response))
+
+        if(response!=null)
+            insilizationChatsList(response!!)
+    }
+    override fun onRequestIsFailure(error: String) {
+        progressPar?.visibility=View.GONE
+        Log.d("!response error",error)
+    }
+
     companion object {
         /**
          * Use this factory method to create a new instance of
