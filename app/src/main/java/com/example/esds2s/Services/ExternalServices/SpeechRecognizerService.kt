@@ -8,19 +8,17 @@ import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.util.Log
 import android.widget.Toast
-import com.example.esds2s.ApiClient.Controlls.ChatAiServiceControll
+import com.example.esds2s.ApiClient.Controlls.SpeechChatControl
 import com.example.esds2s.Interface.IGeminiServiceEventListener
 import com.example.esds2s.Interface.ISpeechRecognizerServices
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
-import com.google.ai.client.generativeai.type.content
-import kotlin.collections.ArrayList
 
 class SpeechRecognizerService(private val context: Context,
                               private val  callBack: IGeminiServiceEventListener,
                               private val  speechListenerCallback: ISpeechRecognizerServices)
     :IGeminiServiceEventListener{
 
-    private var chatAiServiceControll: ChatAiServiceControll? = null
+    private var speechChatControl: SpeechChatControl? = null
     private var speechRecognizerIsListening: Boolean? = false
     private var recognizer:Boolean=true
     private var shareWithApiGenerator:Boolean=true
@@ -174,8 +172,8 @@ class SpeechRecognizerService(private val context: Context,
     }
     fun sendRequestToApiGenerator(speechText:String) {
         try {
-            if (chatAiServiceControll != null)
-                chatAiServiceControll?.messageToGeneratorAudio(speechText, this@SpeechRecognizerService);
+            if (speechChatControl != null)
+                speechChatControl?.messageToGeneratorAudio(speechText, this@SpeechRecognizerService);
         } catch (e: Exception) {
             Log.d("Error ! ", e.message.toString())
         }

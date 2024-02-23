@@ -1,12 +1,7 @@
 package com.example.esds2s
 
-import android.R
-import android.app.AlertDialog
-import android.content.Intent
 import android.media.MediaPlayer
-import android.os.Build
 import android.os.Bundle
-import android.speech.RecognitionListener
 import android.speech.SpeechRecognizer
 import android.util.Log
 import android.view.LayoutInflater
@@ -14,23 +9,17 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.ImageView
-import android.widget.Toast
 import androidx.fragment.app.Fragment
-import com.example.esds2s.ApiClient.Controlls.ChatAiServiceControll
+import com.example.esds2s.ApiClient.Controlls.SpeechChatControl
 import com.example.esds2s.Helpers.AndroidAudioRecorder
 import com.example.esds2s.Helpers.AudioPlayer
 import com.example.esds2s.Helpers.ExternalStorage
 import com.example.esds2s.Helpers.Helper
 import com.example.esds2s.Interface.IGeminiServiceEventListener
 import com.example.esds2s.Interface.ISpeechRecognizerServices
-import com.example.esds2s.Interface.IUplaodAudioEventListener
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
 import com.example.esds2s.Services.ExternalServices.SpeechRecognizerService
-import com.example.esds2s.Services.RecordVoiceService
-import kotlinx.coroutines.GlobalScope
-import okhttp3.internal.wait
 import java.util.*
-import java.util.concurrent.ThreadPoolExecutor
 import kotlin.collections.ArrayList
 
 
@@ -81,7 +70,7 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener , ISpeechR
     var reply_music:MediaPlayer?=null
 
     private var audioPlayer: AudioPlayer? = null
-    private var chatAiServiceControll: ChatAiServiceControll? = null
+    private var speechChatControl: SpeechChatControl? = null
     private var audioRecorder: AndroidAudioRecorder? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -103,12 +92,12 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener , ISpeechR
     }
 
     fun sendRecordAudio(data:String) {
-        chatAiServiceControll?.messageToGeneratorAudio(data,this)
+        speechChatControl?.messageToGeneratorAudio(data,this)
     }
     override fun onStart() {
         super.onStart()
 
-        chatAiServiceControll= this.context?.let { ChatAiServiceControll(it) }
+        speechChatControl= this.context?.let { SpeechChatControl(it) }
         file_record_Path="${this.context?.externalCacheDir?.absolutePath}/audiorecordtest.3gp"  //com.example.esds2s.ApiClient.BuildConfig.AudioFilePath
         audioRecorder = AndroidAudioRecorder(this.context!!)
         audioPlayer = AudioPlayer(this.context!!)
@@ -197,7 +186,7 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener , ISpeechR
 
         try {
             if(reorderCounter!!<3 && speechTextResult!=null) {
-                chatAiServiceControll?.messageToGeneratorAudio(speechTextResult,this);
+                speechChatControl?.messageToGeneratorAudio(speechTextResult,this);
             }
 
         }catch (e:java.lang.Exception){}

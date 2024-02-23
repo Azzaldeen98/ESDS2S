@@ -9,17 +9,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.core.text.set
-import com.example.esds2s.ApiClient.Controlls.ChatAiServiceControll
+import com.example.esds2s.ApiClient.Controlls.SpeechChatControl
 import com.example.esds2s.Helpers.AudioPlayer
 import com.example.esds2s.Interface.IUplaodAudioEventListener
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
-import com.google.ai.client.generativeai.Chat
 import com.google.android.material.textfield.TextInputEditText
-import com.google.gson.Gson
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import retrofit2.Call
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -36,7 +30,7 @@ class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener {
     private var param1: String? = null
     private var param2: String? = null
     private var message:String?=null
-    private  var chatAiServiceControll: ChatAiServiceControll? = null
+    private  var speechChatControl: SpeechChatControl? = null
     private var count: Int? = 0;
     private var btnSend: TextView? = null;
     private var textResult: TextView ? = null;
@@ -61,7 +55,7 @@ class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener {
         textInput=this.activity?.findViewById<TextInputEditText>(R.id.textInput1);
         text_gchat_message_me=this.activity?.findViewById<TextView>(R.id.text_gchat_message_me);
 
-        chatAiServiceControll=ChatAiServiceControll(this.context!!)
+        speechChatControl=SpeechChatControl(this.context!!)
 
         btnSend?.setOnClickListener{v->
             btnSend?.backgroundTintList=ColorStateList.valueOf(Color.GRAY);
@@ -86,7 +80,7 @@ class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener {
 
 
 //            Thread{ activity?.runOnUiThread { GlobalScope.launch {
-//                    chatAiServiceControll?.messageToGeneratorAudio(message,)
+//                    speechChatControl?.messageToGeneratorAudio(message,)
 //                } } }.start()
         }
     }

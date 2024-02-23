@@ -1,26 +1,22 @@
 package com.example.esds2s.ApiClient.Controlls
 
+import android.content.Context
 import android.util.Log
 import androidx.fragment.app.FragmentActivity
 import com.example.esds2s.ApiClient.Adapter.ApiClient
 import com.example.esds2s.ApiClient.Adapter.RequestMethod
 import com.example.esds2s.ApiClient.BuildConfig
 import com.example.esds2s.ApiClient.Interface.IAuthServices
-import com.example.esds2s.ApiClient.Interface.IGeminiApiServices
 import com.example.esds2s.Interface.IAuthServiceEventListener
-import com.example.esds2s.Interface.IUplaodAudioEventListener
-import com.example.esds2s.Models.RequestModels.GeminiRequest
-import com.example.esds2s.Models.ResponseModels.GeminiResponse
 import com.example.esds2s.Models.ResponseModels.RegisterResponse
 import com.google.gson.Gson
-import kotlinx.coroutines.*
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
 
 
-class AuthControll(private val context: FragmentActivity?) {
+class AuthControl(private val context: Context):BaseControl(context) {
 
        fun  register(callBack: IAuthServiceEventListener?) {
 

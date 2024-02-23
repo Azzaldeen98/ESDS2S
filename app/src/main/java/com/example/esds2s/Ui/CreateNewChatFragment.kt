@@ -11,15 +11,15 @@ import android.widget.AutoCompleteTextView
 import android.widget.RelativeLayout
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import com.example.esds2s.ApiClient.Controlls.ChatAiServiceControll
+import com.example.esds2s.ApiClient.Controlls.SessionChatControl
+import com.example.esds2s.ApiClient.Controlls.SpeechChatControl
 import com.example.esds2s.Helpers.Helper
 import com.example.esds2s.Helpers.Enums.TypeChat
 import com.example.esds2s.Helpers.ExternalStorage
 import com.example.esds2s.Interface.IBaseServiceEventListener
-import com.example.esds2s.Models.ResponseModels.BaseChat
+import com.example.esds2s.Models.ResponseModels.BaseChatResponse
 import com.example.esds2s.R
 import com.example.esds2s.RecordAudioActivity
-import com.example.esds2s.RegisterActivity
 import com.example.esds2s.databinding.FragmentCreateNewChatBinding
 import com.google.android.material.textfield.TextInputLayout
 import com.google.gson.Gson
@@ -35,20 +35,20 @@ private const val ARG_PARAM2 = "param2"
  * Use the [CreateNewChatFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<BaseChat>> {
+class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<BaseChatResponse>> {
 
     private var binding: FragmentCreateNewChatBinding?=null
     // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
     private var selectedLanguage: String? = null
-    private var selectedChat: BaseChat? = null
+    private var selectedChat: BaseChatResponse? = null
     private var typeChat: TypeChat? = null
     private var  progressPar: RelativeLayout? = null
     private var  dropdownChats: TextInputLayout? = null
     private var arrayAdapterLanguage: ArrayAdapter<String>? =null
-    private var arrayAdapterChats: ArrayAdapter<BaseChat>? =null
-    private var chatAiServiceControll: ChatAiServiceControll? =null
+    private var arrayAdapterChats: ArrayAdapter<BaseChatResponse>? =null
+    private var sessionChatControl: SessionChatControl? =null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -76,13 +76,17 @@ class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<Ba
     override fun onStart() {
         super.onStart()
 
-        chatAiServiceControll=ChatAiServiceControll(this.context!!)
+        sessionChatControl= SessionChatControl(this.context!!)
         progressPar=activity?.findViewById(R.id.progressPar1)
         dropdownChats=activity?.findViewById(R.id.DropDownListChat)
+
         progressPar?.visibility=View.VISIBLE
+
+
         if(typeChat!=null && typeChat?.ordinal!! > TypeChat.NEWCHAT.ordinal) {
             dropdownChats?.isEnabled=false
             binding?.InputChatDescription?.isEnabled=false
+            binding?.InputChatNameData?.visibility=View.GONE
         }
 
         laoudAllChats()
@@ -100,12 +104,12 @@ class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<Ba
         GlobalScope.launch {
 
                 withContext(Dispatchers.IO) {
-                    chatAiServiceControll?.getAllChats(this@CreateNewChatFragment)
+                    sessionChatControl?.getAllChats(this@CreateNewChatFragment)
                 }
 
         }
     }
-    private  fun insilizationChatsList(chats: ArrayList<BaseChat>){
+    private  fun insilizationChatsList(chats: ArrayList<BaseChatResponse>){
 
         progressPar?.visibility=View.GONE
        var arrayAdapterChats = ArrayAdapter<String>(this?.context!!, R.layout.dropdown_item, chats.map { it.scope })
@@ -134,11 +138,14 @@ class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<Ba
 
     private  fun checkInputData():Boolean{
 
+        if(typeChat?.ordinal!! > TypeChat.NEWCHAT.ordinal)
+            return  true;
+
         var countEmpty=0
-//        if(binding?.InputChatNameData?.text.isNullOrEmpty()) {
-//            countEmpty++
-//            Helper.setEditTextError(binding?.InputChatNameData,getString(R.string.input_is_empty))
-//        }
+        if(binding?.InputChatNameData?.text.isNullOrEmpty()) {
+            countEmpty++
+            Helper.setEditTextError(binding?.InputChatNameData,getString(R.string.input_is_empty))
+        }
         if(binding?.InputChatDescriptionData?.text.isNullOrEmpty()) {
             countEmpty++
             Helper.setEditTextError(binding?.InputChatDescriptionData,getString(R.string.input_is_empty))
@@ -172,7 +179,7 @@ class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<Ba
 
     }
 
-    override fun onRequestIsSuccess(response: ArrayList<BaseChat>) {
+    override fun onRequestIsSuccess(response: ArrayList<BaseChatResponse>) {
         Log.d("response",Gson().toJson(response))
 
         if(response!=null)

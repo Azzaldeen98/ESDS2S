@@ -6,7 +6,6 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.media.AudioManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
@@ -17,11 +16,10 @@ import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import com.example.esds2s.ApiClient.Controlls.ChatAiServiceControll
+import com.example.esds2s.ApiClient.Controlls.SpeechChatControl
 import com.example.esds2s.Helpers.AndroidAudioRecorder
 import com.example.esds2s.Helpers.AudioPlayer
 import com.example.esds2s.Interface.IGeminiServiceEventListener
-import com.example.esds2s.Interface.IUplaodAudioEventListener
 import com.example.esds2s.MainActivity
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
 import com.example.esds2s.R
@@ -45,7 +43,7 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
     private var handler: Handler? = null
     private val isRecording = true
     private var audioPlayer: AudioPlayer? = null
-    private var chatAiServiceControll: ChatAiServiceControll? = null
+    private var speechChatControl: SpeechChatControl? = null
     private var record_audio_path = ""
     private var LANG = "ar"
     private lateinit var myRunnable: Runnable
@@ -57,10 +55,8 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
-
-
         try {
-            chatAiServiceControll = ChatAiServiceControll(this);
+            speechChatControl = SpeechChatControl(this);
             record_audio_path = "${externalCacheDir?.absolutePath}/audiorecordtest.3gp"
             handler = Handler()
             audioPlayer = AudioPlayer(null);
@@ -78,7 +74,6 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
         startSpeechRecognizerListening();
         return START_STICKY
     }
-
     private fun InitializeSpeechRecognizer(intent: Intent?) {
         try {
             if(this==null) return
@@ -168,8 +163,8 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
     }
     private fun sendRequestToGenerator(speechText:String) {
         try {
-            if (chatAiServiceControll != null)
-                 chatAiServiceControll?.messageToGeneratorAudio(speechText, this@RecordVoiceService);
+            if (speechChatControl != null)
+                 speechChatControl?.messageToGeneratorAudio(speechText, this@RecordVoiceService);
         } catch (e: Exception) {
             Log.d("Error ! ", e.message.toString())
         }
@@ -207,17 +202,14 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
             .setContentText("هذه الخدمة تعمل بشكل مستمر دون انقطاع ")
             .setSmallIcon(R.drawable.baseline_mic_24)
             .addAction(R.drawable.baseline_mic_off_24, "إيقاف", pendingIntent)
-//            .addAction( NotificationCompat.Action())
         .setContentIntent(pendingIntent)
             .build()
-
         // Create the notification channel
         createNotificationChannel(context)
-
         // Start the foreground service with the notification
         startForeground(NOTIFICATION_ID, notification)
     }
-    private  fun startMediaRecorder(){}
+
     override fun onRequestIsSuccess(response:GeminiResponse) {
 
              if(response!=null) {
@@ -258,13 +250,12 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
 
         Log.e("Error",error);
         if(reorderCounter!!<3 && textSpeachResult?.length!!>1){
-            chatAiServiceControll?.messageToGeneratorAudio(textSpeachResult!!, this@RecordVoiceService);
+            speechChatControl?.messageToGeneratorAudio(textSpeachResult!!, this@RecordVoiceService);
         }
         else {
             speechRecognizerListenAgain();
         }
     }
-
     private  fun stopSpeechRecognizer(){
         try {
 
@@ -286,8 +277,6 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
     }
     override fun stopService(name: Intent?): Boolean {
         Log.d("Stopping","Stopping Service")
-//            if (audioRecorder != null) audioRecorder!!.stop();
-//            if (audioPlayer != null) audioPlayer!!.stop();
             stopSpeechRecognizer();
         return super.stopService(name)
     }
