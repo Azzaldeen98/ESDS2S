@@ -3,44 +3,61 @@ package com.example.esds2s
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import android.text.format.DateFormat
-import android.view.View
-import android.widget.TextView
+import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.example.esds2s.ApiClient.Controlls.ChatAiServiceControll
 import com.example.esds2s.ContentApp.ContentApp
+import com.example.esds2s.Helpers.ExternalStorage
 import com.example.esds2s.Helpers.Helper
-import com.example.esds2s.Services.RecordVoiceService
-import com.google.ai.client.generativeai.Chat
-import com.google.android.material.textfield.TextInputEditText
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import com.example.esds2s.Ui.MainHomeFragment
+import com.google.android.material.card.MaterialCardView
 
 class MainActivity : AppCompatActivity() {
+
+
+    private  var btn_create_chat:Button?=null
+    private  var btn_chat1: MaterialCardView?=null
+    private  var btn_chat2:MaterialCardView?=null
+    private  var btn_chat3:MaterialCardView?=null
+    private  var btn_chat4:MaterialCardView?=null
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
         val dateFormat = DateFormat.getDateFormat(applicationContext)
 
-        checkMicrophonPermision();
-        val  intent = Intent(this, RecordAudioActivity::class.java)
-        startActivity(intent)
-    }
-    fun startRecordServicesOnForground(){
-        if(!Helper.isRecordServiceRunningInForeground(this, RecordVoiceService::class.java)) {
-            val  serviceIntent = Intent(this, RecordVoiceService::class.java)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){}
-//                startForegroundService(serviceIntent)
-//            else
-//                startService(serviceIntent)
+        setContentView(R.layout.activity_main)
+
+        btn_create_chat=findViewById(R.id.btn_main_create_chat)
+        btn_chat1=findViewById(R.id.btn_main_chat1)
+        btn_chat2=findViewById(R.id.btn_main_chat2)
+        btn_chat3=findViewById(R.id.btn_main_chat3)
+        btn_chat4=findViewById(R.id.btn_main_chat4)
+
+        if(ExternalStorage.existing(this,"Token")) {
+            val  intent = Intent(this, RegisterActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            return
         }
+
+        checkMicrophonPermision();
+        Helper.LoadFragment(MainHomeFragment(),supportFragmentManager,R.id.main_frame_layout)
+//        val  intent = Intent(this, RecordAudioActivity::class.java)
+//        startActivity(intent)
     }
+
+
+//    fun loadFragment(fragment: Fragment) {
+//        val transaction = supportFragmentManager.beginTransaction()
+//        transaction.replace(R.id.main_frame_layout, fragment)
+//        transaction.commit()
+//    }
+
+
     fun checkMicrophonPermision(){
 
 
@@ -53,7 +70,7 @@ class MainActivity : AppCompatActivity() {
                 ContentApp.REQUEST_MICROPHONE_PERMISSION_CODE)
         } else {
             // Permission has already been granted, proceed with your app logic
-            startRecordServicesOnForground();
+
         }
     }
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
@@ -63,7 +80,7 @@ class MainActivity : AppCompatActivity() {
                 // If request is cancelled, the result arrays are empty
                 if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                     // Permission granted, proceed with your app logic
-                    startRecordServicesOnForground();
+
                 } else {
                     // Permission denied, handle accordingly (e.g., show explanation, disable functionality, etc.)
                 }

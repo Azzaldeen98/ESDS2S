@@ -32,7 +32,7 @@
             android:layout_width="200dp"
             android:layout_height="200dp"
             android:layout_marginTop="50dp"
-            android:src="@drawable/robot1"
+            android:src="@drawable/robot_splash"
             android:backgroundTint="@color/white"
             android:background="@color/white"/>
 

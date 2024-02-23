@@ -56,12 +56,20 @@ class RecordVoiceService : Service() , IUplaodAudioEventListener {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
-        chatAiServiceControll = ChatAiServiceControll(null);
-        record_audio_path = "${externalCacheDir?.absolutePath}/audiorecordtest.3gp"
-        handler = Handler()
-        audioPlayer = AudioPlayer(this);
-        if (intent != null && intent?.hasExtra("Lang")!!) {
-            LANG = intent?.getStringExtra("Lang")!!;
+
+
+        try {
+            chatAiServiceControll = ChatAiServiceControll(this);
+            record_audio_path = "${externalCacheDir?.absolutePath}/audiorecordtest.3gp"
+            handler = Handler()
+            audioPlayer = AudioPlayer(null);
+            if(intent!=null) {
+                if (intent != null && intent?.hasExtra("Lang") == true) {
+                    LANG = intent?.getStringExtra("Lang") ?: "en-Us";
+                }
+            }
+        } catch (e:Exception){
+            Toast.makeText(this, e.message.toString(), Toast.LENGTH_SHORT).show()
         }
         Toast.makeText(this, "Background is working ", Toast.LENGTH_SHORT).show()
         startForegroundServiceWithNotification(this);
@@ -71,12 +79,21 @@ class RecordVoiceService : Service() , IUplaodAudioEventListener {
     }
 
     private fun InitializeSpeechRecognizer(intent: Intent?) {
-        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
-        speechRecognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        // Define the language model used for voice recognition
-        speechRecognizerIntent?.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-        // Specify the preferred language for voice recognition
-        speechRecognizerIntent?.putExtra(RecognizerIntent.EXTRA_LANGUAGE, LANG);
+        try {
+            if(this==null) return
+            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this@RecordVoiceService);
+            speechRecognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+            // Define the language model used for voice recognition
+            speechRecognizerIntent?.putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+            )
+            // Specify the preferred language for voice recognition
+            speechRecognizerIntent?.putExtra(RecognizerIntent.EXTRA_LANGUAGE, LANG);
+
+        }catch (e:Exception){
+            Toast.makeText(this, "SpeechRecognizer:"+e.message.toString(), Toast.LENGTH_SHORT).show()
+        }
         // Specifies how complete silence is required for audio input to be considered complete
 //        speechRecognizerIntent?.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 10000);
         // Specifies the minimum amount of silence required to be considered audio input
@@ -168,12 +185,12 @@ class RecordVoiceService : Service() , IUplaodAudioEventListener {
         }
     }
     private fun speechRecognizerListenAgain() {
-         if (speechRecognizerIsListening!!) {
-             speechRecognizerIsListening = false;
-             speechRecognizer?.cancel();
-             startSpeechRecognizerListening();
+             if (speechRecognizerIsListening!!) {
+                 speechRecognizerIsListening = false;
+                 speechRecognizer?.cancel();
+                 startSpeechRecognizerListening();
+             }
          }
-     }
     // Method to create the notification channel
     private fun createNotificationChannel(context: Context) {
         val notificationManager = NotificationManagerCompat.from(context)

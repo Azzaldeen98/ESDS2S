@@ -28,8 +28,6 @@ class AndroidAudioRecorder(private val context: Context) {
              setOutputFile(filePath)
              setAudioEncoder(MediaRecorder.AudioEncoder.OPUS)
              setAudioChannels(2);
-
-
              try {
                  prepare()
              } catch (e: IOException) {

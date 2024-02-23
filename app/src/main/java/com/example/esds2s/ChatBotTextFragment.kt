@@ -61,7 +61,8 @@ class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener {
         textInput=this.activity?.findViewById<TextInputEditText>(R.id.textInput1);
         text_gchat_message_me=this.activity?.findViewById<TextView>(R.id.text_gchat_message_me);
 
-        chatAiServiceControll=ChatAiServiceControll(this.activity)
+        chatAiServiceControll=ChatAiServiceControll(this.context!!)
+
         btnSend?.setOnClickListener{v->
             btnSend?.backgroundTintList=ColorStateList.valueOf(Color.GRAY);
             Thread.sleep(1000)
@@ -84,11 +85,9 @@ class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener {
             textInput?.text?.clear()
 
 
-            Thread{ activity?.runOnUiThread { GlobalScope.launch {
-                    chatAiServiceControll?.messageToGeneratorAudio(
-                        message,
-                        this@ChatBotTextFragment)
-                } } }.start()
+//            Thread{ activity?.runOnUiThread { GlobalScope.launch {
+//                    chatAiServiceControll?.messageToGeneratorAudio(message,)
+//                } } }.start()
         }
     }
 

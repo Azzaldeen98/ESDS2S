@@ -1,9 +1,8 @@
 package com.example.esds2s.Interface
 
+import com.example.esds2s.Models.ResponseModels.AuthResponse
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
 
-interface IUplaodAudioEventListener {
+interface IUplaodAudioEventListener:IBaseServiceEventListener<GeminiResponse> {
 
-    fun onRequestIsSuccess(response: GeminiResponse)
-    fun onRequestIsFailure(error: String)
 }

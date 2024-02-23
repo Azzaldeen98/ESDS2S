@@ -55,7 +55,7 @@ class RecordVoiceService0 : Service() , IUplaodAudioEventListener {
 //        }
         handler= Handler()
         audioPlayer= AudioPlayer(this);
-        chatAiServiceControll= ChatAiServiceControll(null);
+        chatAiServiceControll= ChatAiServiceControll(this);
         record_audio_path="${externalCacheDir?.absolutePath}/audiorecordtest.3gp"
         Toast.makeText(this, "Background is working ", Toast.LENGTH_SHORT).show()
         startForegroundServiceWithNotification(this);

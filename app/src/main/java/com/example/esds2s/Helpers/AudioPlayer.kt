@@ -4,7 +4,7 @@ import android.content.Context
 import android.media.MediaPlayer
 import android.util.Log
 
-class AudioPlayer(private val context: Context) {
+class AudioPlayer(private val context: Context?) {
     private var mediaPlayer: MediaPlayer? =null
     fun start(filePath: String?): MediaPlayer? {
 //        if(mediaPlayer!=null) stop();

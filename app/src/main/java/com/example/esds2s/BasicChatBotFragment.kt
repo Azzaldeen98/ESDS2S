@@ -6,6 +6,7 @@ import android.content.Intent
 import android.media.MediaPlayer
 import android.os.Build
 import android.os.Bundle
+import android.speech.RecognitionListener
 import android.speech.SpeechRecognizer
 import android.util.Log
 import android.view.LayoutInflater
@@ -18,13 +19,19 @@ import androidx.fragment.app.Fragment
 import com.example.esds2s.ApiClient.Controlls.ChatAiServiceControll
 import com.example.esds2s.Helpers.AndroidAudioRecorder
 import com.example.esds2s.Helpers.AudioPlayer
+import com.example.esds2s.Helpers.ExternalStorage
 import com.example.esds2s.Helpers.Helper
+import com.example.esds2s.Interface.IGeminiServiceEventListener
+import com.example.esds2s.Interface.ISpeechRecognizerServices
 import com.example.esds2s.Interface.IUplaodAudioEventListener
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
+import com.example.esds2s.Services.ExternalServices.SpeechRecognizerService
 import com.example.esds2s.Services.RecordVoiceService
+import kotlinx.coroutines.GlobalScope
 import okhttp3.internal.wait
 import java.util.*
 import java.util.concurrent.ThreadPoolExecutor
+import kotlin.collections.ArrayList
 
 
 // TODO: Rename parameter arguments, choose names that match
@@ -37,10 +44,11 @@ private const val ARG_PARAM2 = "param2"
  * Use the [BasicChatBotFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class BasicChatBotFragment : Fragment() , IUplaodAudioEventListener {
+class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener , ISpeechRecognizerServices {
 
     companion object {
         val RecordAudioRequestCode: Int? = 1
+        lateinit var speechRecognizerService:SpeechRecognizerService
         var speechRecognizer: SpeechRecognizer? = null
         /**
          * Use this factory method to create a new instance of
@@ -67,8 +75,9 @@ class BasicChatBotFragment : Fragment() , IUplaodAudioEventListener {
     var file_record_Path: String?=null
     var  micButton: ImageView?=null
     var  editText: EditText?=null
-    var isRecord:Boolean?=false
+    var isRecord:Boolean=false
     var reorderCounter:Int?=0;
+    var speechTextResult:String?=null;
     var reply_music:MediaPlayer?=null
 
     private var audioPlayer: AudioPlayer? = null
@@ -81,6 +90,8 @@ class BasicChatBotFragment : Fragment() , IUplaodAudioEventListener {
             param1 = it.getString(ARG_PARAM1)
             param2 = it.getString(ARG_PARAM2)
         }
+
+
     }
 
 
@@ -91,52 +102,40 @@ class BasicChatBotFragment : Fragment() , IUplaodAudioEventListener {
         return inflater.inflate(com.example.esds2s.R.layout.fragment_basic_chat_bot, container, false)
     }
 
-fun sendRecordAudio()
-{
-    Thread {
-        activity?.runOnUiThread {
-            try {
-                if (audioRecorder != null)
-                    audioRecorder?.stop();
-                chatAiServiceControll?.uploadAudioFile(
-                    file_record_Path!!,
-                    this@BasicChatBotFragment.activity,
-                    this@BasicChatBotFragment
-                );
-
-            } catch (e: Exception) {
-                Log.d("Error ! ", e.message.toString())
-            }
-        }
-    }.start();
-
-}
+    fun sendRecordAudio(data:String) {
+        chatAiServiceControll?.messageToGeneratorAudio(data,this)
+    }
     override fun onStart() {
         super.onStart()
 
-        chatAiServiceControll= ChatAiServiceControll(this.activity)
+        chatAiServiceControll= this.context?.let { ChatAiServiceControll(it) }
         file_record_Path="${this.context?.externalCacheDir?.absolutePath}/audiorecordtest.3gp"  //com.example.esds2s.ApiClient.BuildConfig.AudioFilePath
         audioRecorder = AndroidAudioRecorder(this.context!!)
         audioPlayer = AudioPlayer(this.context!!)
-
-//        Toast.makeText(this.context,"onStart", Toast.LENGTH_SHORT).show()
         micButton=activity?.findViewById(com.example.esds2s.R.id.micButton)
         editText=activity?.findViewById(com.example.esds2s.R.id.text)
-        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this.activity)
+
+       speechRecognizerService = SpeechRecognizerService(this?.context!!, this,this)
+    var lang:String?=null
+      if( ExternalStorage.existing(this?.context,"Lang"))
+          lang= ExternalStorage.getValue(this.activity,"Lang") as String?
+         speechRecognizerService?.Initialization(true,true,false,lang)
+
+//        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this.activity)
+
 
         micButton?.setOnClickListener{v->
-            if(!isRecord!!){
-
+            if(isRecord==false){
                 micButton!!.setImageResource(com.example.esds2s.R.drawable.ic_mic_black_24dp)
                 Log.d("startRecorder", "Recorder....");
-                audioRecorder?.start(file_record_Path!!)
+                speechRecognizerService?.startSpeechRecognizerListening()
+
             } else{
                 micButton!!.setImageResource(com.example.esds2s.R.drawable.ic_mic_black_off)
                 micButton?.isEnabled=false;
                 Log.d("stopRecorder", "Recorder....");
                 editText?.hint="Wait ...";
-                sendRecordAudio();
-
+                speechRecognizerService?.stopSpeechRecognizer()
             }
 
             isRecord=(!isRecord!!)
@@ -144,18 +143,11 @@ fun sendRecordAudio()
 
     }
 
-//    val builder = AlertDialog.Builder(this.context)
-//        .setTitle("Info")
-//        .setMessage("The Automated Chat service will be stopped")
-//        .setPositiveButton("OK") { dialog, which ->
-//            if(!Helper.isRecordServiceRunningInForeground(this.context, RecordVoiceService::class.java)) {
-////                activity?.stopService(RecordVoiceService::class)
-//            }
-//        }
-//        .setNegativeButton("Cancel") { dialog, which -> }
-//        .create()
-//        .show()
 
+    override fun onDestroy() {
+        super.onDestroy()
+        speechRecognizerService?.destroy()
+    }
     fun getAutomaticReplyVoice():Int
     {
         val randomValues = Random().nextInt(7)!!
@@ -173,6 +165,7 @@ fun sendRecordAudio()
     override fun onRequestIsSuccess(response: GeminiResponse) {
 
         reorderCounter=0;
+        speechTextResult=null;
         if(response!=null) {
             if (response?.description != null) {
                 if (audioPlayer != null) {
@@ -203,20 +196,16 @@ fun sendRecordAudio()
     override fun onRequestIsFailure(error: String) {
 
         try {
-            if(reorderCounter!!<3) {
-                chatAiServiceControll?.uploadAudioFile(
-                    file_record_Path!!,
-                    this@BasicChatBotFragment.activity,
-                    this@BasicChatBotFragment
-                );
+            if(reorderCounter!!<3 && speechTextResult!=null) {
+                chatAiServiceControll?.messageToGeneratorAudio(speechTextResult,this);
             }
 
-//            Helper.deleteFile(file_record_Path)
-//            editText?.hint="!! please try again";
         }catch (e:java.lang.Exception){}
         finally {
-            if(reorderCounter!! >=3)
-                micButton?.isEnabled=true;
+            if(reorderCounter!! >=3) {
+                micButton?.isEnabled = true;
+                speechTextResult=null;
+            }
 
             reorderCounter = reorderCounter?.plus(1);
         }
@@ -224,87 +213,14 @@ fun sendRecordAudio()
         Log.e("onFailure",error!!);
     }
 
-    //        val speechRecognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-//        speechRecognizerIntent.putExtra(
-//            RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-//            RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-//        speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
-//
-//        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this.context)
-//        speechRecognizer?.setRecognitionListener(object : RecognitionListener {
-//            override fun onReadyForSpeech(bundle: Bundle) {
-//
-//                Log.d("Tag-onReadyForSpeech", "Beginning Of Speech")
-//            }
-//            override fun onBeginningOfSpeech() {
-//                Log.d("Tag", "Beginning Of Speech")
-//                editText!!.setText("")
-//                editText!!.hint = "Listening..."
-//
-//            }
-//            override fun onRmsChanged(v: Float) {
-//                Log.d("Tag-onRmsChanged",v.toString())
-//            }
-//            override fun onBufferReceived(bytes: ByteArray) {
-//                Log.d("Buffer_Size",bytes?.size.toString())
-//
-//            }
-//            override fun onEndOfSpeech() {
-//
-//                Log.d("Tag", "End Of Speech")
-//            }
-//            override fun onError(i: Int) {
-//
-//                Log.e("Tag", i.toString())
-//                editText!!.hint="Sorry, talking again"
-//            }
-//            override fun onResults(bundle: Bundle) {
-//
-//                micButton!!.setImageResource(R.drawable.ic_mic_black_off)
-//                val data = bundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-//                Log.d("Tag-Result", data!![0])
-//                editText!!.setText(data!![0])
-////                audioRecorder?.stop()
-//
-//                if(data!![0]!=null) {
-//                    // Start a background thread
-//
-//
-//                }
-//
-//            }
-//            override fun onPartialResults(bundle: Bundle) {
-//
-//                Log.e("Tag-onPartialResults", "error")
-//            }
-//            override fun onEvent(i: Int, bundle: Bundle) {
-//
-//                Log.e("Tag-onEvent", i.toString())
-//            }
-//        })
+    override fun onSpeechRecognizerResults(results: ArrayList<String>?) {
 
-//        micButton!!.setOnTouchListener { view, motionEvent ->
-//            if (motionEvent.action == MotionEvent.ACTION_UP) {
-//
-//              speechRecognizer?.stopListening()
-//
-//            }
-//            if (motionEvent.action == MotionEvent.ACTION_DOWN) {
-//                micButton!!.setImageResource(R.drawable.ic_mic_black_24dp)
-//
-////                Thread {
-////                    activity?.runOnUiThread {
-////                        try {
-////                            audioRecorder?.start(file_record_Path!!)
-////
-////                        } catch (e: Exception) { Log.d("Error ! ", e.message.toString()) }
-////                    }
-////                }.start()
-//                speechRecognizer?.startListening(speechRecognizerIntent)
-//
-//            }
-//            false
-//        }
+        if(results!=null&& results?.count()!!>0) {
+            speechTextResult = results[0]
+            sendRecordAudio(speechTextResult!!)
+            Log.e("onSpeechRecognizerResults90",speechTextResult!!);
+        }
+    }
 
 
 }

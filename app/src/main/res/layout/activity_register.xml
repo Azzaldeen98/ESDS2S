@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".RegisterActivity">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:background="@drawable/gradient_color1"
+            android:gravity="center">
+
+           <include layout="@layout/first_logo_content"/>
+
+            <Button
+                android:id="@+id/btnRegisterAccount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="80dp"
+                android:drawableRight="@drawable/baseline_person_add_alt_1_24"
+                android:drawableTint="@color/white"
+                android:paddingVertical="10dp"
+                android:text="@string/btn_register"
+                android:textAllCaps="false"
+                android:textSize="22dp"
+                tools:ignore="MissingConstraints" />
+
+        </LinearLayout>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

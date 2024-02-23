@@ -1,12 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
+    <color name="purple_500">@color/teal_700</color>
+    <color name="purple_700">@color/teal_700</color>
     <color name="teal_200">#FF03DAC5</color>
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="gray">#A39696</color>
     <color name="back_notify_color">#A9272525</color>
+    <color name="black_alpha_6">#BB304FFE</color>
+    <color name="btn_main_label">#FFFFFF</color>
+    <color name="page_title">#A1373535</color>
+    <color name="gradient_color1" tools:ignore="ReferenceType">@drawable/gradient_color1</color>
+
+
 </resources>
