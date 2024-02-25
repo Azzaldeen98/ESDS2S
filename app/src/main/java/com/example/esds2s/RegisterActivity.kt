@@ -18,6 +18,7 @@ class RegisterActivity : AppCompatActivity() ,IAuthServiceEventListener{
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register)
+
         authControl=AuthControl(this)
         logo_content=findViewById(R.id.first_logo_content)
         btn_register=findViewById(R.id.btnRegisterAccount)

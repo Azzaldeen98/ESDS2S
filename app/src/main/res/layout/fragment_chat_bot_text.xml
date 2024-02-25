@@ -70,7 +70,7 @@
                         android:id="@+id/card_gchat_message_me"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        app:cardBackgroundColor="#774df2"
+                        app:cardBackgroundColor="@color/purple_700"
                         app:cardCornerRadius="12dp"
                         app:cardElevation="0dp"
                         android:padding="20dp"
@@ -134,7 +134,7 @@
                     android:contentDescription="Enter How Much Cookies You Want"
                     android:layout_height="50dp"
                     android:background="@drawable/baseline_send_24"
-                    android:backgroundTint="@color/purple_500"
+                    android:backgroundTint="@color/purple_700"
                     android:layout_alignParentRight="true"
                     android:gravity="center"/>
 

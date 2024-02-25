@@ -5,7 +5,7 @@ import android.media.MediaPlayer
 import android.util.Log
 
 class AudioPlayer(private val context: Context?) {
-    private var mediaPlayer: MediaPlayer? =null
+     var mediaPlayer: MediaPlayer? =null
     fun start(filePath: String?): MediaPlayer? {
 //        if(mediaPlayer!=null) stop();
         mediaPlayer = MediaPlayer()
@@ -24,7 +24,8 @@ class AudioPlayer(private val context: Context?) {
 
         try{
             if (mediaPlayer != null) {
-                if (mediaPlayer?.isPlaying()!!) mediaPlayer?.stop()
+                if (mediaPlayer?.isPlaying()!!)
+                    mediaPlayer?.stop()
                 mediaPlayer?.release()
                 mediaPlayer = null
             }
@@ -33,14 +34,28 @@ class AudioPlayer(private val context: Context?) {
         }
 
     }
+    fun isPlayer():Boolean {
+        return (mediaPlayer != null && mediaPlayer?.isPlaying()!!)
+    }
     fun pause() {
         try{
 
             if (mediaPlayer != null) {
-                if (mediaPlayer?.isPlaying()!!) mediaPlayer?.stop()
-                mediaPlayer?.release()
-                mediaPlayer = null
+                if (mediaPlayer?.isPlaying()!!)
+                    mediaPlayer?.pause()
+
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+    }
+
+    fun resume() {
+        try{
+
+            if (mediaPlayer != null &&  !mediaPlayer?.isPlaying!!)
+                    mediaPlayer?.start()
         } catch (e: Exception) {
             e.printStackTrace()
         }

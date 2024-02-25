@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ESG</string>
+    <string name="app_name">VoiceBot</string>
     <string name="gemini_api_key">AIzaSyDW35bfhBIy28pH39-vcKOGFRKNd2eo1NU</string>
     <string name="title_activity_audio_record_test">AudioRecordTestActivity</string>
     <!-- Strings used for fragments for navigation -->
@@ -35,6 +35,7 @@
     <!--========================[Pages title]==========================-->
     <string name="chat_info_page"> Chat Information</string>
     <string name="home_page">Enter chat information</string>
+    <string name="automated_chat_page">Automated chat service</string>
     <!--=======================[public]===========================-->
 
     <string name="btn_yes"> yes </string>
@@ -70,9 +71,9 @@
         <item>English</item>
         <item>Spanish</item>
         <item>French</item>
-        <item>German</item>
-        <item>Chinese</item>
-        <item>Japan</item>
+<!--        <item>German</item>-->
+<!--        <item>Chinese</item>-->
+<!--        <item>Japan</item>-->
     </string-array>
 
 
@@ -80,12 +81,19 @@
     <string-array name="language_codes">
         <item>ar-SA-1</item>
         <item>en-US-3</item>
-        <item>es</item>
-        <item>fr</item>
-        <item>de</item>
-        <item>zh</item>
-        <item>ja-JP-3</item>
+        <item>es-ES-1</item>
+        <item>fr-FR-1</item>
+<!--        <item>de</item>-->
+<!--        <item>zh</item>-->
+<!--        <item>ja-JP-3</item>-->
     </string-array>
     <!--=========================================================================-->
     <string name="msg_stop_record_service">The Automated Chat service will be stopped</string>
+    <string name="msg_stop_session_chat">The entire current chat session will be stopped. Do you agree to this?</string>
+    <string name="msg_choose_the_chat">Choose the chat</string>
+    <string name="msg_choose_the_language">Choose the language</string>
+    <string name="msg_failed_the_session_create">Failed to send the request</string>
+    <string name="msg_no_internet"> !! No Internet Connection</string>
+    <string name="retry_button">Retry Connection</string>
+
 </resources>

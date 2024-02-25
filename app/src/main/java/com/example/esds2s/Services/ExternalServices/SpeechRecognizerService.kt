@@ -32,9 +32,10 @@ class SpeechRecognizerService(private val context: Context,
         get() { return _lang }
         set(value) { _lang = value }
 
-    fun  Initialization(_recognizer: Boolean=true,_shareWithApiGenerator: Boolean=true,_workingInTheContinuously: Boolean=false,lang:String?="ar"):SpeechRecognizerService {
+    fun  Initialization(_recognizer: Boolean?=true,_shareWithApiGenerator: Boolean?=true,_workingInTheContinuously: Boolean?=false,lang:String?="ar"):SpeechRecognizerService {
 
-        setOptions(lang!!,_recognizer,_shareWithApiGenerator,_workingInTheContinuously)
+        setOptions(lang!!,_recognizer!!,_shareWithApiGenerator!!,_workingInTheContinuously!!)
+
         try {
             speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context);
             speechRecognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);

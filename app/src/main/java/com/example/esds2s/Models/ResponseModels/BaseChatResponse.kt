@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class BaseChatResponse(
-var token:String?="",
+var token:String,
 var modeldescription:String?="",
-var scope:String?=""
+var scope:String
 )

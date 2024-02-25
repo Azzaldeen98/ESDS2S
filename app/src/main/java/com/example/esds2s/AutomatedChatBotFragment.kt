@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,10 +17,18 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import com.example.esds2s.ApiClient.Controlls.SessionChatControl
 import com.example.esds2s.ContentApp.ContentApp
+import com.example.esds2s.Helpers.Enums.AudioPlayerStatus
+import com.example.esds2s.Helpers.ExternalStorage
 import com.example.esds2s.Helpers.Helper
+import com.example.esds2s.Helpers.LanguageInfo
 import com.example.esds2s.Services.RecordVoiceService
+import com.example.esds2s.Services.TestConnection
+import com.example.esds2s.Ui.MainHomeFragment
 import com.example.esds2s.databinding.FragmentAutomatedChatBotBinding
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.util.*
 
 // TODO: Rename parameter arguments, choose names that match
@@ -38,27 +47,88 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
     var alert_btn_ok: TextView?=null
     var languageCodes : Array<String>?=null
     var languageNames : Array<String>?=null
-
+    private  lateinit var serviceIntent:Intent;
     private lateinit var binding: FragmentAutomatedChatBotBinding
     private var alert_msg: TextView?=null
     private var selectedLanguageCode: String?=null
     private var alert_btn_cancel: TextView?=null
-
     private var notify_layout_back : LinearLayout?=null
     private var alert_notify: LinearLayout?=null
-
+    private var isMuteVoice: Boolean=false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         arguments?.let {}
     }
-
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = FragmentAutomatedChatBotBinding.inflate(inflater, container, false)
         return binding.getRoot()
     }
-
     override fun onStart() {
         super.onStart()
+
+        internalHeader()
+        initializationComponent()
+
+        initializationEvents();
+        val adapter: ArrayAdapter<String> = ArrayAdapter<String>(
+            this@AutomatedChatBotFragment?.getContext()!!, android.R.layout.simple_spinner_item, languageNames?.toList()!!)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.spinnerLanguages.setAdapter(adapter)
+        binding.spinnerLanguages.setOnItemSelectedListener(this@AutomatedChatBotFragment)
+        loadPresetUserLanguage()
+
+    }
+    private fun internalHeader(){
+
+        val btn_back:TextView?=activity?.findViewById(R.id.internal_head_btn_back)
+        val internaal_header:TextView?=activity?.findViewById(R.id.internal_head_title)
+        internaal_header?.setText(getString(R.string.automated_chat_page))
+        btn_back?.setOnClickListener {onBack()}
+    }
+    private fun onBack() {
+
+        if(Helper.isRecordServiceRunningInForeground(this?.context,RecordVoiceService::class.java)) {
+            onClickStopService()
+        } else{
+            AlertDialog.Builder(this.context)
+                .setTitle("Alert")
+                .setIcon(R.drawable.baseline_info_24)
+                .setMessage(getString(R.string.msg_stop_session_chat))
+                .setPositiveButton(getString(R.string.btn_ok)) { dialog, which -> stopSession() }
+                .setNegativeButton(getString(R.string.btn_no)) { dialog, which ->}
+                .create()
+                .show()
+        }
+
+    }
+    fun stopSession() {
+
+         activity?.runOnUiThread {
+             GlobalScope.launch {
+                 try {
+                     if(TestConnection.isOnline(this@AutomatedChatBotFragment.context!!)) {
+                         val respons = SessionChatControl(this@AutomatedChatBotFragment?.context!!).removeSession()
+                          }
+                         stopRecordForGroundService()
+                         val intent = Intent(this@AutomatedChatBotFragment.activity, MainActivity::class.java)
+                         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                         startActivity(intent)
+                         activity?.finish()
+
+                 }catch (e:Exception){
+
+                     stopRecordForGroundService()
+                     val intent = Intent(this@AutomatedChatBotFragment.activity, MainActivity::class.java)
+                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                     startActivity(intent)
+                     activity?.finish()
+                 }
+             }}
+
+//         Helper.LoadFragment(MainHomeFragment(), activity?.supportFragmentManager, R.id.main_frame_layout)
+     }
+    private fun initializationComponent() {
 
         languageCodes = resources.getStringArray(R.array.language_codes)
         languageNames = resources.getStringArray(R.array.language_names)
@@ -67,18 +137,16 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
         alert_btn_ok = activity?.findViewById(R.id.alert_btn_ok)
         alert_notify = activity?.findViewById(R.id.alert_notify)
         alert_btn_cancel = activity?.findViewById(R.id.alert_btn_cancel)
-        intiolizationEvent();
 
-        val adapter: ArrayAdapter<String> = ArrayAdapter<String>(
-            this@AutomatedChatBotFragment?.getContext()!!, android.R.layout.simple_spinner_item, languageNames?.toList()!!)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.spinnerCarsPlate.setAdapter(adapter)
-        binding.spinnerCarsPlate.setOnItemSelectedListener(this@AutomatedChatBotFragment)
     }
+    private fun loadPresetUserLanguage() {
+        val languageInfo = LanguageInfo.getStorageSelcetedLanguage(this?.context);
+        if(languageInfo!=null) {
+            binding.spinnerLanguages.setSelection(languageInfo.index)
+        }
 
-
-    private fun intiolizationEvent() {
-
+    }
+    private fun initializationEvents() {
         if(Helper.isRecordServiceRunningInForeground(this?.activity!!, RecordVoiceService::class.java))
             setStartRecordForGroundServiceMode();
         else
@@ -86,17 +154,17 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
 
         alert_btn_cancel?.setOnClickListener{v-> notify_layout_back?.setVisibility(View.GONE)}
         binding?.btnAutomatedChat?.setOnClickListener{v-> onClickGenerateAutomatedChatService(v) }
-        binding?.btnCloseService?.setOnClickListener{v-> onClickStopService(v) }
+        binding?.btnCloseService?.setOnClickListener{v-> onClickStopService() }
+        binding?.robotSpeekerBtn?.setOnClickListener{v-> VoiceControll() }
         alert_btn_ok?.setOnClickListener{v->
             if(selectedLanguageCode!=null)
                 checkMicrophonPermision()
             notify_layout_back?.setVisibility(View.GONE)
         }
-
     }
     fun onClickGenerateAutomatedChatService(v:View) {
 
-//        if(!isRecordServiceRunningInForeground(this?.activity!!, RecordVoiceService::class.java)) {
+//        if(!Helper.isRecordServiceRunningInForeground(this?.activity!!, RecordVoiceService::class.java)) {
             notify_layout_back?.visibility = View.VISIBLE;
             val animation = AnimationUtils.loadAnimation(this.context, R.anim.entry_to_top_animation)
             alert_msg?.text = getString(R.string.notify1_Automated_msg)
@@ -104,13 +172,14 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
 
 //        }
     }
-    fun onClickStopService(v:View) {
+    fun onClickStopService() {
+
         AlertDialog.Builder(this.context)
             .setTitle("Alert")
             .setIcon(R.drawable.baseline_info_24)
             .setMessage(getString(R.string.msg_stop_record_service))
             .setPositiveButton(getString(R.string.btn_ok)) { dialog, which ->
-                stopRecordForGroundService()
+                stopSession()
             }
             .setNegativeButton(getString(R.string.btn_no)) { dialog, which ->}
             .create()
@@ -119,41 +188,59 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
     private  fun  setStartRecordForGroundServiceMode(){
         binding?.btnAutomatedChat?.visibility = View.GONE
         binding?.btnCloseService?.visibility = View.VISIBLE
+        binding?.robotSpeekerBtn?.visibility = View.VISIBLE
     }
     private  fun  setStopRecordForGroundServiceMode(){
         binding?.btnAutomatedChat?.visibility = View.VISIBLE
         binding?.btnCloseService?.visibility = View.GONE
+        binding?.robotSpeekerBtn?.visibility = View.GONE
     }
-
     private  fun stopRecordForGroundService(){
 
-        if(Helper.isRecordServiceRunningInForeground(this@AutomatedChatBotFragment?.context, RecordVoiceService::class.java)) {
-            val serviceIntent = Intent(this?.context!!, RecordVoiceService::class.java)
-            activity?.stopService(serviceIntent)
-            setStopRecordForGroundServiceMode()
+        try {
+            if (Helper.isRecordServiceRunningInForeground(this@AutomatedChatBotFragment?.context, RecordVoiceService::class.java)) {
+                 serviceIntent = Intent(this?.context!!, RecordVoiceService::class.java)
+                activity?.stopService(serviceIntent)
+                setStopRecordForGroundServiceMode()
+            }
+        }catch (e:Exception){
+            Log.d("Erorr-Close Forground Service",e.message.toString())
         }
     }
-
     override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
         selectedLanguageCode = languageCodes?.get(position)
+        if(selectedLanguageCode!=null){
+            LanguageInfo.setStorageSelcetedLanguage(this?.context,selectedLanguageCode,position)
+        }
+
         Toast.makeText(this?.context,selectedLanguageCode, Toast.LENGTH_SHORT).show();
     }
-
-    override fun onNothingSelected(parent: AdapterView<*>?) {
-
-    }
-
+    override fun onNothingSelected(parent: AdapterView<*>?) {}
     fun startRecordServicesOnForground(){
 
         setStartRecordForGroundServiceMode()
         if(!Helper.isRecordServiceRunningInForeground(this?.activity!!, RecordVoiceService::class.java)) {
-            val  serviceIntent = Intent(this?.context!!, RecordVoiceService::class.java)
-            serviceIntent.putExtra("Lang",selectedLanguageCode)
+             serviceIntent = Intent(this?.context!!, RecordVoiceService::class.java)
+            serviceIntent.putExtra(ContentApp.LANGUAGE,selectedLanguageCode)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                 this?.activity?.startForegroundService(serviceIntent)
             else
                 this?.activity?.startService(serviceIntent)
         }
+    }
+    fun VoiceControll(){
+
+        if(!isMuteVoice) {
+            binding?.robotSpeekerBtn?.setImageResource(R.drawable.baseline_volume_mute_24)
+            ExternalStorage.storage(activity,ContentApp.ROBOT_CHAT_SETTINGS,ContentApp.PLAYER_ROBOT_AUDIO,
+                AudioPlayerStatus.PAUSE.ordinal.toString())
+        }
+        else {
+            binding?.robotSpeekerBtn?.setImageResource(R.drawable.baseline_volume_up_24)
+            ExternalStorage.storage(activity,ContentApp.ROBOT_CHAT_SETTINGS,ContentApp.PLAYER_ROBOT_AUDIO,AudioPlayerStatus.RESUME.ordinal.toString())
+        }
+
+            isMuteVoice=!isMuteVoice
     }
     fun checkMicrophonPermision(){
 
@@ -188,7 +275,6 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
             // Add more cases for other permissions if needed
         }
     }
-
     companion object {
         /**
          * Use this factory method to create a new instance of
@@ -211,3 +297,5 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
     }
 
 }
+
+

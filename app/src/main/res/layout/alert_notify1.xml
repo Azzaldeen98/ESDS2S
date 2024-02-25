@@ -30,7 +30,6 @@
 
 <!--        <Button-->
 <!--            android:id="@+id/alert_btn_close"-->
-<!--            android:layout_width="40dp"-->
 <!--            android:layout_height="40dp"-->
 <!--            android:layout_gravity="end"-->
 <!--            android:layout_alignParentRight="true"-->
@@ -38,6 +37,7 @@
 <!--            android:layout_marginRight="10dp"-->
 <!--            android:onClick="hiddenNotifyDialog"-->
 <!--            android:background="@drawable/baseline_close_24" />-->
+
 
         <ImageView
 
@@ -58,7 +58,6 @@
                 android:gravity="center"
                 android:padding="10dp">
 
-
                 <TextView
                     android:id="@+id/alert_title"
                     android:layout_width="match_parent"
@@ -66,8 +65,7 @@
                     android:gravity="center"
                     android:text="message"
                     android:layout_margin="10dp"
-                    android:textSize="20dp"/>
-
+                    android:textSize="17dp"/>
 
                 <TextView
                     android:id="@+id/alert_message"
@@ -79,8 +77,6 @@
                     android:gravity="center"
                     android:textDirection="rtl"
                     android:textSize="20dp"/>
-
-
 
             </LinearLayout>
 
@@ -99,48 +95,43 @@
         android:text="Resend  Verification link to email  "
         android:textColor="@color/purple_500"
         android:textSize="20dp" />
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_margin="30dp"
+        android:gravity="end"
+        android:layoutDirection="ltr">
+
+    <TextView
+        android:id="@+id/alert_btn_cancel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:drawableLeft="@drawable/baseline_close_24"
+        android:drawableTint="@color/black"
+        android:layoutDirection="rtl"
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="7dp"
+        android:backgroundTint="@color/white"
+        android:text="Cancel"
+        android:textColor="@color/black"
+        android:textSize="20dp" />
 
 
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:layout_margin="30dp"
-                    android:gravity="end"
-                    android:layoutDirection="ltr">
+<TextView
+    android:id="@+id/alert_btn_ok"
+    android:layout_width="120dp"
+    android:layout_height="wrap_content"
+    android:layout_alignParentEnd="true"
+    android:gravity="center"
+    android:paddingVertical="7dp"
+    android:background="@color/purple_500"
+    android:text="@string/btn_yes"
+    android:textColor="#FFF"
+    android:textSize="20dp" />
 
-                <TextView
-                    android:id="@+id/alert_btn_cancel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="5dp"
-                    android:drawableLeft="@drawable/baseline_close_24"
-                    android:drawableTint="@color/black"
-                    android:layoutDirection="rtl"
-                    android:paddingHorizontal="10dp"
-                    android:paddingVertical="7dp"
-                    android:backgroundTint="@color/white"
-                    android:text="Cancel"
-                    android:textColor="@color/black"
-                    android:textSize="20dp" />
-
-
-            <TextView
-                android:id="@+id/alert_btn_ok"
-                android:layout_width="120dp"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:gravity="center"
-                android:paddingVertical="7dp"
-                android:background="@color/purple_500"
-                android:text="@string/btn_yes"
-                android:textColor="#FFF"
-                android:textSize="20dp" />
-
-        </RelativeLayout>
-
-
-
+</RelativeLayout>
 </LinearLayout>
 
 

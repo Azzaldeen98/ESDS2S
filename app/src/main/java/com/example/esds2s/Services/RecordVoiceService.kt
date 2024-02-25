@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.os.AsyncTask
 import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
@@ -17,8 +18,13 @@ import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.esds2s.ApiClient.Controlls.SpeechChatControl
+import com.example.esds2s.ContentApp.ContentApp
 import com.example.esds2s.Helpers.AndroidAudioRecorder
 import com.example.esds2s.Helpers.AudioPlayer
+import com.example.esds2s.Helpers.Enums.AudioPlayerStatus
+import com.example.esds2s.Helpers.ExternalStorage
+import com.example.esds2s.Helpers.Helper
+import com.example.esds2s.Helpers.LanguageInfo
 import com.example.esds2s.Interface.IGeminiServiceEventListener
 import com.example.esds2s.MainActivity
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
@@ -46,12 +52,12 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
     private var speechChatControl: SpeechChatControl? = null
     private var record_audio_path = ""
     private var LANG = "ar"
-    private lateinit var myRunnable: Runnable
-    private var recordingThread: Thread? = null
     private var speechRecognizerIntent: Intent? = null
     private var speechRecognizer: SpeechRecognizer? = null
     private var reorderCounter:Int?=0;
     private var textSpeachResult:String?=null;
+    private var registrationIsAllowed:Boolean=true;
+    private var allowSpeaking:Boolean=false;
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
@@ -59,10 +65,14 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
             speechChatControl = SpeechChatControl(this);
             record_audio_path = "${externalCacheDir?.absolutePath}/audiorecordtest.3gp"
             handler = Handler()
-            audioPlayer = AudioPlayer(null);
+            audioPlayer = AudioPlayer(this);
             if(intent!=null) {
-                if (intent != null && intent?.hasExtra("Lang") == true) {
-                    LANG = intent?.getStringExtra("Lang") ?: "en-Us";
+
+                if (intent != null && intent?.hasExtra(ContentApp.LANGUAGE) == true) {
+                    LANG = intent?.getStringExtra(ContentApp.LANGUAGE) ?: "en-Us";
+                }
+                else{
+                    LANG= ExternalStorage.getValue(this@RecordVoiceService,ContentApp.LANGUAGE).toString()
                 }
             }
         } catch (e:Exception){
@@ -82,8 +92,8 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
             // Define the language model used for voice recognition
             speechRecognizerIntent?.putExtra(
                 RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
-            )
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            speechRecognizerIntent?.putExtra(RecognizerIntent.EXTRA_PROMPT, "")
             // Specify the preferred language for voice recognition
             speechRecognizerIntent?.putExtra(RecognizerIntent.EXTRA_LANGUAGE, LANG);
 
@@ -143,11 +153,12 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
                 val data = bundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                 textSpeachResult=data!![0]
                 Toast.makeText(this@RecordVoiceService,textSpeachResult, Toast.LENGTH_SHORT).show()
-                if(textSpeachResult?.length!!>1)
+                if(textSpeachResult?.length!!>1) {
                     sendRequestToGenerator(textSpeachResult!!);
+                    allowSpeaking=true
+                }
                 else
-                    speechRecognizerListenAgain();
-
+                speechRecognizerListenAgain();
             }
             override fun onPartialResults(bundle: Bundle) {}
             override fun onEvent(i: Int, bundle: Bundle) {
@@ -155,21 +166,28 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
             }
         })
     }
+
     private fun startSpeechRecognizerListening() {
         if (!speechRecognizerIsListening!!) speechRecognizerIsListening=true
         if (this@RecordVoiceService.speechRecognizer != null && this@RecordVoiceService.speechRecognizerIntent != null){
-            this@RecordVoiceService.speechRecognizer ?.startListening(this@RecordVoiceService.speechRecognizerIntent !!)
-        }
+
+            val lang= LanguageInfo.getStorageSelcetedLanguage(this)
+            if(lang!=null && speechRecognizerIntent?.getStringExtra(RecognizerIntent.EXTRA_LANGUAGE)?.lowercase()!=lang.code?.lowercase())
+                 speechRecognizerIntent?.putExtra(RecognizerIntent.EXTRA_LANGUAGE, lang.code);
+
+            this@RecordVoiceService.speechRecognizer ?.startListening(this@RecordVoiceService.speechRecognizerIntent !!) }
     }
     private fun sendRequestToGenerator(speechText:String) {
         try {
-            if (speechChatControl != null)
-                 speechChatControl?.messageToGeneratorAudio(speechText, this@RecordVoiceService);
+            if(TestConnection.isOnline(this@RecordVoiceService,false)) {
+                if (speechChatControl != null)
+                    speechChatControl?.messageToGeneratorAudio(speechText, this@RecordVoiceService);
+            }
         } catch (e: Exception) {
             Log.d("Error ! ", e.message.toString())
         }
     }
-    private fun speechRecognizerListenAgain() {
+     fun speechRecognizerListenAgain() {
              if (speechRecognizerIsListening!!) {
                  speechRecognizerIsListening = false;
                  speechRecognizer?.cancel();
@@ -183,7 +201,7 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 "Record_Audio_Service",
-                NotificationManager.IMPORTANCE_DEFAULT
+                NotificationManager.IMPORTANCE_HIGH
             )
             notificationManager.createNotificationChannel(channel)
         }
@@ -191,12 +209,8 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
     // Method to start the foreground service with notification
     private fun startForegroundServiceWithNotification(context: Context) {
         val notificationIntent = Intent(context, MainActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(
-            context,
-            0,
-            notificationIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT
-        )
+        val pendingIntent = PendingIntent.getActivity(context, 0,
+            notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT)
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setContentTitle(" خدمة الاستماع")
             .setContentText("هذه الخدمة تعمل بشكل مستمر دون انقطاع ")
@@ -214,22 +228,35 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
 
              if(response!=null) {
                  if (response?.description != null) {
-                     if (audioPlayer != null) {
-                        val player= audioPlayer?.start(response?.description)
+                     if (audioPlayer != null && Helper.isAudioFile(response?.description)) {
+
+                         val player= audioPlayer?.start(response?.description)
+
+                         val backgroundTask = BackgroundTask()
+                         backgroundTask.execute(Pair(audioPlayer!!,this))
 
                          player?.setOnErrorListener { mp, what, extra ->
                              // Handle the error here
                              try {
-                                 mp?.stop();
+                                 Log.e("errorPlyer","" );
+                                 backgroundTask?.cancel(true)
+                                 allowSpeaking=false
+                                 if(mp.isPlaying)
+                                    mp?.stop();
                                  mp.reset();
                                  mp.release();
                              }catch (e:Exception){  Log.e("error",e.message.toString() );}
-                             finally { speechRecognizerListenAgain(); }
+                             finally {
+
+
+                                 speechRecognizerListenAgain();
+                             }
                              Log.e("error Plyer","" );
                              true // Return true if the error is considered handled, false otherwise
                          }
 
                         player?.setOnCompletionListener{ mp ->
+                            backgroundTask?.cancel(true)
                              Log.e("Complate Plyer", "Complate Plyer Museic");
                              mp?.stop();
                              mp.reset();
@@ -242,18 +269,26 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
              else
              { Log.e("responseError","!! response is empty or  null"); }
 
-//        try { Helper.deleteFile(record_audio_path) }
-//        catch (e:java.lang.Exception){ Log.e("Delete File Error",e.message.toString());}
+
 
     }
     override fun onRequestIsFailure(error: String) {
 
-        Log.e("Error",error);
-        if(reorderCounter!!<3 && textSpeachResult?.length!!>1){
-            speechChatControl?.messageToGeneratorAudio(textSpeachResult!!, this@RecordVoiceService);
+        try {
+            Log.e("Error", error);
+            if (reorderCounter!! < 3 && textSpeachResult?.length!! > 1) {
+                speechChatControl?.messageToGeneratorAudio(textSpeachResult!!, this@RecordVoiceService);
+            }
+            else {
+                speechRecognizerListenAgain();
+            }
         }
-        else {
-            speechRecognizerListenAgain();
+        catch (e:Exception){}
+        finally {
+            if(reorderCounter!! < 3)
+                     reorderCounter= reorderCounter?.plus(1)
+            else
+                reorderCounter=0
         }
     }
     private  fun stopSpeechRecognizer(){
@@ -268,6 +303,10 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
                 speechRecognizer?.destroy();
                 speechRecognizer=null;
             }
+            if(audioPlayer!=null) {
+                audioPlayer?.stop()
+            }
+
             speechRecognizerIntent=null;
 
         }
@@ -286,6 +325,23 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
     override fun onDestroy() {
         super.onDestroy()
         stopSpeechRecognizer();
+    }
+
+
+    private inner class BackgroundTask : AsyncTask<Pair<AudioPlayer, Context>,Void, Void>() {
+
+
+        override fun doInBackground(vararg params: Pair<AudioPlayer, Context>?): Void? {
+            val audioPlayer:AudioPlayer = params[0]?.first!!
+            val context :Context = params[0]?.second!!
+
+            while (true) {
+                Log.d("oooo","itrurtuerit")
+                SettingsResourceForRecordServices.checkAudioPlayerSettings(context!!, audioPlayer!!)
+                Thread.sleep(1000)
+            }
+            return null
+        }
     }
 
 }

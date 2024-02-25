@@ -1,6 +1,7 @@
 package com.example.esds2s
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -10,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import com.example.esds2s.Services.TestConnection
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class RecordAudioActivity : AppCompatActivity() {
@@ -20,29 +22,42 @@ class RecordAudioActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         val dateFormat = DateFormat.getDateFormat(applicationContext)
         setContentView(R.layout.activity_record_audio)
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED
-        ) { checkPermission() }
-        loadFragment(BasicChatBotFragment())
-        bottomNav = findViewById(R.id.bottomNavigationView) as BottomNavigationView
-        bottomNav.setOnItemSelectedListener {
-            when (it.itemId) {
-                R.id.basicChatBot -> {
-                    loadFragment(BasicChatBotFragment())
-                    true
-                }
-                R.id.automatedChatBot -> {
-                    loadFragment(AutomatedChatBotFragment())
-                    true
-                }
-                R.id.textChatBot -> {
-                    loadFragment(ChatBotTextFragment())
-                    true
-                }
-                else -> false
+
+      if(TestConnection.isOnline(this)) {
+              if (ContextCompat.checkSelfPermission(
+                      this,
+                      Manifest.permission.RECORD_AUDIO
+                  ) != PackageManager.PERMISSION_GRANTED
+              ) {
+                  checkPermission()
+              }
+              loadFragment(AutomatedChatBotFragment())
+              bottomNav = findViewById(R.id.bottomNavigationView) as BottomNavigationView
+              bottomNav.setOnItemSelectedListener {
+                  when (it.itemId) {
+                      R.id.basicChatBot -> {
+                          loadFragment(BasicChatBotFragment())
+                          true
+                      }
+                      R.id.automatedChatBot -> {
+                          loadFragment(AutomatedChatBotFragment())
+                          true
+                      }
+                      R.id.textChatBot -> {
+                          loadFragment(ChatBotTextFragment())
+                          true
+                      }
+                      else -> false
 
 
-            }
-        }
+                  }
+              }
+          }
+        else {
+          val intent = Intent(this, MainActivity::class.java)
+          intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+          startActivity(intent)
+      }
     }
     private  fun loadFragment(fragment: Fragment){
         val transaction = supportFragmentManager.beginTransaction()

@@ -14,7 +14,56 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         tools:ignore="MissingConstraints" />
+    <!-- res/layout/no_connection_layout.xml -->
 
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/noConnectionPage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="gone"
+        android:padding="0dp">
+
+        <ImageView
+            android:id="@+id/imageNoConnection"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:src="@drawable/baseline_wifi_off_24"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="48dp"
+            android:contentDescription="@string/msg_no_internet"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/textNoConnection"
+            android:text="@string/msg_no_internet"
+            android:layout_below="@id/imageNoConnection"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="16dp"
+            android:textSize="18sp"
+            android:textColor="@android:color/black"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/buttonRetry"
+            android:text="@string/retry_button"
+            android:layout_below="@id/textNoConnection"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="24dp"
+            android:paddingStart="16dp"
+            android:textAllCaps="false"
+            android:drawableLeft="@drawable/baseline_sync_24"
+            android:drawableTint="@color/white"
+            android:paddingEnd="16dp"
+            android:textSize="16sp"
+            android:textColor="@android:color/white"
+            android:background="@color/black_alpha_6"/>
+
+    </LinearLayout>
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

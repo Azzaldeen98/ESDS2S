@@ -9,11 +9,19 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.content.ContextCompat
+import com.example.esds2s.ApiClient.Controlls.SessionChatControl
 import com.example.esds2s.ApiClient.Controlls.SpeechChatControl
 import com.example.esds2s.Helpers.AudioPlayer
+import com.example.esds2s.Helpers.Helper
+import com.example.esds2s.Interface.IGeminiServiceEventListener
 import com.example.esds2s.Interface.IUplaodAudioEventListener
+import com.example.esds2s.Models.RequestModels.CustomerChatRequest
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
+import com.example.esds2s.Services.TestConnection
 import com.google.android.material.textfield.TextInputEditText
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -25,7 +33,7 @@ private const val ARG_PARAM2 = "param2"
  * Use the [ChatBotTextFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener {
+class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener, IGeminiServiceEventListener {
     // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
@@ -43,9 +51,11 @@ class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener {
             param1 = it.getString(ARG_PARAM1)
             param2 = it.getString(ARG_PARAM2)
         }
+
     }
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
+
         return inflater.inflate(R.layout.fragment_chat_bot_text, container, false)
     }
     override fun onStart() {
@@ -60,9 +70,8 @@ class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener {
         btnSend?.setOnClickListener{v->
             btnSend?.backgroundTintList=ColorStateList.valueOf(Color.GRAY);
             Thread.sleep(1000)
-            val color = Color.parseColor("#FF6200EE")
+            val color = ContextCompat.getColor(this@ChatBotTextFragment.context!!, R.color.purple_700) // Color.parseColor(R.color.purple_700.toString())
             btnSend?.backgroundTintList=ColorStateList.valueOf(color);
-
             sendMessage();
         }
     }
@@ -79,15 +88,25 @@ class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener {
             textInput?.text?.clear()
 
 
-//            Thread{ activity?.runOnUiThread { GlobalScope.launch {
-//                    speechChatControl?.messageToGeneratorAudio(message,)
-//                } } }.start()
+            Thread{ activity?.runOnUiThread {
+                GlobalScope.launch {
+                    if(TestConnection.isOnline(this@ChatBotTextFragment.context!!,true)) {
+                        try {
+                            speechChatControl?.messageToGeneratorAudio(
+                                message,
+                                this@ChatBotTextFragment
+                            )
+                        }catch (e:Exception){
+                            Log.d("Error",e.message.toString())
+                        }
+                    }
+                } } }.start()
         }
     }
 
     override fun onRequestIsSuccess(response: GeminiResponse) {
         count=0
-        if (response != null) {
+        if (response != null &&  Helper.isAudioFile(response?.description)) {
             btnSend?.isEnabled=true;
             textInput?.isEnabled=true;
             Log.d("res",response!!.description)

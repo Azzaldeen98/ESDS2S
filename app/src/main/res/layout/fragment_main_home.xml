@@ -3,8 +3,21 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/white"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".Ui.MainHomeFragment">
+
+
+
+<!--        <androidx.recyclerview.widget.RecyclerView-->
+<!--            android:id="@+id/recyclerview"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent"-->
+<!--            tools:itemCount="100"-->
+<!--            tools:listitem="@layout/card_view_design" />-->
+
+
+
 
     <ScrollView
         android:layout_width="match_parent"
@@ -23,7 +36,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical"
-
                 android:layout_alignParentTop="true"
                 android:layout_marginTop="50dp"
                 android:gravity="top">

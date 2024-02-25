@@ -1,5 +1,6 @@
 package com.example.esds2s
 
+import android.annotation.SuppressLint
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.speech.SpeechRecognizer
@@ -11,6 +12,7 @@ import android.widget.EditText
 import android.widget.ImageView
 import androidx.fragment.app.Fragment
 import com.example.esds2s.ApiClient.Controlls.SpeechChatControl
+import com.example.esds2s.ContentApp.ContentApp
 import com.example.esds2s.Helpers.AndroidAudioRecorder
 import com.example.esds2s.Helpers.AudioPlayer
 import com.example.esds2s.Helpers.ExternalStorage
@@ -19,6 +21,7 @@ import com.example.esds2s.Interface.IGeminiServiceEventListener
 import com.example.esds2s.Interface.ISpeechRecognizerServices
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
 import com.example.esds2s.Services.ExternalServices.SpeechRecognizerService
+import com.example.esds2s.Services.TestConnection
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -80,7 +83,6 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener , ISpeechR
             param2 = it.getString(ARG_PARAM2)
         }
 
-
     }
 
 
@@ -92,8 +94,17 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener , ISpeechR
     }
 
     fun sendRecordAudio(data:String) {
-        speechChatControl?.messageToGeneratorAudio(data,this)
+
+        try {
+            if(TestConnection.isOnline(this.context!!,true)) {
+                speechChatControl?.messageToGeneratorAudio(data, this)
+            }
+        }catch (e:java.lang.Exception){
+
+        }
+
     }
+    @SuppressLint("SuspiciousIndentation")
     override fun onStart() {
         super.onStart()
 
@@ -105,9 +116,9 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener , ISpeechR
         editText=activity?.findViewById(com.example.esds2s.R.id.text)
 
        speechRecognizerService = SpeechRecognizerService(this?.context!!, this,this)
-    var lang:String?=null
-      if( ExternalStorage.existing(this?.context,"Lang"))
-          lang= ExternalStorage.getValue(this.activity,"Lang") as String?
+    var lang:String?="ar"
+      if( ExternalStorage.existing(this?.context,ContentApp.LANGUAGE))
+          lang= ExternalStorage.getValue(this.activity,ContentApp.LANGUAGE) as String?
          speechRecognizerService?.Initialization(true,true,false,lang)
 
 //        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this.activity)
@@ -137,71 +148,59 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener , ISpeechR
         super.onDestroy()
         speechRecognizerService?.destroy()
     }
-    fun getAutomaticReplyVoice():Int
-    {
-        val randomValues = Random().nextInt(7)!!
-        var sound=com.example.esds2s.R.raw.res1;
-        when(randomValues) {
-            0 -> sound = com.example.esds2s.R.raw.res1
-            1 -> sound = com.example.esds2s.R.raw.res2
-            2 -> sound = com.example.esds2s.R.raw.res4
-            3 -> sound = com.example.esds2s.R.raw.res5
-            4 -> sound = com.example.esds2s.R.raw.res6
-            5 -> sound = com.example.esds2s.R.raw.res7
-        }
-        return sound;
-    }
+
     override fun onRequestIsSuccess(response: GeminiResponse) {
 
-        reorderCounter=0;
-        speechTextResult=null;
-        if(response!=null) {
-            if (response?.description != null) {
-                if (audioPlayer != null) {
-                    if(reply_music!=null && reply_music!!.isPlaying()) {
-                        reply_music!!.stop()
+        try {
+            reorderCounter = 0;
+            speechTextResult = null;
+            if (response != null) {
+                if (response?.description != null && Helper.isAudioFile(response?.description)) {
+                    if (audioPlayer != null) {
+                        if (reply_music != null && reply_music!!.isPlaying()) {
+                            reply_music!!.stop()
 //                        reply_music!!.
-                        Thread.sleep(1000)
-                    }
-                    Log.d("responseSuccess", "Player....");
-                   editText?.hint="Listen ...";
-                    audioPlayer?.start(response?.description)?.setOnCompletionListener { mPlayer ->
-                        Log.e("onUplaodAudioIsSuccess", "Complate Plyer Museic");
-                        audioPlayer?.stop();
-                        micButton?.isEnabled=true;
-                        editText?.hint="Speaking ...";
+                            Thread.sleep(1000)
+                        }
+                        Log.d("responseSuccess", "Player....");
+                        editText?.hint = "Listen ...";
+                        audioPlayer?.start(response?.description)
+                            ?.setOnCompletionListener { mPlayer ->
+                                Log.e("onUplaodAudioIsSuccess", "Complate Plyer Museic");
+                                audioPlayer?.stop();
+                                micButton?.isEnabled = true;
+                                editText?.hint = "Speaking ...";
+                            }
                     }
                 }
+            } else {
+                // Handle unsuccessful response here
+                Log.e("responseError", "!! response is empty or  null");
             }
-        } else {
-            // Handle unsuccessful response here
-            Log.e("responseError","!! response is empty or  null");
-        }
 
-        Helper.deleteFile(file_record_Path)
+        } catch (e:Exception){}
+
     }
-
-
     override fun onRequestIsFailure(error: String) {
 
         try {
             if(reorderCounter!!<3 && speechTextResult!=null) {
                 speechChatControl?.messageToGeneratorAudio(speechTextResult,this);
             }
-
         }catch (e:java.lang.Exception){}
         finally {
             if(reorderCounter!! >=3) {
                 micButton?.isEnabled = true;
                 speechTextResult=null;
+                reorderCounter=0
             }
-
-            reorderCounter = reorderCounter?.plus(1);
+            else {
+                reorderCounter = reorderCounter?.plus(1);
+            }
         }
 
         Log.e("onFailure",error!!);
     }
-
     override fun onSpeechRecognizerResults(results: ArrayList<String>?) {
 
         if(results!=null&& results?.count()!!>0) {

@@ -6,7 +6,9 @@ import com.example.esds2s.ApiClient.Adapter.ApiClient
 import com.example.esds2s.ApiClient.Adapter.RequestMethod
 import com.example.esds2s.ApiClient.BuildConfig
 import com.example.esds2s.ApiClient.Interface.IChatServices
+import com.example.esds2s.ContentApp.ContentApp
 import com.example.esds2s.Helpers.ExternalStorage
+import com.example.esds2s.Helpers.Helper
 import com.example.esds2s.Interface.IGeminiServiceEventListener
 import com.example.esds2s.Interface.IUplaodAudioEventListener
 import com.example.esds2s.Models.RequestModels.GeminiRequest
@@ -26,44 +28,44 @@ class SpeechChatControl(private val context: Context):BaseControl(context) {
         if(inputText!=null) {
             val client: IChatServices by lazy {
                 ApiClient.getClient(context, RequestMethod.POST,
-                    BuildConfig.BASE_URL_TEXT_TO_GENERATOR)
+                    BuildConfig.BASE_URL)
                     ?.create(IChatServices::class.java)!! }
 
-            var lang= ExternalStorage.getValue(context,"Lang") as String?
+            var lang= ExternalStorage.getValue(context,ContentApp.LANGUAGE) as String?
+            val token=ExternalStorage.getValue(context,ContentApp.CURRENT_SESSION_TOKEN)
 
-            val body = GeminiRequestMessage(
-                token_chat="23123",
-                description= inputText,
-                voice_code=lang!!)
+            if(token!=null) {
+                val body = GeminiRequestMessage(
+                    token_chat = token?.toString(),
+                    description = inputText,
+                    voice_code = lang!!)
 
-            Log.d("rquestData", Gson().toJson(body));
+                Log.d("rquestData", Gson().toJson(body));
+                val call: Call<GeminiResponse?> by lazy { client?.messageToGenerator(body)!! }
+                call?.enqueue(object : retrofit2.Callback<GeminiResponse?> {
+                    override fun onResponse(
+                        call: Call<GeminiResponse?>,
+                        response: retrofit2.Response<GeminiResponse?>
+                    ) {
+                        if (response!!.isSuccessful) {
+                            val responseData: GeminiResponse? = response.body()
+                            Log.d("response", Gson().toJson(responseData));
+                            if (callBack != null) {
+                                callBack.onRequestIsSuccess(responseData!!)
+                            }
+                        } else
+                            if (callBack != null)
+                                callBack.onRequestIsFailure(response?.message()!!)
+                    }
 
-            val call: Call<GeminiResponse?> by lazy { client?.messageToGenerator(body)!! }
-            call?.enqueue(object : retrofit2.Callback<GeminiResponse?> {
-                override fun onResponse(
-                    call: Call<GeminiResponse?>,
-                    response: retrofit2.Response<GeminiResponse?>
-                ) {
-                    if (response!!.isSuccessful) {
-                        val responseData: GeminiResponse? = response.body()
-                        Log.d("response", Gson().toJson(responseData));
-                        if (callBack != null) {
-                            callBack.onRequestIsSuccess(responseData!!)
-                        }
-                    } else
+                    override fun onFailure(call: Call<GeminiResponse?>, t: Throwable) {
+                        // التعامل مع الأخطاء هنا
                         if (callBack != null)
-                            callBack.onRequestIsFailure(response?.message()!!)
-                }
+                            callBack?.onRequestIsFailure(t.message!!)
 
-                override fun onFailure(call: Call<GeminiResponse?>, t: Throwable) {
-                    // التعامل مع الأخطاء هنا
-                    if (callBack != null)
-                        callBack?.onRequestIsFailure(t.message!!)
-
-                }
-            })
-
-
+                    }
+                })
+            }
 
         } else {
             throw java.lang.Exception("message is empty !!")

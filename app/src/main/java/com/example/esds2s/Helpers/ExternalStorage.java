@@ -23,6 +23,9 @@ public class ExternalStorage {
     public  static Object getValue(Context activity,String key) {
       return   getValue(activity,storageName,key);
     }
+
+
+
     public  static Object getValue(Context activity,String storageName,String key)
     {
         SharedPreferences preferences = activity.getSharedPreferences(storageName, Context.MODE_PRIVATE);
@@ -30,10 +33,22 @@ public class ExternalStorage {
             return  preferences.getString(key,null);
         return  null;
     }
+    public  static int getIntValue(Context activity,String key) {
+        SharedPreferences preferences = activity.getSharedPreferences(storageName, Context.MODE_PRIVATE);
+        if(preferences.contains(key))
+            return  preferences.getInt(key,0);
+        return  0;
+    }
+
+    public  static boolean getBooleantValue(Context activity,String key) {
+        SharedPreferences preferences = activity.getSharedPreferences(storageName, Context.MODE_PRIVATE);
+        if(preferences.contains(key))
+            return  preferences.getBoolean(key,false);
+        return  false;
+    }
 
 
-    public  static boolean remove(Context activity,String key)
-    {
+    public  static boolean remove(Context activity,String key) {
         SharedPreferences preferences = activity.getSharedPreferences(storageName, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
         if(preferences.contains(key))
@@ -62,6 +77,41 @@ public class ExternalStorage {
                 editor.putString(key, value);
                 return editor.commit();
             }
+        }
+
+        return false;
+    }
+
+    public  static boolean storage(Context activity,String storageName,String key ,int value) {
+        if(!key.isEmpty() && !storageName.isEmpty()) {
+            SharedPreferences preferences = activity.getSharedPreferences(storageName, Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = preferences.edit();
+            editor.putInt(key, value);
+            return editor.commit();
+        }
+        return false;
+    }
+
+    public  static boolean storage(Context activity,String storageName,String key ,boolean value) {
+        if(!key.isEmpty() && !storageName.isEmpty())
+        {
+            SharedPreferences preferences = activity.getSharedPreferences(storageName, Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = preferences.edit();
+            editor.putBoolean(key, value);
+            return editor.commit();
+        }
+        return false;
+    }
+
+    public  static boolean storage(Context activity,String key ,int value)
+    {
+
+        if(!key.isEmpty())
+        {
+            SharedPreferences preferences = activity.getSharedPreferences(storageName, Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = preferences.edit();
+            editor.putInt(key, value);
+            return editor.commit();
         }
 
         return false;

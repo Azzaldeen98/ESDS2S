@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:cardCornerRadius="20sp"
+    android:layout_alignParentRight="true"
+    style="@style/background_small_round1"
+    app:cardElevation="6dp">
+
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center">
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/btn_main_circle"
+                app:cardCornerRadius="300sp"
+                android:padding="10dp">
+
+                <ImageView
+                    android:id="@+id/resycleImage"
+                    style="@style/btnCircle_image"
+                    android:src="@drawable/robot_splash" />
+
+            </com.google.android.material.card.MaterialCardView>
+            <TextView
+                android:id="@+id/resyclelabel"
+                android:layout_centerHorizontal="true"
+                android:layout_alignParentBottom="true"
+                style="@style/btn_main_label_name"
+                android:layout_gravity="center"
+                android:text="Chat2" />
+
+        </RelativeLayout>
+
+
+
+</androidx.cardview.widget.CardView>
