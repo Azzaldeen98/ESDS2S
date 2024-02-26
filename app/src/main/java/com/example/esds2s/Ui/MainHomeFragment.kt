@@ -79,15 +79,18 @@ class MainHomeFragment : Fragment(), IBaseServiceEventListener<ArrayList<BaseCha
         flexLayoutManager.flexWrap =  FlexWrap.WRAP  // يحدد flex-wrap: wrap
         recyclerview?.layoutManager= flexLayoutManager
         binding?.btnMainCreateChat?.setOnClickListener({v-> openSelectedChat(TypeChat.NEWCHAT) })
+//        binding?.btnMainCreateChat?.visibility = View.INVISIBLE
         laoudAllChats()
 
     }
 
     private  fun uplaodAllChatsFromLocalStorage():Boolean{
 
+        progressPar?.visibility = View.VISIBLE
         var storage :JsonStorageManager?=null
         var chatsList :List<BaseChatResponse>?=null
 
+//        binding?.btnMainCreateChat?.visibility = View.VISIBLE
         try {
             storage = JsonStorageManager(this?.context!!, ContentApp.API_TEMP_STORAGE)
             if(!storage.exists(ContentApp.CHATS_LIST_STORAGE))
@@ -99,7 +102,6 @@ class MainHomeFragment : Fragment(), IBaseServiceEventListener<ArrayList<BaseCha
             if (chatsList == null)
                 return false
             else {
-                progressPar?.visibility = View.GONE
                 insilizationChatsList(chatsList as ArrayList<BaseChatResponse>)
                 return true
             }
@@ -128,7 +130,7 @@ class MainHomeFragment : Fragment(), IBaseServiceEventListener<ArrayList<BaseCha
 
 
     override fun onRequestIsSuccess(response: ArrayList<BaseChatResponse>) {
-        progressPar?.visibility = View.GONE
+
         try {
             if (response != null) {
 
@@ -142,6 +144,9 @@ class MainHomeFragment : Fragment(), IBaseServiceEventListener<ArrayList<BaseCha
         }catch (e:Exception){
             Log.e("Error-laoudAllChats-response  ", e?.message.toString())
         }
+        finally {
+            progressPar?.visibility = View.GONE
+        }
 
     }
 
@@ -151,9 +156,11 @@ class MainHomeFragment : Fragment(), IBaseServiceEventListener<ArrayList<BaseCha
     }
     private  fun insilizationChatsList(chats: ArrayList<BaseChatResponse>){
 
+        binding?.btnMainCreateChat?.visibility = View.VISIBLE
         Helper.setAnimateAlphaForTool(binding?.mainContinerChatButtons,0)
          adapter = CustomAdapter(chats,this,this.activity!!)
         recyclerview?.adapter = adapter
+        progressPar?.visibility = View.GONE
     }
 
     override fun onItemClick(item: BaseChatResponse) {
@@ -187,9 +194,10 @@ class MainHomeFragment : Fragment(), IBaseServiceEventListener<ArrayList<BaseCha
 //        Toast.makeText(this.context,"Chat: "+ typeChat?.toString(), Toast.LENGTH_SHORT).show()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        JsonStorageManager(this.context).delete(ContentApp.CHATS_LIST_STORAGE)
+    override fun onResume() {
+        super.onResume()
+//        progressPar?.visibility = View.VISIBLE
+
     }
 
 

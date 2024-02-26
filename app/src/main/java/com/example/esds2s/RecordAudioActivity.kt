@@ -1,16 +1,20 @@
 package com.example.esds2s
 
 import android.Manifest
+import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.text.format.DateFormat
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import com.example.esds2s.Helpers.Helper
+import com.example.esds2s.Services.RecordVoiceService
 import com.example.esds2s.Services.TestConnection
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
@@ -36,15 +40,18 @@ class RecordAudioActivity : AppCompatActivity() {
               bottomNav.setOnItemSelectedListener {
                   when (it.itemId) {
                       R.id.basicChatBot -> {
-                          loadFragment(BasicChatBotFragment())
+                          checkServiceAndLoudFragment(BasicChatBotFragment())
+//                          loadFragment(BasicChatBotFragment())
                           true
                       }
                       R.id.automatedChatBot -> {
+
                           loadFragment(AutomatedChatBotFragment())
                           true
                       }
                       R.id.textChatBot -> {
-                          loadFragment(ChatBotTextFragment())
+                          checkServiceAndLoudFragment(ChatBotTextFragment())
+//                          loadFragment(ChatBotTextFragment())
                           true
                       }
                       else -> false
@@ -58,6 +65,31 @@ class RecordAudioActivity : AppCompatActivity() {
           intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
           startActivity(intent)
       }
+    }
+
+    private  fun checkServiceAndLoudFragment(fragment: Fragment){
+
+        try {
+            if (Helper.isRecordServiceRunningInForeground(this, RecordVoiceService::class.java)) {
+
+                AlertDialog.Builder(this)
+                    .setTitle("warning")
+                    .setIcon(R.drawable.baseline_warning_24)
+                    .setMessage(getString(R.string.msg_stop_automated_chat))
+                    .setPositiveButton(getString(R.string.btn_yes)) { dialog, which ->
+                        val  serviceIntent = Intent(this, RecordVoiceService::class.java)
+                        stopService(serviceIntent)
+                        loadFragment(fragment)
+                    }.setNegativeButton(getString(R.string.btn_no)) { dialog, which ->}
+                    .create()
+                    .show()
+            }
+            else
+                loadFragment(fragment)
+
+        }catch (e:Exception){
+            Log.d("Erorr-Close Forground Service",e.message.toString())
+        }
     }
     private  fun loadFragment(fragment: Fragment){
         val transaction = supportFragmentManager.beginTransaction()

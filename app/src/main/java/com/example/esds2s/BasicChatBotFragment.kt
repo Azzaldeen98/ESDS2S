@@ -1,6 +1,8 @@
 package com.example.esds2s
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
+import android.content.Intent
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.speech.SpeechRecognizer
@@ -21,6 +23,7 @@ import com.example.esds2s.Interface.IGeminiServiceEventListener
 import com.example.esds2s.Interface.ISpeechRecognizerServices
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
 import com.example.esds2s.Services.ExternalServices.SpeechRecognizerService
+import com.example.esds2s.Services.RecordVoiceService
 import com.example.esds2s.Services.TestConnection
 import java.util.*
 import kotlin.collections.ArrayList
@@ -225,6 +228,5 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener , ISpeechR
             Log.e("onSpeechRecognizerResults90",speechTextResult!!);
         }
     }
-
 
 }

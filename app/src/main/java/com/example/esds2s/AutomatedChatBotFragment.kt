@@ -55,6 +55,7 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
     private var notify_layout_back : LinearLayout?=null
     private var alert_notify: LinearLayout?=null
     private var isMuteVoice: Boolean=false
+    private var progressBar: RelativeLayout?=null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -69,7 +70,7 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
 
         internalHeader()
         initializationComponent()
-
+        progressBar=activity?.findViewById(R.id.progressPar1)!!
         initializationEvents();
         val adapter: ArrayAdapter<String> = ArrayAdapter<String>(
             this@AutomatedChatBotFragment?.getContext()!!, android.R.layout.simple_spinner_item, languageNames?.toList()!!)
@@ -86,13 +87,18 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
         internaal_header?.setText(getString(R.string.automated_chat_page))
         btn_back?.setOnClickListener {onBack()}
     }
+
+    override fun onResume() {
+        super.onResume()
+        internalHeader()
+    }
     private fun onBack() {
 
         if(Helper.isRecordServiceRunningInForeground(this?.context,RecordVoiceService::class.java)) {
             onClickStopService()
         } else{
             AlertDialog.Builder(this.context)
-                .setTitle("Alert")
+                .setTitle("Warning")
                 .setIcon(R.drawable.baseline_info_24)
                 .setMessage(getString(R.string.msg_stop_session_chat))
                 .setPositiveButton(getString(R.string.btn_ok)) { dialog, which -> stopSession() }
@@ -103,7 +109,7 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
 
     }
     fun stopSession() {
-
+        progressBar?.visibility=View.VISIBLE
          activity?.runOnUiThread {
              GlobalScope.launch {
                  try {
@@ -180,8 +186,7 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
             .setMessage(getString(R.string.msg_stop_record_service))
             .setPositiveButton(getString(R.string.btn_ok)) { dialog, which ->
                 stopSession()
-            }
-            .setNegativeButton(getString(R.string.btn_no)) { dialog, which ->}
+            }.setNegativeButton(getString(R.string.btn_no)) { dialog, which ->}
             .create()
             .show()
     }

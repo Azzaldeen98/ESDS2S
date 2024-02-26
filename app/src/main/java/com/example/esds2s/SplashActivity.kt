@@ -6,7 +6,9 @@ import android.os.Bundle
 import android.os.Handler
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
+import com.example.esds2s.ContentApp.ContentApp
 import com.example.esds2s.Helpers.Helper
+import com.example.esds2s.Helpers.JsonStorageManager
 import com.example.esds2s.Services.Broadcasts.ConnectivityReceiver
 
 
@@ -30,7 +32,10 @@ class SplashActivity : AppCompatActivity() {
         }, 3000)
     }
 
-
+    override fun onDestroy() {
+        super.onDestroy()
+        JsonStorageManager(this).delete(ContentApp.CHATS_LIST_STORAGE)
+    }
 
 
 

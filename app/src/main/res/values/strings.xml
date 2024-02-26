@@ -88,7 +88,8 @@
 <!--        <item>ja-JP-3</item>-->
     </string-array>
     <!--=========================================================================-->
-    <string name="msg_stop_record_service">The Automated Chat service will be stopped</string>
+    <string name="msg_stop_record_service">The Automated Chat background service will be stopped</string>
+    <string name="msg_stop_automated_chat">You must close the automated chat service before moving to any other service</string>
     <string name="msg_stop_session_chat">The entire current chat session will be stopped. Do you agree to this?</string>
     <string name="msg_choose_the_chat">Choose the chat</string>
     <string name="msg_choose_the_language">Choose the language</string>
