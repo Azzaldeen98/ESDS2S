@@ -1,11 +1,13 @@
 package com.example.esds2s.Services
 
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.media.MediaPlayer
 import android.os.AsyncTask
 import android.os.Bundle
 import android.os.Handler
@@ -149,6 +151,7 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
                 }
                 speechRecognizerListenAgain()
             }
+            @SuppressLint("SuspiciousIndentation")
             override fun onResults(bundle: Bundle) {
                 val data = bundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                 textSpeachResult=data!![0]
@@ -228,41 +231,95 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
 
              if(response!=null) {
                  if (response?.description != null) {
-                     if (audioPlayer != null && Helper.isAudioFile(response?.description)) {
+                     if (audioPlayer != null ){
 
-                         val player= audioPlayer?.start(response?.description)
-
+                         val player:MediaPlayer
+                         if(!Helper.isAudioFile(response?.description)) {
+                             val sound_id = Helper.getDefaultSoundResource()
+                             Log.e("isAudioFile", sound_id.toString());
+                             player =  audioPlayer?.startFromRowResource(this,sound_id)!!
+                         }
+                         else {
+                             player = audioPlayer?.start(response?.description)!!
+                         }
                          val backgroundTask = BackgroundTask()
-                         backgroundTask.execute(Pair(audioPlayer!!,this))
+                         backgroundTask.execute(Pair(audioPlayer!!, this))
 
                          player?.setOnErrorListener { mp, what, extra ->
                              // Handle the error here
                              try {
-                                 Log.e("errorPlyer","" );
+                                 Log.e("errorPlyer", "");
                                  backgroundTask?.cancel(true)
-                                 allowSpeaking=false
-                                 if(mp.isPlaying)
-                                    mp?.stop();
+                                 allowSpeaking = false
+                                 if (mp.isPlaying)
+                                     mp?.stop();
                                  mp.reset();
                                  mp.release();
-                             }catch (e:Exception){  Log.e("error",e.message.toString() );}
-                             finally {
+                             } catch (e: Exception) {
+                                 Log.e("error", e.message.toString());
+                             } finally {
 
 
                                  speechRecognizerListenAgain();
                              }
-                             Log.e("error Plyer","" );
+                             Log.e("error Plyer", "");
                              true // Return true if the error is considered handled, false otherwise
                          }
-
-                        player?.setOnCompletionListener{ mp ->
-                            backgroundTask?.cancel(true)
+                         player?.setOnCompletionListener { mp ->
+                             backgroundTask?.cancel(true)
                              Log.e("Complate Plyer", "Complate Plyer Museic");
                              mp?.stop();
                              mp.reset();
                              mp.release();
                              speechRecognizerListenAgain();
                          }
+
+//                             if(!Helper.isAudioFile(response?.description)) {
+//                                 val sound_id = Helper.getDefaultSoundResource()
+//                                 Log.e("isAudioFile", sound_id.toString());
+//                                 val st =  audioPlayer?.startFromRowResource(sound_id)
+//                                 st?.setOnCompletionListener{v->
+//                                     v?.stop()
+//                                     v?.reset()
+//                                     v?.release()
+//                                 }
+//                                 st?.setOnErrorListener { mp, what, extra ->  }
+//                             }
+//                            else {
+//
+//                                 val player = audioPlayer?.start(response?.description)
+//
+//
+//                                 player?.setOnErrorListener { mp, what, extra ->
+//                                     // Handle the error here
+//                                     try {
+//                                         Log.e("errorPlyer", "");
+//                                         backgroundTask?.cancel(true)
+//                                         allowSpeaking = false
+//                                         if (mp.isPlaying)
+//                                             mp?.stop();
+//                                         mp.reset();
+//                                         mp.release();
+//                                     } catch (e: Exception) {
+//                                         Log.e("error", e.message.toString());
+//                                     } finally {
+//
+//
+//                                         speechRecognizerListenAgain();
+//                                     }
+//                                     Log.e("error Plyer", "");
+//                                     true // Return true if the error is considered handled, false otherwise
+//                                 }
+//
+//                                 player?.setOnCompletionListener { mp ->
+//                                     backgroundTask?.cancel(true)
+//                                     Log.e("Complate Plyer", "Complate Plyer Museic");
+//                                     mp?.stop();
+//                                     mp.reset();
+//                                     mp.release();
+//                                     speechRecognizerListenAgain();
+//                                 }
+//                         }
                      }
                  }
              }

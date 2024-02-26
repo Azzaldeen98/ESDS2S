@@ -7,4 +7,4 @@ data class BaseChatResponse(
 var token:String,
 var modeldescription:String?="",
 var scope:String
-)
+) : java.io.Serializable

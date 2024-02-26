@@ -139,6 +139,8 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener , ISpeechR
             }
 
             isRecord=(!isRecord!!)
+
+
         }
 
     }
@@ -149,28 +151,42 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener , ISpeechR
         speechRecognizerService?.destroy()
     }
 
+    @SuppressLint("SuspiciousIndentation")
     override fun onRequestIsSuccess(response: GeminiResponse) {
 
         try {
             reorderCounter = 0;
             speechTextResult = null;
             if (response != null) {
-                if (response?.description != null && Helper.isAudioFile(response?.description)) {
-                    if (audioPlayer != null) {
-                        if (reply_music != null && reply_music!!.isPlaying()) {
-                            reply_music!!.stop()
-//                        reply_music!!.
+                if (response?.description != null) {
+
+                    if (audioPlayer == null )
+                        audioPlayer= AudioPlayer(this@BasicChatBotFragment.context)
+
+                        if (audioPlayer!!.isPlayer()) {
+                            audioPlayer!!.stop()
                             Thread.sleep(1000)
-                        }
-                        Log.d("responseSuccess", "Player....");
+                         }
                         editText?.hint = "Listen ...";
-                        audioPlayer?.start(response?.description)
-                            ?.setOnCompletionListener { mPlayer ->
+                        var media_player:MediaPlayer
+                        if(!Helper.isAudioFile(response?.description)) {
+
+                            val sound_id = Helper.getDefaultSoundResource()
+                            Log.e("isAudioFile", sound_id.toString());
+                            media_player=audioPlayer?.startFromRowResource(this.context!!,sound_id!!)!!
+                        } else {
+                            media_player = audioPlayer?.start(response?.description)!!
+                        }
+                        if(media_player!=null) {
+
+
+                            media_player?.setOnCompletionListener { mPlayer ->
                                 Log.e("onUplaodAudioIsSuccess", "Complate Plyer Museic");
                                 audioPlayer?.stop();
                                 micButton?.isEnabled = true;
                                 editText?.hint = "Speaking ...";
                             }
+
                     }
                 }
             } else {

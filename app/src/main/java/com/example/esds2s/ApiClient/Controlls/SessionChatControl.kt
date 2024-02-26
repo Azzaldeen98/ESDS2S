@@ -10,6 +10,7 @@ import com.example.esds2s.ApiClient.Interface.ISessionChatServices
 import com.example.esds2s.ContentApp.ContentApp
 import com.example.esds2s.Helpers.ExternalStorage
 import com.example.esds2s.Helpers.Helper
+import com.example.esds2s.Helpers.JsonStorageManager
 import com.example.esds2s.Helpers.LanguageInfo
 import com.example.esds2s.Interface.IBaseServiceEventListener
 import com.example.esds2s.Models.RequestModels.CustomerChatRequest
@@ -18,6 +19,7 @@ import com.example.esds2s.Models.RequestModels.GeminiRequestMessage
 import com.example.esds2s.Models.ResponseModels.BaseChatResponse
 import com.example.esds2s.Models.ResponseModels.CustomerChatResponse
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
+import com.example.esds2s.Services.SessionManagement
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -29,9 +31,9 @@ import retrofit2.Call
 
 class SessionChatControl(private val context: Context): BaseControl(context) {
 
-    suspend fun  getAllChats(callBack: IBaseServiceEventListener<ArrayList<BaseChatResponse>>) {
 
-        Log.d("getAllChats","getAllChats" );
+   suspend  fun  getAllChats(callBack: IBaseServiceEventListener<ArrayList<BaseChatResponse>>) {
+
 
         val client: IChatServices by lazy {
             ApiClient.getClient(context, RequestMethod.GET,
@@ -72,7 +74,7 @@ class SessionChatControl(private val context: Context): BaseControl(context) {
                 BuildConfig.BASE_URL)
                 ?.create(ISessionChatServices::class.java)!! }
 
-
+        Log.d("createSessionChat", Gson().toJson(body))
         val call: Call<CustomerChatResponse?> by lazy { client?.createSessionChat(body)!! }
         val response = call.execute()
             if (response.isSuccessful) {
@@ -107,143 +109,39 @@ class SessionChatControl(private val context: Context): BaseControl(context) {
 //        })
     }
 
-    suspend fun  removeSession() : GeminiResponse? = withContext(Dispatchers.IO){
+    suspend fun  removeSession() : GeminiResponse? = withContext(Dispatchers.IO) {
 
         val client: ISessionChatServices by lazy {
-            ApiClient.getClient(context, RequestMethod.POST,
-                BuildConfig.BASE_URL)
-                ?.create(ISessionChatServices::class.java)!! }
+            ApiClient.getClient(
+                context, RequestMethod.POST,
+                BuildConfig.BASE_URL
+            )
+                ?.create(ISessionChatServices::class.java)!!
+        }
 
-        var customer_token= ExternalStorage.getValue(context,ContentApp.CURRENT_SESSION_TOKEN) as String?
-        Log.d("customer_token",customer_token!!)
-        if(customer_token==null) {
-            Log.d("Error","Token is null")
+        var customer_token =
+            ExternalStorage.getValue(context, ContentApp.CURRENT_SESSION_TOKEN) as String?
+        Log.d("customer_token", customer_token!!)
+        if (customer_token == null) {
+            Log.d("Error", "Token is null")
             return@withContext null
         }
 
-        val body=GeminiRequest(_content = customer_token!!)
+        val body = GeminiRequest(_content = customer_token!!)
         val call: Call<GeminiResponse?> by lazy { client?.removeSession(body)!! }
         val response = call.execute()
 
-        if (ExternalStorage.existing(context, ContentApp.CURRENT_SESSION_TOKEN)) {
-            ExternalStorage.remove(context, ContentApp.CURRENT_SESSION_TOKEN)
-        }
-        LanguageInfo.removeStorageSelcetedLanguage(context)
+        SessionManagement.OnLogOutFromSession(context)
 
         if (response.isSuccessful) {
-            Log.d("responseEndSession",Gson().toJson(response.body()))
+            Log.d("responseEndSession", Gson().toJson(response.body()))
 //            ExternalStorage.remove(context,ContentApp.CURRENT_SESSION_TOKEN)
             return@withContext response.body()
+        } else {
+            Log.e("removeSession", response.message())
+            return@withContext throw java.lang.Exception("")
         }
-        else {
-            Log.e("removeSession",response.message())
-            return@withContext throw  java.lang.Exception("")
-        }
-
-
-
-//        call?.enqueue(object : retrofit2.Callback<CustomerChatResponse?> {
-//            override fun onResponse(
-//                call: Call<CustomerChatResponse?>,
-//                response: retrofit2.Response<CustomerChatResponse?>
-//            ) {
-//                if (response!!.isSuccessful) {
-//                    val responseData: CustomerChatResponse? = response.body()
-//                    if(responseData!=null && responseData.token!=null)
-//                         ExternalStorage.storage(context,ContentApp.CURRENT_CHAT_TOKEN,responseData.token)
-//                       Log.d("response", Gson().toJson(responseData));
-//
-//                    }
-//                }
-//
-//
-//            override fun onFailure(call: Call<CustomerChatResponse?>, t: Throwable) {
-//                // التعامل مع الأخطاء هنا
-//
-//
-//            }
-//        })
     }
-
-//    suspend  fun  createSessionChat(body: CustomerChatRequest) {
-//
-//         val client: ISessionChatServices by lazy {
-//            ApiClient.getClient(context, RequestMethod.POST,
-//                BuildConfig.BASE_URL)
-//                ?.create(ISessionChatServices::class.java)!! }
-//
-//        Log.d("CustomerChatResponse1",Gson().toJson(body))
-//
-//
-//
-//
-////            val call: Call<ResponseBody?> by lazy { client?.createSessionChat(body)!! }
-////
-////            call?.enqueue(object : retrofit2.Callback<ResponseBody?> {
-////                override fun onResponse(
-////                    call: Call<ResponseBody?>,
-////                    response: retrofit2.Response<ResponseBody?>
-////                ) {
-////                    if (response!!.isSuccessful) {
-////                        val responseData: ResponseBody? = response.body()
-////                        Log.d("response", Gson().toJson(responseData));
-////                    } else {
-////                    }
-////                }
-////
-////
-////
-////                override fun onFailure(call: Call<ResponseBody?>, t: Throwable) {
-////                    // التعامل مع الأخطاء هنا
-////                    Log.d("Error", t.message.toString());
-////
-////                }
-////            })
-//
-////            val call: Call<CustomerChatResponse?> by lazy { client?.createSessionChat(body)!! }
-////            call?.enqueue(object : retrofit2.Callback<CustomerChatResponse?> {
-////            override fun onResponse(call: Call<CustomerChatResponse?>,
-////                response: retrofit2.Response<CustomerChatResponse?>
-////            ) {
-////                Log.d("response","response90" );
-////
-////                if (response?.isSuccessful!!) {
-////                    Log.d("response", Gson().toJson(response.body()));
-////                    val responseData: CustomerChatResponse? = response.body()
-////
-////
-////                }
-////
-////            }
-////
-////            override fun onFailure(call: Call<CustomerChatResponse?>, t: Throwable) {
-////                Log.d("error90", Gson().toJson(t.message));
-////            }
-////
-////        })
-//
-////            val response = call.execute()
-////
-////            if (response.isSuccessful) {
-////                Log.d("CustomerChatResponse2",Gson().toJson(response))
-////                return@withContext response.body()
-////            } else {
-////                Log.e("CustomerChatResponse2",response.message())
-////                return@withContext null
-////            }
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-////
-//    }
 }
 
 

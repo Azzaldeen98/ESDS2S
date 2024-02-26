@@ -3,18 +3,21 @@ package com.example.esds2s.Helpers
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import com.example.esds2s.ContentApp.ContentApp
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
 
-class JsonStorageManager(context: Context?,prefsKey:String) {
+class JsonStorageManager(private var context: Context?,private var prefsKey:String?=null) {
 
     private lateinit var sharedPreferences: SharedPreferences
     private val gson: Gson
 
     init {
         if (context != null) {
-            sharedPreferences = context.getSharedPreferences(prefsKey, Context.MODE_PRIVATE)
+            if(prefsKey==null)
+                prefsKey=ContentApp.API_TEMP_STORAGE
+            sharedPreferences = context?.getSharedPreferences(prefsKey, Context.MODE_PRIVATE)!!
         }
         gson = Gson()
     }
@@ -51,5 +54,14 @@ class JsonStorageManager(context: Context?,prefsKey:String) {
             MutableList::class.java, clazz
         ).type
         return gson.fromJson(json, type)
+    }
+
+    fun  delete(key: String?):Boolean? {
+        if(key==null || !exists(key))
+            return false
+        val editor = sharedPreferences?.edit()
+        editor?.remove(key!!)
+        Log.e("delete "," delete Json Storage")
+       return editor?.commit()
     }
 }

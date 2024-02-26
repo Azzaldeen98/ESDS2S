@@ -1,34 +1,32 @@
 package com.example.esds2s.Ui
 
-import android.R
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
+import android.widget.RelativeLayout
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.esds2s.ApiClient.Controlls.SessionChatControl
 import com.example.esds2s.ContentApp.ContentApp
 import com.example.esds2s.Helpers.CustomAdapter
-import com.example.esds2s.Helpers.Helper
 import com.example.esds2s.Helpers.Enums.TypeChat
+import com.example.esds2s.Helpers.Helper
 import com.example.esds2s.Helpers.JsonStorageManager
+import com.example.esds2s.Interface.IBaseItemClickListener
 import com.example.esds2s.Interface.IBaseServiceEventListener
 import com.example.esds2s.Models.ResponseModels.BaseChatResponse
 import com.example.esds2s.Services.TestConnection
 import com.example.esds2s.databinding.FragmentMainHomeBinding
-import com.google.firebase.inappmessaging.dagger.Component
+import com.google.android.flexbox.*
 import com.google.gson.Gson
-import com.google.rpc.Help
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -40,8 +38,10 @@ private const val ARG_PARAM2 = "param2"
  * Use the [MainHomeFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class MainHomeFragment : Fragment(), IBaseServiceEventListener<ArrayList<BaseChatResponse>> {
+class MainHomeFragment : Fragment(), IBaseServiceEventListener<ArrayList<BaseChatResponse>>,IBaseItemClickListener<BaseChatResponse> {
+    private lateinit var adapter: CustomAdapter
     private var binding: FragmentMainHomeBinding?=null
+    private var  progressPar: RelativeLayout? = null
 
     // TODO: Rename and change types of parameters
     private var param1: String? = null
@@ -66,44 +66,132 @@ class MainHomeFragment : Fragment(), IBaseServiceEventListener<ArrayList<BaseCha
         return binding?.getRoot()
     }
 
+    @SuppressLint("ResourceType")
     override fun onStart() {
         super.onStart()
 
-        binding?.btnMainCreateChat?.setOnClickListener({v-> openSelectedChat(TypeChat.NEWCHAT) })
-//        binding?.btnMainChat1?.setOnClickListener({v-> openSelectedChat(TypeChat.CHAT1) })
-//        binding?.btnMainChat2?.setOnClickListener({v-> openSelectedChat(TypeChat.CHAT2) })
-//        binding?.btnMainChat3?.setOnClickListener({v-> openSelectedChat(TypeChat.CHAT3) })
-//        binding?.btnMainChat4?.setOnClickListener({v-> openSelectedChat(TypeChat.CHAT4) })
-
+        progressPar=activity?.findViewById(com.example.esds2s.R.id.progressPar1)
         // getting the recyclerview by its id
-//         recyclerview = activity?.findViewById<RecyclerView>(com.example.esds2s.R.id.recyclerview)
-//        // this creates a vertical layout Manager
-//         recyclerview?.layoutManager = LinearLayoutManager(this?.context)
-        Helper.setAnimateAlphaForTool(binding?.mainContinerChatButtons,0)
-
+        recyclerview = activity?.findViewById<RecyclerView>(com.example.esds2s.R.id.RecyclerViewChatsList)
+        val flexLayoutManager = FlexboxLayoutManager(context)
+        flexLayoutManager.alignItems =   AlignItems.STRETCH  // يحدد flex-wrap: wrap
+        flexLayoutManager.justifyContent =   JustifyContent.SPACE_AROUND  // يحدد flex-wrap: wrap
+        flexLayoutManager.flexWrap =  FlexWrap.WRAP  // يحدد flex-wrap: wrap
+        recyclerview?.layoutManager= flexLayoutManager
+        binding?.btnMainCreateChat?.setOnClickListener({v-> openSelectedChat(TypeChat.NEWCHAT) })
+        laoudAllChats()
 
     }
 
-    private  fun laoudAllChats(){
+    private  fun uplaodAllChatsFromLocalStorage():Boolean{
 
-        if(TestConnection.isOnline(this.context!!)) {
-            GlobalScope.launch {
-                withContext(Dispatchers.IO) {
-                    sessionChatControl?.getAllChats(this@MainHomeFragment)
-                }
+        var storage :JsonStorageManager?=null
+        var chatsList :List<BaseChatResponse>?=null
+
+        try {
+            storage = JsonStorageManager(this?.context!!, ContentApp.API_TEMP_STORAGE)
+            if(!storage.exists(ContentApp.CHATS_LIST_STORAGE))
+                return  false
+            chatsList = storage.getList(ContentApp.CHATS_LIST_STORAGE, BaseChatResponse::class.java)
+        } catch (e:java.lang.Exception){
+            return  false
+        } finally {
+            if (chatsList == null)
+                return false
+            else {
+                progressPar?.visibility = View.GONE
+                insilizationChatsList(chatsList as ArrayList<BaseChatResponse>)
+                return true
             }
         }
     }
+    private  fun laoudAllChats(){
+        progressPar?.visibility = View.VISIBLE
+        try {
+            // upload data from local storage
+            if(!uplaodAllChatsFromLocalStorage()) {
+                // upload data from Api server
+                if (TestConnection.isOnline(this.context!!)) {
+                    sessionChatControl = SessionChatControl(this.context!!)
+                    GlobalScope.launch {
+                        withContext(Dispatchers.IO) {
+                            sessionChatControl?.getAllChats(this@MainHomeFragment)
+                        }
+                    }
+                }
+            }
+        } catch (e: java.lang.Exception) {
+            Log.e("Error-laoudAllChats!! ", e?.message.toString())
+            progressPar?.visibility = View.GONE
+        }
+    }
 
-    fun openSelectedChat(typeChat: TypeChat) {
 
-        val newFragment=CreateNewChatFragment()
-        val bundle = Bundle()
-        bundle.putInt("typeChat", typeChat.ordinal)
-        newFragment.setArguments(bundle)
-        Helper.LoadFragment(newFragment,activity?.supportFragmentManager, com.example.esds2s.R.id.main_frame_layout)
+    override fun onRequestIsSuccess(response: ArrayList<BaseChatResponse>) {
+        progressPar?.visibility = View.GONE
+        try {
+            if (response != null) {
+
+                insilizationChatsList(response)
+                val storage= JsonStorageManager(this?.context!!,ContentApp.API_TEMP_STORAGE)
+                storage.saveList(ContentApp.CHATS_LIST_STORAGE,response)
+                val chats_list: List<BaseChatResponse>?= storage.getList(ContentApp.CHATS_LIST_STORAGE,BaseChatResponse::class.java)
+                Log.d("CHATS_LIST_STORAGE", Gson().toJson(chats_list)!!)
+
+            }
+        }catch (e:Exception){
+            Log.e("Error-laoudAllChats-response  ", e?.message.toString())
+        }
+
+    }
+
+    override fun onRequestIsFailure(error: String) {
+        progressPar?.visibility = View.GONE
+        Log.e("onRequestIsFailure",error)
+    }
+    private  fun insilizationChatsList(chats: ArrayList<BaseChatResponse>){
+
+        Helper.setAnimateAlphaForTool(binding?.mainContinerChatButtons,0)
+         adapter = CustomAdapter(chats,this,this.activity!!)
+        recyclerview?.adapter = adapter
+    }
+
+    override fun onItemClick(item: BaseChatResponse) {
+
+        if(item!=null) {
+//            Toast.makeText(this?.context,item.scope,Toast.LENGTH_SHORT).show()
+            openSelectedChat(TypeChat.SPACIFICCHAT,item)
+
+        }
+
+    }
+
+    @SuppressLint("SuspiciousIndentation")
+    fun openSelectedChat(typeChat: TypeChat, spacificChat:BaseChatResponse?=null) {
+
+
+        try {
+            val newFragment = CreateNewChatFragment()
+            val bundle = Bundle()
+            bundle.putInt("typeChat", typeChat.ordinal)
+        if(typeChat==TypeChat.SPACIFICCHAT && spacificChat!=null)
+            bundle.putSerializable("spacificChat",spacificChat!!)
+            newFragment.setArguments(bundle)
+            Helper.LoadFragment(newFragment,
+                activity?.supportFragmentManager,
+                com.example.esds2s.R.id.main_frame_layout)
+
+        }catch (e:Exception){
+            Log.e("Error - go to  CreateNewChatFragment",e.message.toString())
+        }
 //        Toast.makeText(this.context,"Chat: "+ typeChat?.toString(), Toast.LENGTH_SHORT).show()
     }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        JsonStorageManager(this.context).delete(ContentApp.CHATS_LIST_STORAGE)
+    }
+
 
     companion object {
         /**
@@ -126,27 +214,6 @@ class MainHomeFragment : Fragment(), IBaseServiceEventListener<ArrayList<BaseCha
     }
 
 
-    override fun onRequestIsSuccess(response: ArrayList<BaseChatResponse>) {
-
-        if(response!=null) {
-
-            val storage= JsonStorageManager(this?.context!!,ContentApp.API_TEMP_STORAGE)
-            storage.saveList(ContentApp.CHATS_LIST_STORAGE,response)
-            val chats_list: List<BaseChatResponse>?= storage.getList(ContentApp.CHATS_LIST_STORAGE,BaseChatResponse::class.java)
-
-            Log.d("CHATS_LIST_STORAGE",Gson().toJson(chats_list)!!)
-
-
-//            val adapter = CustomAdapter(response)
-//            recyclerview?.adapter = adapter
-
-        }
-
-    }
-
-    override fun onRequestIsFailure(error: String) {
-        Log.d("onRequestIsFailure",error)
-    }
 
 
 }

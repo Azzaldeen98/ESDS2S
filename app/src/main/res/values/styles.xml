@@ -2,8 +2,8 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
     <style name="btnCircle_image" >
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_width">80dp</item>
+        <item name="android:layout_height">80dp</item>
         <item name="android:layout_margin">15dp</item>
         <item name="android:background">@drawable/rounded_shape</item>
         <item name="android:padding">10dp</item>
@@ -22,10 +22,10 @@
     </style>
 
     <style name="background_small_round1" >
-        <item name="android:layout_width">150dp</item>
-        <item name="android:layout_height">150dp</item>
-        <item name="android:layout_margin">20dp</item>
-        <item name="android:backgroundTint">#B9018786</item>
+        <item name="android:layout_width">100dp</item>
+        <item name="android:layout_height">100dp</item>
+        <item name="android:layout_marginVertical">30dp</item>
+        <item name="android:backgroundTint">@color/purple_700</item>
     </style>
 
     <style name="btn_main_label_name" >

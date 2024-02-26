@@ -2,7 +2,9 @@ package com.example.esds2s
 
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.media.MediaPlayer
 import android.os.Bundle
+import android.provider.MediaStore.Audio.Media
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -106,12 +108,24 @@ class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener, IGeminiServic
 
     override fun onRequestIsSuccess(response: GeminiResponse) {
         count=0
-        if (response != null &&  Helper.isAudioFile(response?.description)) {
+        if (response != null ){ //&&  Helper.isAudioFile(response?.description)) {
             btnSend?.isEnabled=true;
             textInput?.isEnabled=true;
-            Log.d("res",response!!.description)
-            val aud=AudioPlayer((this@ChatBotTextFragment).context!!)
-            aud.start(response?.description)?.setOnCompletionListener { v-> aud.stop() }
+            val player:MediaPlayer
+            val media_player=AudioPlayer(this@ChatBotTextFragment.context)
+            if(!Helper.isAudioFile(response?.description)) {
+                val sound_id = Helper.getDefaultSoundResource()
+                Log.e("isAudioFile", sound_id.toString());
+                 player=media_player?.startFromRowResource(this.context!!,sound_id)!!
+
+            }else {
+                player = media_player?.start(response?.description)!!
+            }
+            player?.setOnCompletionListener{v->
+                v.stop()
+                v.reset()
+                v.release()
+            }
         }
     }
     override fun onRequestIsFailure(error: String) {

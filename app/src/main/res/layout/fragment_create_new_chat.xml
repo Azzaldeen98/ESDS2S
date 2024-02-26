@@ -8,78 +8,81 @@
     tools:context=".Ui.CreateNewChatFragment"
     tools:ignore="HardcodedText">
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:orientation="vertical"
         android:layout_height="match_parent">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:orientation="vertical"
+            android:layout_height="match_parent">
+            <include layout="@layout/internal_header" />
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_marginTop="20dp"
+            android:layout_height="match_parent">
 
-        <include layout="@layout/internal_header" />
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_marginTop="20dp"
-        android:layout_height="match_parent">
+        <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+          android:orientation="vertical"
+          tools:ignore="HardcodedText"
+          android:gravity="center">
 
-    <LinearLayout
-      android:layout_width="match_parent"
-      android:layout_height="match_parent"
-      android:orientation="vertical"
-      tools:ignore="HardcodedText"
-      android:gravity="center">
+          <include layout="@layout/drop_down_list_chat" />
 
-      <include layout="@layout/drop_down_list_chat" />
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/inputChatName"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="32dp"
+                android:layout_marginTop="30dp"
+                android:layout_marginEnd="32dp"
+                android:hint="@string/input_chat_name">
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/inputChatName"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                <!--this is the actual edit text which takes the input-->
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/InputChatNameData"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+          <com.google.android.material.textfield.TextInputLayout
+              android:id="@+id/InputChatDescription"
+              style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:layout_marginStart="32dp"
+              android:layout_marginTop="30dp"
+              android:layout_marginEnd="32dp"
+              android:hint="@string/input_chat_desript">
+
+              <!--this is the actual edit text which takes the input-->
+              <com.google.android.material.textfield.TextInputEditText
+                  android:id="@+id/InputChatDescriptionData"
+                  android:layout_width="match_parent"
+                  android:layout_height="100dp" />
+
+          </com.google.android.material.textfield.TextInputLayout>
+            <include layout="@layout/drop_down_list" />
+
+        <Button
+            android:id="@+id/btnSubmitChatInfo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
-            android:layout_marginTop="30dp"
-            android:layout_marginEnd="32dp"
-            android:hint="@string/input_chat_name">
+            android:text="@string/btn_create_chat"
+            android:layout_marginTop="50dp"
+            android:layout_marginHorizontal="20dp"
+            android:paddingVertical="8dp"
+            android:textSize="24dp"
+            android:textColor="@color/white"
+            android:gravity="center"
+            android:textAllCaps="false"
+            android:drawableRight="@drawable/baseline_add_24"/>
 
-            <!--this is the actual edit text which takes the input-->
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/InputChatNameData"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-      <com.google.android.material.textfield.TextInputLayout
-          android:id="@+id/InputChatDescription"
-          style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:layout_marginStart="32dp"
-          android:layout_marginTop="30dp"
-          android:layout_marginEnd="32dp"
-          android:hint="@string/input_chat_desript">
-
-          <!--this is the actual edit text which takes the input-->
-          <com.google.android.material.textfield.TextInputEditText
-              android:id="@+id/InputChatDescriptionData"
-              android:layout_width="match_parent"
-              android:layout_height="100dp" />
-
-      </com.google.android.material.textfield.TextInputLayout>
-        <include layout="@layout/drop_down_list" />
-
-    <Button
-        android:id="@+id/btnSubmitChatInfo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/btn_create_chat"
-        android:layout_marginTop="50dp"
-        android:layout_marginHorizontal="20dp"
-        android:paddingVertical="8dp"
-        android:textSize="24dp"
-        android:textColor="@color/white"
-        android:gravity="center"
-        android:textAllCaps="false"
-        android:drawableRight="@drawable/baseline_add_24"/>
-
+        </LinearLayout>
+        </ScrollView>
     </LinearLayout>
-    </ScrollView>
-</LinearLayout>
-    <include layout="@layout/progress_par"/>
+        <include layout="@layout/progress_par"/>
+</RelativeLayout>
 </FrameLayout>

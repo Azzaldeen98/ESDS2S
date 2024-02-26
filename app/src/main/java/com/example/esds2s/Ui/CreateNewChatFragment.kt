@@ -13,20 +13,27 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.fragment.app.Fragment
 import com.example.esds2s.ApiClient.Controlls.SessionChatControl
+import com.example.esds2s.ContentApp.ContentApp
 import com.example.esds2s.Helpers.Enums.TypeChat
 import com.example.esds2s.Helpers.Helper
+import com.example.esds2s.Helpers.JsonStorageManager
 import com.example.esds2s.Helpers.LanguageInfo
 import com.example.esds2s.Interface.IBaseServiceEventListener
+import com.example.esds2s.Interface.IExecuteRequestAsync
 import com.example.esds2s.Models.RequestModels.CustomerChatRequest
 import com.example.esds2s.Models.ResponseModels.BaseChatResponse
+import com.example.esds2s.Models.ResponseModels.CustomerChatResponse
+import com.example.esds2s.Models.ResponseModels.GeminiResponse
 import com.example.esds2s.R
 import com.example.esds2s.RecordAudioActivity
+import com.example.esds2s.Services.SendRequestAsync
 import com.example.esds2s.Services.TestConnection
 import com.example.esds2s.databinding.FragmentCreateNewChatBinding
 import com.google.android.material.textfield.TextInputLayout
 import com.google.gson.Gson
 import kotlinx.coroutines.*
-
+import com.google.android.flexbox.FlexboxLayoutManager
+import okhttp3.internal.wait
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -40,6 +47,8 @@ private const val ARG_PARAM2 = "param2"
  */
 class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<BaseChatResponse>> {
 
+    private var autocompleteTV: AutoCompleteTextView?=null
+    private lateinit var receivedChat: BaseChatResponse
     private var binding: FragmentCreateNewChatBinding?=null
     // TODO: Rename and change types of parameters
     private var param1: String? = null
@@ -48,7 +57,7 @@ class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<Ba
     private var selectedLanguageIndex: Int? = 0
     private var selectedChat: BaseChatResponse? = null
     private var typeChat: TypeChat? = null
-    private var  progressPar: RelativeLayout? = null
+    private lateinit var  progressPar: RelativeLayout
     private var  btn_back: TextView? = null
     private var  internaal_header: TextView? = null
     private var  dropdownChats: TextInputLayout? = null
@@ -74,6 +83,8 @@ class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<Ba
             val _value:Int?= args.getInt("typeChat", TypeChat.NEWCHAT.ordinal)
             if(_value!=null)
                 typeChat=enumValues<TypeChat>().getOrNull(_value)
+            if(args.containsKey("spacificChat"))
+                selectedChat = (arguments?.getSerializable("spacificChat") as? BaseChatResponse)!!
 
             // Use the data as needed
         }
@@ -91,56 +102,75 @@ class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<Ba
                 R.id.main_frame_layout)
         }
     }
+
     override fun onStart() {
         super.onStart()
 
         internalHeader()
         sessionChatControl= SessionChatControl(this.context!!)
-        progressPar=activity?.findViewById(R.id.progressPar1)
+        progressPar=activity?.findViewById(R.id.progressPar1)!!
         dropdownChats=activity?.findViewById(R.id.DropDownListChat)
 
-
-        progressPar?.visibility=View.VISIBLE
-
-        if(typeChat!=null && typeChat?.ordinal!! > TypeChat.NEWCHAT.ordinal) {
+        if(typeChat!=null && typeChat?.ordinal!! == TypeChat.SPACIFICCHAT.ordinal && selectedChat!=null) {
             dropdownChats?.isEnabled=false
             binding?.InputChatDescription?.isEnabled=false
-            binding?.InputChatNameData?.visibility=View.GONE
+            binding?.InputChatDescriptionData?.setText(selectedChat?.modeldescription)
+            binding?.inputChatName?.visibility=View.GONE
+            binding?.InputChatNameData?.setText(selectedChat?.scope)
         }
-
-        laoudAllChats()
+        binding?.btnSubmitChatInfo?.setOnClickListener{ submitChatInfo() }
+        progressPar.visibility = View.VISIBLE
         insilizationLanguagesList()
-        binding?.btnSubmitChatInfo?.setOnClickListener{submitChatInfo() }
-
+        laoudAllChats()
     }
 
-    private  fun laoudAllChats(){
+    private  fun uplaodAllChatsFromLocalStorage():Boolean{
 
-        progressPar?.visibility = View.VISIBLE
-        if(TestConnection.isOnline(this.context!!)) {
+        var storage :JsonStorageManager?=null
+        var chatsList :List<BaseChatResponse>?=null
 
-//        val storage= JsonStorageManager(this?.context!!,ContentApp.API_TEMP_STORAGE)
-//        if(storage)
-//        storage.getList(ContentApp.CHATS_LIST_STORAGE,BaseChatResponse::class.java)
-            try {
-
-                GlobalScope.launch {
-                    withContext(Dispatchers.IO) {
-                        sessionChatControl?.getAllChats(this@CreateNewChatFragment)
-                    }
-                }
-            } catch (e: java.lang.Exception) {
-
+        try {
+             storage = JsonStorageManager(this?.context!!, ContentApp.API_TEMP_STORAGE)
+             chatsList = storage.getList(ContentApp.CHATS_LIST_STORAGE, BaseChatResponse::class.java)
+        } catch (e:java.lang.Exception){
+            return  false
+        } finally {
+            if (chatsList == null)
+                return false
+            else {
+                insilizationChatsList(chatsList as ArrayList<BaseChatResponse>)
+                return true
             }
         }
     }
+    private  fun laoudAllChats(){
 
+        try {
+                if(typeChat== TypeChat.NEWCHAT) {
+                    if(!uplaodAllChatsFromLocalStorage()){
+                        progressPar?.visibility = View.VISIBLE
+                        GlobalScope.launch {
+                          withContext(Dispatchers.IO) {
+                        sessionChatControl?.getAllChats(this@CreateNewChatFragment) } }
+                    }
+                }
+                else if(typeChat== TypeChat.SPACIFICCHAT && selectedChat!= null) {
+                    val data = ArrayList<BaseChatResponse>()
+                    data.add(selectedChat!!)
+                    insilizationChatsList(data)
+                    autocompleteTV?.setText(selectedChat?.scope, false)
+                }
+        } catch (e: java.lang.Exception) {
+            progressPar?.visibility = View.GONE
+        }
+
+    }
     @SuppressLint("SuspiciousIndentation")
     private  fun insilizationChatsList(chats: ArrayList<BaseChatResponse>){
 
         progressPar?.visibility=View.GONE
         arrayAdapter = ArrayAdapter<String>(this?.context!!, R.layout.dropdown_item, chats.map { it.scope })
-        val autocompleteTV = activity?.findViewById<AutoCompleteTextView>(R.id.autoCompleteTextViewChat)
+         autocompleteTV = activity?.findViewById<AutoCompleteTextView>(R.id.autoCompleteTextViewChat)
         autocompleteTV?.setAdapter(arrayAdapter)
         autocompleteTV?.setOnItemClickListener { parent, view, position, id ->
           selectedChat=chats?.get(position)
@@ -205,50 +235,40 @@ class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<Ba
         return countEmpty==0
     }
 
-    fun <T> lazyDeferred(block: suspend CoroutineScope.() -> T): Lazy<Deferred<T>> {
-        return lazy {
-            GlobalScope.async(start = CoroutineStart.LAZY) {
-                block.invoke(this)
-            }
-        }
-    }
 
-    @SuppressLint("SuspiciousIndentation")
+
+
     private  fun submitChatInfo(){
+        val mainHandler = Handler(Looper.getMainLooper())
 
+        if(!checkInputData()) return;
 
-        if(!checkInputData())
-            return;
-        progressPar?.visibility=View.VISIBLE
 
         val body=CustomerChatRequest(
             token_chat =selectedChat?.token!!,
-            name =  binding?.InputChatNameData?.text.toString(),
+            name = selectedChat?.scope.toString(),
             description=binding?.InputChatDescriptionData?.text.toString())
-
-        LanguageInfo.setStorageSelcetedLanguage(this?.context,selectedLanguage,selectedLanguageIndex!!);
-        val mainHandler = Handler(Looper.getMainLooper())
-        GlobalScope.launch {
+        LanguageInfo.setStorageSelcetedLanguage(this?.context,selectedLanguage,selectedLanguageIndex!!)
+        GlobalScope.async {
             withContext(Dispatchers.IO) {
-                var response =   sessionChatControl?.createSessionChat(body)
-                if(response!=null) {
-                    Log.d("CustomerChatResponse55",Gson().toJson(response))
-
-                    mainHandler.post(java.lang.Runnable { progressPar!!.visibility = View.GONE })
-
-                    val  intent = Intent(this@CreateNewChatFragment.context, RecordAudioActivity::class.java)
+                var response = sessionChatControl?.createSessionChat(body)
+                     if (response != null) {
+                    Log.d("CustomerChatResponse55", Gson().toJson(response))
+                    val intent = Intent(this@CreateNewChatFragment.context, RecordAudioActivity::class.java)
                     startActivity(intent)
-
+                } else {
+                     mainHandler.post(java.lang.Runnable {
+                        AlertDialog.Builder(this@CreateNewChatFragment.context)
+                            .setTitle("Alert")
+                            .setIcon(R.drawable.baseline_warning_24)
+                            .setMessage(getString(R.string.msg_failed_the_session_create))
+                            .setPositiveButton(getString(R.string.btn_ok)) { dialog, which -> }
+                            .create()
+                            .show()
+                    })
                 }
-                else{
-                    AlertDialog.Builder(this@CreateNewChatFragment.context)
-                        .setTitle("Alert")
-                        .setIcon(R.drawable.baseline_warning_24)
-                        .setMessage(getString(R.string.msg_failed_the_session_create))
-                        .setPositiveButton(getString(R.string.btn_ok)) { dialog, which -> }
-                        .create()
-                        .show()
-                }
+//                mainHandler.post(java.lang.Runnable { progressPar!!.visibility = View.GONE })
+//
             }
         }
 
@@ -270,15 +290,18 @@ class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<Ba
     }
 
     override fun onRequestIsSuccess(response: ArrayList<BaseChatResponse>) {
-        Log.d("response",Gson().toJson(response))
+
         try {
+
+            Log.d("response",Gson().toJson(response))
+
             if (response != null) {
                 insilizationChatsList(response!!)
             }
         }catch (e:java.lang.Exception){
 
         }
-
+        progressPar?.visibility = View.GONE
 //            val storage= JsonStorageManager(this?.context!!,ContentApp.API_TEMP_STORAGE)
 ////            val arr: List<BaseChatResponse> =response.toList()
 //            storage.saveList(ContentApp.CHATS_LIST_STORAGE,response)

@@ -8,17 +8,6 @@
     tools:context=".Ui.MainHomeFragment">
 
 
-
-<!--        <androidx.recyclerview.widget.RecyclerView-->
-<!--            android:id="@+id/recyclerview"-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="match_parent"-->
-<!--            tools:itemCount="100"-->
-<!--            tools:listitem="@layout/card_view_design" />-->
-
-
-
-
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -28,158 +17,174 @@
             android:id="@+id/main_continer_chat_buttons"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:gravity="center">
 
             <LinearLayout
                 android:id="@+id/backResult"
                 android:layout_marginHorizontal="15dp"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:orientation="vertical"
+                android:minHeight="500dp"
                 android:layout_alignParentTop="true"
-                android:layout_marginTop="50dp"
-                android:gravity="top">
-
-                <RelativeLayout
+                android:orientation="vertical"
+                android:layout_marginTop="5dp"
+                android:gravity="center">
+<!--                <com.google.android.flexbox.FlexboxLayout-->
+<!--                    xmlns:android="http://schemas.android.com/apk/res/android"-->
+<!--                    xmlns:app="http://schemas.android.com/apk/res-auto"-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="match_parent"-->
+<!--                    app:flexWrap="wrap"-->
+<!--                    app:alignItems="stretch"-->
+<!--                    app:alignContent="stretch" >-->
+<!--                    -->
+<!--                </com.google.android.flexbox.FlexboxLayout>-->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/RecyclerViewChatsList"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="0dp"
-                    android:layout_marginTop="20dp">
+                    android:layout_height="match_parent"
+                    tools:listitem="@layout/card_view_design" />
+                <!--                <RelativeLayout-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:padding="0dp"-->
+<!--                    android:layout_marginTop="20dp">-->
 
-                    <com.google.android.material.card.MaterialCardView
-                        android:id="@+id/btn_main_chat2"
-                        app:cardCornerRadius="20sp"
-                        android:layout_alignParentRight="true"
-                        style="@style/background_small_round1">
-                        <RelativeLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:layout_gravity="center">
+<!--                    <com.google.android.material.card.MaterialCardView-->
+<!--                        android:id="@+id/btn_main_chat2"-->
+<!--                        app:cardCornerRadius="20sp"-->
+<!--                        android:layout_alignParentRight="true"-->
+<!--                        style="@style/background_small_round1">-->
+<!--                        <RelativeLayout-->
+<!--                            android:layout_width="match_parent"-->
+<!--                            android:layout_height="match_parent"-->
+<!--                            android:layout_gravity="center">-->
 
-                            <com.google.android.material.card.MaterialCardView
-                                style="@style/btn_main_circle"
-                                app:cardCornerRadius="300sp"
-                                android:padding="10dp">
+<!--                            <com.google.android.material.card.MaterialCardView-->
+<!--                                style="@style/btn_main_circle"-->
+<!--                                app:cardCornerRadius="300sp"-->
+<!--                                android:padding="10dp">-->
 
-                                <ImageView
-                                    style="@style/btnCircle_image"
-                                    android:src="@drawable/robot_splash" />
+<!--                                <ImageView-->
+<!--                                    style="@style/btnCircle_image"-->
+<!--                                    android:src="@drawable/robot_splash" />-->
 
-                            </com.google.android.material.card.MaterialCardView>
-                            <TextView
-                                android:layout_centerHorizontal="true"
-                                android:layout_alignParentBottom="true"
-                                style="@style/btn_main_label_name"
-                                android:layout_gravity="center"
-                                android:text="Chat2" />
+<!--                            </com.google.android.material.card.MaterialCardView>-->
+<!--                            <TextView-->
+<!--                                android:layout_centerHorizontal="true"-->
+<!--                                android:layout_alignParentBottom="true"-->
+<!--                                style="@style/btn_main_label_name"-->
+<!--                                android:layout_gravity="center"-->
+<!--                                android:text="Chat2" />-->
 
-                        </RelativeLayout>
-                    </com.google.android.material.card.MaterialCardView>
-                    <com.google.android.material.card.MaterialCardView
-                        android:id="@+id/btn_main_chat1"
-                        app:cardCornerRadius="20sp"
-                        style="@style/background_small_round1"
-                        android:layout_marginRight="20dp"
-                        android:layout_alignParentLeft="true">
-                        <RelativeLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:layout_gravity="center">
+<!--                        </RelativeLayout>-->
+<!--                    </com.google.android.material.card.MaterialCardView>-->
+<!--                    <com.google.android.material.card.MaterialCardView-->
+<!--                        android:id="@+id/btn_main_chat1"-->
+<!--                        app:cardCornerRadius="20sp"-->
+<!--                        style="@style/background_small_round1"-->
+<!--                        android:layout_marginRight="20dp"-->
+<!--                        android:layout_alignParentLeft="true">-->
+<!--                        <RelativeLayout-->
+<!--                            android:layout_width="match_parent"-->
+<!--                            android:layout_height="match_parent"-->
+<!--                            android:layout_gravity="center">-->
 
-                            <com.google.android.material.card.MaterialCardView
-                                style="@style/btn_main_circle"
-                                app:cardCornerRadius="300sp"
-                                android:backgroundTint="@color/purple_500"
-                                android:padding="10dp">
+<!--                            <com.google.android.material.card.MaterialCardView-->
+<!--                                style="@style/btn_main_circle"-->
+<!--                                app:cardCornerRadius="300sp"-->
+<!--                                android:backgroundTint="@color/purple_500"-->
+<!--                                android:padding="10dp">-->
 
-                                <ImageView
-                                    style="@style/btnCircle_image"
-                                    android:src="@drawable/robot_splash" />
+<!--                                <ImageView-->
+<!--                                    style="@style/btnCircle_image"-->
+<!--                                    android:src="@drawable/robot_splash" />-->
 
-                            </com.google.android.material.card.MaterialCardView>
-                            <TextView
-                                android:layout_centerHorizontal="true"
-                                android:layout_alignParentBottom="true"
-                                style="@style/btn_main_label_name"
-                                android:layout_gravity="center"
-                                android:text="Chat1" />
+<!--                            </com.google.android.material.card.MaterialCardView>-->
+<!--                            <TextView-->
+<!--                                android:layout_centerHorizontal="true"-->
+<!--                                android:layout_alignParentBottom="true"-->
+<!--                                style="@style/btn_main_label_name"-->
+<!--                                android:layout_gravity="center"-->
+<!--                                android:text="Chat1" />-->
 
-                        </RelativeLayout>
-                    </com.google.android.material.card.MaterialCardView>
-                </RelativeLayout>
+<!--                        </RelativeLayout>-->
+<!--                    </com.google.android.material.card.MaterialCardView>-->
+<!--                </RelativeLayout>-->
 
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="0dp"
-                    android:layout_marginTop="20dp">
+<!--                <RelativeLayout-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:padding="0dp"-->
+<!--                    android:layout_marginTop="20dp">-->
 
-                    <com.google.android.material.card.MaterialCardView
-                        android:id="@+id/btn_main_chat4"
-                        app:cardCornerRadius="20sp"
-                        android:layout_alignParentRight="true"
-                        style="@style/background_small_round1" >
+<!--                    <com.google.android.material.card.MaterialCardView-->
+<!--                        android:id="@+id/btn_main_chat4"-->
+<!--                        app:cardCornerRadius="20sp"-->
+<!--                        android:layout_alignParentRight="true"-->
+<!--                        style="@style/background_small_round1" >-->
 
-                        <RelativeLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:layout_gravity="center">
+<!--                        <RelativeLayout-->
+<!--                            android:layout_width="match_parent"-->
+<!--                            android:layout_height="match_parent"-->
+<!--                            android:layout_gravity="center">-->
 
-                            <com.google.android.material.card.MaterialCardView
-                                style="@style/btn_main_circle"
-                                app:cardCornerRadius="300sp"
-                                android:backgroundTint="@color/purple_500"
-                                android:padding="10dp">
+<!--                            <com.google.android.material.card.MaterialCardView-->
+<!--                                style="@style/btn_main_circle"-->
+<!--                                app:cardCornerRadius="300sp"-->
+<!--                                android:backgroundTint="@color/purple_500"-->
+<!--                                android:padding="10dp">-->
 
-                                <ImageView
-                                    style="@style/btnCircle_image"
-                                    android:src="@drawable/robot_splash" />
+<!--                                <ImageView-->
+<!--                                    style="@style/btnCircle_image"-->
+<!--                                    android:src="@drawable/robot_splash" />-->
 
-                            </com.google.android.material.card.MaterialCardView>
-                            <TextView
-                                android:layout_centerHorizontal="true"
-                                android:layout_alignParentBottom="true"
-                                style="@style/btn_main_label_name"
-                                android:layout_gravity="center"
-                                android:text="Chat4" />
+<!--                            </com.google.android.material.card.MaterialCardView>-->
+<!--                            <TextView-->
+<!--                                android:layout_centerHorizontal="true"-->
+<!--                                android:layout_alignParentBottom="true"-->
+<!--                                style="@style/btn_main_label_name"-->
+<!--                                android:layout_gravity="center"-->
+<!--                                android:text="Chat4" />-->
 
-                        </RelativeLayout>
+<!--                        </RelativeLayout>-->
 
-                    </com.google.android.material.card.MaterialCardView>
-                    <com.google.android.material.card.MaterialCardView
-                        app:cardCornerRadius="20sp"
-                        android:id="@+id/btn_main_chat3"
-                        style="@style/background_small_round1"
-                        android:layout_marginRight="20dp"
-                        android:layout_alignParentLeft="true">
+<!--                    </com.google.android.material.card.MaterialCardView>-->
+<!--                    <com.google.android.material.card.MaterialCardView-->
+<!--                        app:cardCornerRadius="20sp"-->
+<!--                        android:id="@+id/btn_main_chat3"-->
+<!--                        style="@style/background_small_round1"-->
+<!--                        android:layout_marginRight="20dp"-->
+<!--                        android:layout_alignParentLeft="true">-->
 
-                        <RelativeLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="146dp"
-                            android:layout_gravity="center"
-                            android:backgroundTint="@android:color/transparent">
+<!--                        <RelativeLayout-->
+<!--                            android:layout_width="match_parent"-->
+<!--                            android:layout_height="146dp"-->
+<!--                            android:layout_gravity="center"-->
+<!--                            android:backgroundTint="@android:color/transparent">-->
 
-                            <com.google.android.material.card.MaterialCardView
-                                style="@style/btn_main_circle"
-                                android:padding="10dp"
-                                app:cardCornerRadius="300sp">
+<!--                            <com.google.android.material.card.MaterialCardView-->
+<!--                                style="@style/btn_main_circle"-->
+<!--                                android:padding="10dp"-->
+<!--                                app:cardCornerRadius="300sp">-->
 
-                                <ImageView
-                                    style="@style/btnCircle_image"
-                                    android:src="@drawable/robot_splash" />
+<!--                                <ImageView-->
+<!--                                    style="@style/btnCircle_image"-->
+<!--                                    android:src="@drawable/robot_splash" />-->
 
-                            </com.google.android.material.card.MaterialCardView>
+<!--                            </com.google.android.material.card.MaterialCardView>-->
 
-                            <TextView
-                                style="@style/btn_main_label_name"
-                                android:layout_alignParentBottom="true"
-                                android:layout_centerHorizontal="true"
-                                android:layout_gravity="center"
-                                android:text="Chat3" />
+<!--                            <TextView-->
+<!--                                style="@style/btn_main_label_name"-->
+<!--                                android:layout_alignParentBottom="true"-->
+<!--                                android:layout_centerHorizontal="true"-->
+<!--                                android:layout_gravity="center"-->
+<!--                                android:text="Chat3" />-->
 
-                        </RelativeLayout>
-                    </com.google.android.material.card.MaterialCardView>
-                </RelativeLayout>
+<!--                        </RelativeLayout>-->
+<!--                    </com.google.android.material.card.MaterialCardView>-->
+<!--                </RelativeLayout>-->
 
             </LinearLayout>
 
@@ -188,6 +193,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
                 android:orientation="vertical"
+                android:layout_gravity="end"
                 android:gravity="center">
 
                 <Button
@@ -206,5 +212,5 @@
         </LinearLayout>
 
     </ScrollView>
-
+<include layout="@layout/progress_par"/>
 </FrameLayout>

@@ -99,7 +99,7 @@ public static  void  deleteFile(String filePath)
         return false;
     }
 
-    public static int getSoundResource() {
+    public static int getDefaultSoundResource() {
         int randomValues = new Random().nextInt(7);
         int sound = com.example.esds2s.R.raw.res1;
 
@@ -127,9 +127,14 @@ public static  void  deleteFile(String filePath)
         return sound;
     }
 
-    public   static void LoadFragment(Fragment fragment, FragmentManager supportFragmentManager,int fragment_container_id){
+    public   static void LoadFragment(Fragment fragment, FragmentManager supportFragmentManager,int fragment_container)
+    {
+        LoadFragment(fragment,supportFragmentManager,fragment_container,null );
+    }
+    public   static void LoadFragment(Fragment fragment, FragmentManager supportFragmentManager,int fragment_container_id,String addToBackStack){
         FragmentTransaction transaction = supportFragmentManager.beginTransaction();
         transaction.replace(fragment_container_id,fragment);
+        transaction.addToBackStack(addToBackStack);
         transaction.commit();
     }
     public static void setEditTextError(EditText editText, String message)
