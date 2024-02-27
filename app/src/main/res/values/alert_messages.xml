@@ -6,6 +6,8 @@
     <string name="msg_stop_automated_chat">You must close the automated chat service before moving to any other service</string>
     <string name="msg_stop_session_chat">The entire current chat session will be stopped. Do you agree to this?</string>
     <string name="msg_choose_the_chat">Choose the chat</string>
+    <string name="msg_mute_microphone_alarm_tone">You can turn off the alarm tone for turning on and off the microphone to prevent disturbance by
+        switching the device's sound mode to silent or vibrate.</string>
     <string name="msg_choose_the_language">Choose the language</string>
     <string name="msg_failed_the_session_create">Failed to send the request</string>
     <string name="msg_no_internet"> !! No Internet Connection</string>

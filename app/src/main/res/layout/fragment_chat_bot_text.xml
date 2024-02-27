@@ -140,23 +140,21 @@
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/textInput1"
-                    android:layout_width="300dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_alignParentLeft="true"
-                    android:maxWidth="300dp"
-                    android:maxHeight="150dp"
                     android:layout_gravity="center"
-                    android:layout_marginStart="5dp"
+                    android:layout_marginRight="80dp"
                     android:layout_marginTop="5dp"
                     android:layout_marginEnd="5dp"
                     android:layout_marginBottom="5dp"
                     android:paddingHorizontal="10dp"
                     android:background="@drawable/border"
                     android:inputType="text|textMultiLine"
-                    android:hint="أدخل النص هنا"
-
+                    android:hint="Enter your message"
                     android:textDirection="rtl"
                     android:padding="10dp" />
+
             </RelativeLayout>
         </LinearLayout>
 

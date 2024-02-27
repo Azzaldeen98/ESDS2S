@@ -136,7 +136,14 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
 
         alert_btn_ok?.setOnClickListener{v->
             if(selectedLanguageCode!=null) {
-                checkMicrophonPermision() }
+                AlertDialog.Builder(this.context)
+                                .setTitle("Info")
+                                .setIcon(R.drawable.baseline_info_24)
+                                .setMessage(getString(R.string.msg_mute_microphone_alarm_tone))
+                                .setPositiveButton(getString(R.string.btn_ok)) { dialog, which ->  checkMicrophonPermision() }
+                                .create()
+                                .show()
+                }
             notify_layout_back?.setVisibility(View.GONE)
         }
     }

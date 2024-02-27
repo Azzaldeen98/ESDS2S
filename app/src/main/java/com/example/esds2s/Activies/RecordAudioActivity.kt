@@ -33,7 +33,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.util.Objects
 
-class RecordAudioActivity : AppCompatActivity(), IBaseCallbackListener<String>, AdapterView.OnItemSelectedListener {
+class RecordAudioActivity : AppCompatActivity() {
 
 
     private var arrayAdapterLanguage: ArrayAdapter<String>? =null
@@ -44,11 +44,7 @@ class RecordAudioActivity : AppCompatActivity(), IBaseCallbackListener<String>, 
     lateinit var bottomNav : BottomNavigationView
     private  var languageCodes : Array<String>?=null
     private  var languageNames : Array<String>?=null
-    private  var genderList: Array<String>?=null
-    private  var languagesSpinnerHandler: SpinnerHandler?=null
-    private  var genderSpinnerHandler: SpinnerHandler?=null
-    private  var spinner_languages: Spinner?=null
-    private  var spinner_gender: Spinner?=null
+
 
 
 
@@ -93,21 +89,11 @@ class RecordAudioActivity : AppCompatActivity(), IBaseCallbackListener<String>, 
           startActivity(intent)
       }
       else {
-
-          loadPresetUserLanguage()
-          initializationLanguagesList()
-
               if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-                  checkPermission()
-              }
+                  checkPermission() }
+              loadPresetUserLanguage()
+              initializationLanguagesList()
               loadFragment(AutomatedChatBotFragment())
-
-//          languagesSpinnerHandler= SpinnerHandler(this,spinner_languages!!,this)
-//          languagesSpinnerHandler?.initialize(languageNames?.toList()!!)
-
-
-//              genderSpinnerHandler= SpinnerHandler(this,spinner_gender!!,this)
-//              genderSpinnerHandler?.initialize(genderList?.toList()!!)
           }
 
     }
@@ -125,17 +111,13 @@ class RecordAudioActivity : AppCompatActivity(), IBaseCallbackListener<String>, 
 
         languageCodes = resources.getStringArray(R.array.language_codes)
         languageNames = resources.getStringArray(R.array.language_names)
-
         if(selectedLanguageIndex>-1)
-        autocompleteTV?.setText(languageNames?.get(0))
-
+            autocompleteTV?.setText(languageNames?.get(0))
         arrayAdapterLanguage = ArrayAdapter<String>(this, R.layout.dropdown_item, languageNames!!)
         autocompleteTV?.setAdapter(arrayAdapterLanguage)
         autocompleteTV?.setOnItemClickListener { parent, view, position, id -> onSelectedLanguage(position)}
-
     }
     fun onSelectedLanguage(position:Int){
-
         selectedLanguageCode = languageCodes?.get(position) as String
         selectedLanguageIndex=position
         selectedLanguageCode = languageCodes?.get(position).toString()
@@ -202,20 +184,5 @@ class RecordAudioActivity : AppCompatActivity(), IBaseCallbackListener<String>, 
         }
     }
 
-    override fun onCallBackExecuted(item: String?) {
 
-    }
-
-    override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-        selectedLanguageCode = languageCodes?.get(position).toString()
-        if(selectedLanguageCode!=null){
-            LanguageInfo.setStorageSelcetedLanguage(this, selectedLanguageCode, position)
-        }
-
-        Toast.makeText(this, selectedLanguageCode, Toast.LENGTH_SHORT).show();
-    }
-
-    override fun onNothingSelected(parent: AdapterView<*>?) {
-        TODO("Not yet implemented")
-    }
 }
