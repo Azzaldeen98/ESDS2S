@@ -1,4 +1,4 @@
-package com.example.esds2s
+package com.example.esds2s.Activies
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -8,6 +8,7 @@ import com.example.esds2s.ApiClient.Controlls.AuthControl
 import com.example.esds2s.Helpers.ExternalStorage
 import com.example.esds2s.Interface.IAuthServiceEventListener
 import com.example.esds2s.Models.ResponseModels.AuthResponse
+import com.example.esds2s.R
 
 class RegisterActivity : AppCompatActivity() ,IAuthServiceEventListener{
 

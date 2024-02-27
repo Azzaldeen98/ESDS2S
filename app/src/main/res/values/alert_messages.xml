@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notify1_Automated_msg"> This service will work continuously without stopping, even when the application is closed </string>
+    <!--=========================================================================-->
+    <string name="msg_stop_record_service">The Automated Chat  service  will be stopped </string>
+    <string name="msg_stop_automated_chat">You must close the automated chat service before moving to any other service</string>
+    <string name="msg_stop_session_chat">The entire current chat session will be stopped. Do you agree to this?</string>
+    <string name="msg_choose_the_chat">Choose the chat</string>
+    <string name="msg_choose_the_language">Choose the language</string>
+    <string name="msg_failed_the_session_create">Failed to send the request</string>
+    <string name="msg_no_internet"> !! No Internet Connection</string>
+    <string name="retry_button">Retry Connection</string>
+</resources>

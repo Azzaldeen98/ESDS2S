@@ -78,12 +78,11 @@ class MainHomeFragment : Fragment(), IBaseServiceEventListener<ArrayList<BaseCha
         flexLayoutManager.justifyContent =   JustifyContent.SPACE_AROUND  // يحدد flex-wrap: wrap
         flexLayoutManager.flexWrap =  FlexWrap.WRAP  // يحدد flex-wrap: wrap
         recyclerview?.layoutManager= flexLayoutManager
-        binding?.btnMainCreateChat?.setOnClickListener({v-> openSelectedChat(TypeChat.NEWCHAT) })
+        binding?.btnMainCreateChat?.setOnClickListener({v-> onClickChatButton(TypeChat.NEWCHAT) })
 //        binding?.btnMainCreateChat?.visibility = View.INVISIBLE
         laoudAllChats()
 
     }
-
     private  fun uplaodAllChatsFromLocalStorage():Boolean{
 
         progressPar?.visibility = View.VISIBLE
@@ -127,8 +126,6 @@ class MainHomeFragment : Fragment(), IBaseServiceEventListener<ArrayList<BaseCha
             progressPar?.visibility = View.GONE
         }
     }
-
-
     override fun onRequestIsSuccess(response: ArrayList<BaseChatResponse>) {
 
         try {
@@ -149,7 +146,6 @@ class MainHomeFragment : Fragment(), IBaseServiceEventListener<ArrayList<BaseCha
         }
 
     }
-
     override fun onRequestIsFailure(error: String) {
         progressPar?.visibility = View.GONE
         Log.e("onRequestIsFailure",error)
@@ -162,22 +158,15 @@ class MainHomeFragment : Fragment(), IBaseServiceEventListener<ArrayList<BaseCha
         recyclerview?.adapter = adapter
         progressPar?.visibility = View.GONE
     }
-
-    override fun onItemClick(item: BaseChatResponse) {
-
+    override fun onSelectedItem(item: BaseChatResponse) {
         if(item!=null) {
-//            Toast.makeText(this?.context,item.scope,Toast.LENGTH_SHORT).show()
-            openSelectedChat(TypeChat.SPACIFICCHAT,item)
-
+            onClickChatButton(TypeChat.SPACIFICCHAT,item)
         }
-
     }
-
     @SuppressLint("SuspiciousIndentation")
-    fun openSelectedChat(typeChat: TypeChat, spacificChat:BaseChatResponse?=null) {
-
-
+    fun onClickChatButton(typeChat: TypeChat, spacificChat:BaseChatResponse?=null) {
         try {
+            progressPar?.visibility = View.VISIBLE
             val newFragment = CreateNewChatFragment()
             val bundle = Bundle()
             bundle.putInt("typeChat", typeChat.ordinal)
@@ -193,12 +182,10 @@ class MainHomeFragment : Fragment(), IBaseServiceEventListener<ArrayList<BaseCha
         }
 //        Toast.makeText(this.context,"Chat: "+ typeChat?.toString(), Toast.LENGTH_SHORT).show()
     }
-
-    override fun onResume() {
-        super.onResume()
-//        progressPar?.visibility = View.VISIBLE
-
-    }
+//    override fun onResume() {
+//        super.onResume()
+////        progressPar?.visibility = View.VISIBLE
+//    }
 
 
     companion object {

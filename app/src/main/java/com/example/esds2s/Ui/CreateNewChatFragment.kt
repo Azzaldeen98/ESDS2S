@@ -19,21 +19,14 @@ import com.example.esds2s.Helpers.Helper
 import com.example.esds2s.Helpers.JsonStorageManager
 import com.example.esds2s.Helpers.LanguageInfo
 import com.example.esds2s.Interface.IBaseServiceEventListener
-import com.example.esds2s.Interface.IExecuteRequestAsync
 import com.example.esds2s.Models.RequestModels.CustomerChatRequest
 import com.example.esds2s.Models.ResponseModels.BaseChatResponse
-import com.example.esds2s.Models.ResponseModels.CustomerChatResponse
-import com.example.esds2s.Models.ResponseModels.GeminiResponse
 import com.example.esds2s.R
-import com.example.esds2s.RecordAudioActivity
-import com.example.esds2s.Services.SendRequestAsync
-import com.example.esds2s.Services.TestConnection
+import com.example.esds2s.Activies.RecordAudioActivity
 import com.example.esds2s.databinding.FragmentCreateNewChatBinding
 import com.google.android.material.textfield.TextInputLayout
 import com.google.gson.Gson
 import kotlinx.coroutines.*
-import com.google.android.flexbox.FlexboxLayoutManager
-import okhttp3.internal.wait
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -118,7 +111,7 @@ class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<Ba
             binding?.inputChatName?.visibility=View.GONE
             binding?.InputChatNameData?.setText(selectedChat?.scope)
         }
-        binding?.btnSubmitChatInfo?.setOnClickListener{ submitChatInfo() }
+        binding?.btnSubmitChatInfo?.setOnClickListener{ submitCreateChat() }
         progressPar.visibility = View.VISIBLE
         insilizationLanguagesList()
         laoudAllChats()
@@ -234,16 +227,11 @@ class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<Ba
         Toast.makeText(this.context, countEmpty?.toString(), Toast.LENGTH_SHORT).show()
         return countEmpty==0
     }
+    private  fun submitCreateChat(){
 
-
-
-
-    private  fun submitChatInfo(){
+        progressPar.visibility = View.VISIBLE
         val mainHandler = Handler(Looper.getMainLooper())
-
         if(!checkInputData()) return;
-
-
         val body=CustomerChatRequest(
             token_chat =selectedChat?.token!!,
             name = selectedChat?.scope.toString(),
@@ -251,23 +239,27 @@ class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<Ba
         LanguageInfo.setStorageSelcetedLanguage(this?.context,selectedLanguage,selectedLanguageIndex!!)
         GlobalScope.async {
             withContext(Dispatchers.IO) {
-                var response = sessionChatControl?.createSessionChat(body)
-                     if (response != null) {
-                    Log.d("CustomerChatResponse55", Gson().toJson(response))
-                    val intent = Intent(this@CreateNewChatFragment.context, RecordAudioActivity::class.java)
-                    startActivity(intent)
-                } else {
-                     mainHandler.post(java.lang.Runnable {
-                        AlertDialog.Builder(this@CreateNewChatFragment.context)
-                            .setTitle("Alert")
-                            .setIcon(R.drawable.baseline_warning_24)
-                            .setMessage(getString(R.string.msg_failed_the_session_create))
-                            .setPositiveButton(getString(R.string.btn_ok)) { dialog, which -> }
-                            .create()
-                            .show()
-                    })
-                }
-//                mainHandler.post(java.lang.Runnable { progressPar!!.visibility = View.GONE })
+                try {
+                    var response = sessionChatControl?.createSessionChat(body)
+                    if (response != null) {
+                        Log.d("CustomerChatResponse55", Gson().toJson(response))
+                        val intent = Intent(this@CreateNewChatFragment.context, RecordAudioActivity::class.java)
+                        startActivity(intent)
+                    } else {
+                        mainHandler.post(java.lang.Runnable {
+                            AlertDialog.Builder(this@CreateNewChatFragment.context)
+                                .setTitle("Alert")
+                                .setIcon(R.drawable.baseline_warning_24)
+                                .setMessage(getString(R.string.msg_failed_the_session_create))
+                                .setPositiveButton(getString(R.string.btn_ok)) { dialog, which -> }
+                                .create()
+                                .show()
+                        })
+                    }
+                }catch (e:Exception){ Log.e("Customer Chat",e.message.toString())}
+                finally { mainHandler.post(java.lang.Runnable { progressPar!!.visibility = View.GONE }) }
+
+//
 //
             }
         }
@@ -288,9 +280,7 @@ class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<Ba
 
 
     }
-
     override fun onRequestIsSuccess(response: ArrayList<BaseChatResponse>) {
-
         try {
 
             Log.d("response",Gson().toJson(response))

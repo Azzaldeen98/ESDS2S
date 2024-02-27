@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="gender">
+        <item>Male</item>
+        <item>Female</item>
+    </string-array>
+    <string-array name="language_names">
+        <item>Arabic - Male</item>
+        <item>Arabic - Female</item>
+        <item>English - Male</item>
+        <item>English - Female</item>
+        <item>Spanish - Male</item>
+        <item>Spanish - Female</item>
+        <item>French - Male</item>
+        <item>French - Female</item>
+        <!--        <item>German</item>-->
+        <!--        <item>Chinese</item>-->
+        <!--        <item>Japan</item>-->
+    </string-array>
+    <string-array name="language_codes">
+        <item>ar-SA-1</item>
+        <item>ar-SA-2</item>
+        <item>en-US-3</item>
+        <item>en-US-1</item>
+        <item>es-ES-2</item>
+        <item>es-ES-1</item>
+        <item>fr-FR-2</item>
+        <item>fr-FR-1</item>
+        <!--        <item>de</item>-->
+        <!--        <item>zh</item>-->
+        <!--        <item>ja-JP-3</item>-->
+    </string-array>
+</resources>

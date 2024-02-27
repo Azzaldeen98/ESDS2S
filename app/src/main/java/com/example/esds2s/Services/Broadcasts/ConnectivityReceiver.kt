@@ -3,8 +3,6 @@ package com.example.esds2s.Services.Broadcasts
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.net.ConnectivityManager
-import com.example.esds2s.MainActivity
-import com.example.esds2s.RecordAudioActivity
 import com.example.esds2s.Services.TestConnection
 import android.content.Intent
 

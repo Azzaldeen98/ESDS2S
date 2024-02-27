@@ -1,8 +1,6 @@
-package com.example.esds2s
+package com.example.esds2s.Ui
 
 import android.annotation.SuppressLint
-import android.app.AlertDialog
-import android.content.Intent
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.speech.SpeechRecognizer
@@ -22,12 +20,9 @@ import com.example.esds2s.Helpers.Helper
 import com.example.esds2s.Interface.IGeminiServiceEventListener
 import com.example.esds2s.Interface.ISpeechRecognizerServices
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
+import com.example.esds2s.R
 import com.example.esds2s.Services.ExternalServices.SpeechRecognizerService
-import com.example.esds2s.Services.RecordVoiceService
 import com.example.esds2s.Services.TestConnection
-import java.util.*
-import kotlin.collections.ArrayList
-
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -39,11 +34,11 @@ private const val ARG_PARAM2 = "param2"
  * Use the [BasicChatBotFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener , ISpeechRecognizerServices {
+class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener, ISpeechRecognizerServices {
 
     companion object {
         val RecordAudioRequestCode: Int? = 1
-        lateinit var speechRecognizerService:SpeechRecognizerService
+        lateinit var speechRecognizerService: SpeechRecognizerService
         var speechRecognizer: SpeechRecognizer? = null
         /**
          * Use this factory method to create a new instance of
@@ -73,7 +68,7 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener , ISpeechR
     var isRecord:Boolean=false
     var reorderCounter:Int?=0;
     var speechTextResult:String?=null;
-    var reply_music:MediaPlayer?=null
+    var reply_music: MediaPlayer?=null
 
     private var audioPlayer: AudioPlayer? = null
     private var speechChatControl: SpeechChatControl? = null
@@ -93,13 +88,13 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener , ISpeechR
     ): View? {
         // Inflate the layout for this fragment
 
-        return inflater.inflate(com.example.esds2s.R.layout.fragment_basic_chat_bot, container, false)
+        return inflater.inflate(R.layout.fragment_basic_chat_bot, container, false)
     }
 
     fun sendRecordAudio(data:String) {
 
         try {
-            if(TestConnection.isOnline(this.context!!,true)) {
+            if(TestConnection.isOnline(this.context!!, true)) {
                 speechChatControl?.messageToGeneratorAudio(data, this)
             }
         }catch (e:java.lang.Exception){
@@ -115,13 +110,13 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener , ISpeechR
         file_record_Path="${this.context?.externalCacheDir?.absolutePath}/audiorecordtest.3gp"  //com.example.esds2s.ApiClient.BuildConfig.AudioFilePath
         audioRecorder = AndroidAudioRecorder(this.context!!)
         audioPlayer = AudioPlayer(this.context!!)
-        micButton=activity?.findViewById(com.example.esds2s.R.id.micButton)
-        editText=activity?.findViewById(com.example.esds2s.R.id.text)
+        micButton=activity?.findViewById(R.id.micButton)
+        editText=activity?.findViewById(R.id.text)
 
-       speechRecognizerService = SpeechRecognizerService(this?.context!!, this,this)
+       speechRecognizerService = SpeechRecognizerService(this?.context!!, this, this)
     var lang:String?="ar"
-      if( ExternalStorage.existing(this?.context,ContentApp.LANGUAGE))
-          lang= ExternalStorage.getValue(this.activity,ContentApp.LANGUAGE) as String?
+      if(ExternalStorage.existing(this?.context, ContentApp.LANGUAGE))
+          lang= ExternalStorage.getValue(this.activity, ContentApp.LANGUAGE) as String?
          speechRecognizerService?.Initialization(true,true,false,lang)
 
 //        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this.activity)
@@ -129,12 +124,12 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener , ISpeechR
 
         micButton?.setOnClickListener{v->
             if(isRecord==false){
-                micButton!!.setImageResource(com.example.esds2s.R.drawable.ic_mic_black_24dp)
+                micButton!!.setImageResource(R.drawable.ic_mic_black_24dp)
                 Log.d("startRecorder", "Recorder....");
                 speechRecognizerService?.startSpeechRecognizerListening()
 
             } else{
-                micButton!!.setImageResource(com.example.esds2s.R.drawable.ic_mic_black_off)
+                micButton!!.setImageResource(R.drawable.ic_mic_black_off)
                 micButton?.isEnabled=false;
                 Log.d("stopRecorder", "Recorder....");
                 editText?.hint="Wait ...";
@@ -171,7 +166,7 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener , ISpeechR
                             Thread.sleep(1000)
                          }
                         editText?.hint = "Listen ...";
-                        var media_player:MediaPlayer
+                        var media_player: MediaPlayer
                         if(!Helper.isAudioFile(response?.description)) {
 
                             val sound_id = Helper.getDefaultSoundResource()
@@ -218,14 +213,14 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener , ISpeechR
             }
         }
 
-        Log.e("onFailure",error!!);
+        Log.e("onFailure", error!!);
     }
     override fun onSpeechRecognizerResults(results: ArrayList<String>?) {
 
         if(results!=null&& results?.count()!!>0) {
             speechTextResult = results[0]
             sendRecordAudio(speechTextResult!!)
-            Log.e("onSpeechRecognizerResults90",speechTextResult!!);
+            Log.e("onSpeechRecognizerResults90", speechTextResult!!);
         }
     }
 

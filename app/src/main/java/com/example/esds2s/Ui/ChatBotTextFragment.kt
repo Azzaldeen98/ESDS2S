@@ -1,35 +1,31 @@
-package com.example.esds2s
+package com.example.esds2s.Ui
 
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.media.MediaPlayer
 import android.os.Bundle
-import android.provider.MediaStore.Audio.Media
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.content.ContextCompat
-import com.example.esds2s.ApiClient.Controlls.SessionChatControl
+import androidx.fragment.app.Fragment
 import com.example.esds2s.ApiClient.Controlls.SpeechChatControl
 import com.example.esds2s.Helpers.AudioPlayer
 import com.example.esds2s.Helpers.Helper
 import com.example.esds2s.Interface.IGeminiServiceEventListener
 import com.example.esds2s.Interface.IUplaodAudioEventListener
-import com.example.esds2s.Models.RequestModels.CustomerChatRequest
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
+import com.example.esds2s.R
 import com.example.esds2s.Services.TestConnection
 import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
-
 /**
  * A simple [Fragment] subclass.
  * Use the [ChatBotTextFragment.newInstance] factory method to
@@ -43,7 +39,7 @@ class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener, IGeminiServic
     private  var speechChatControl: SpeechChatControl? = null
     private var count: Int? = 0;
     private var btnSend: TextView? = null;
-    private var textResult: TextView ? = null;
+    private var textResult: TextView? = null;
     private var textInput: TextInputEditText? = null;
     private var text_gchat_message_me: TextView? = null;
 
@@ -67,13 +63,16 @@ class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener, IGeminiServic
         textInput=this.activity?.findViewById<TextInputEditText>(R.id.textInput1);
         text_gchat_message_me=this.activity?.findViewById<TextView>(R.id.text_gchat_message_me);
 
-        speechChatControl=SpeechChatControl(this.context!!)
+        speechChatControl= SpeechChatControl(this.context!!)
 
         btnSend?.setOnClickListener{v->
-            btnSend?.backgroundTintList=ColorStateList.valueOf(Color.GRAY);
+            btnSend?.backgroundTintList= ColorStateList.valueOf(Color.GRAY);
             Thread.sleep(1000)
-            val color = ContextCompat.getColor(this@ChatBotTextFragment.context!!, R.color.purple_700) // Color.parseColor(R.color.purple_700.toString())
-            btnSend?.backgroundTintList=ColorStateList.valueOf(color);
+            val color = ContextCompat.getColor(
+                this@ChatBotTextFragment.context!!,
+                R.color.purple_700
+            ) // Color.parseColor(R.color.purple_700.toString())
+            btnSend?.backgroundTintList= ColorStateList.valueOf(color);
             sendMessage();
         }
     }
@@ -85,21 +84,17 @@ class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener, IGeminiServic
 
             btnSend?.isEnabled=false;
             textInput?.isEnabled=false;
-            text_gchat_message_me?.visibility=View.VISIBLE
+            text_gchat_message_me?.visibility= View.VISIBLE
             text_gchat_message_me?.text=message
             textInput?.text?.clear()
 
-
             Thread{ activity?.runOnUiThread {
                 GlobalScope.launch {
-                    if(TestConnection.isOnline(this@ChatBotTextFragment.context!!,true)) {
+                    if(TestConnection.isOnline(this@ChatBotTextFragment.context!!, true)) {
                         try {
-                            speechChatControl?.messageToGeneratorAudio(
-                                message,
-                                this@ChatBotTextFragment
-                            )
+                            speechChatControl?.messageToGeneratorAudio(message, this@ChatBotTextFragment)
                         }catch (e:Exception){
-                            Log.d("Error",e.message.toString())
+                            Log.d("Error", e.message.toString())
                         }
                     }
                 } } }.start()
@@ -111,8 +106,8 @@ class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener, IGeminiServic
         if (response != null ){ //&&  Helper.isAudioFile(response?.description)) {
             btnSend?.isEnabled=true;
             textInput?.isEnabled=true;
-            val player:MediaPlayer
-            val media_player=AudioPlayer(this@ChatBotTextFragment.context)
+            val player: MediaPlayer
+            val media_player= AudioPlayer(this@ChatBotTextFragment.context)
             if(!Helper.isAudioFile(response?.description)) {
                 val sound_id = Helper.getDefaultSoundResource()
                 Log.e("isAudioFile", sound_id.toString());
@@ -129,7 +124,7 @@ class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener, IGeminiServic
         }
     }
     override fun onRequestIsFailure(error: String) {
-        Log.e("Error33",error)
+        Log.e("Error33", error)
         btnSend?.isEnabled=true;
         textInput?.isEnabled=true;
 

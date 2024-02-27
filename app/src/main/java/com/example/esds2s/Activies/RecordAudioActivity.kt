@@ -1,0 +1,197 @@
+package com.example.esds2s.Activies
+
+import android.Manifest
+import android.annotation.SuppressLint
+import android.app.AlertDialog
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
+import android.os.Bundle
+import android.text.format.DateFormat
+import android.util.Log
+import android.view.View
+import android.widget.AdapterView
+import android.widget.Spinner
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
+import com.example.esds2s.ApiClient.Controlls.SessionChatControl
+import com.example.esds2s.Ui.AutomatedChatBotFragment
+import com.example.esds2s.Ui.BasicChatBotFragment
+import com.example.esds2s.Ui.ChatBotTextFragment
+import com.example.esds2s.Helpers.Helper
+import com.example.esds2s.Helpers.LanguageInfo
+import com.example.esds2s.Helpers.Tools.SpinnerHandler
+import com.example.esds2s.Interface.IBaseCallbackListener
+import com.example.esds2s.R
+import com.example.esds2s.Services.RecordVoiceService
+import com.example.esds2s.Services.SessionManagement
+import com.example.esds2s.Services.TestConnection
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import java.util.Objects
+
+class RecordAudioActivity : AppCompatActivity(), IBaseCallbackListener<String>, AdapterView.OnItemSelectedListener {
+
+    private lateinit var selectedLanguageCode: String
+    private lateinit var sessionManagement: SessionManagement<RecordAudioActivity>
+    lateinit var bottomNav : BottomNavigationView
+    private  var languageCodes : Array<String>?=null
+    private  var languageNames : Array<String>?=null
+    private  var genderList: Array<String>?=null
+    private  var languagesSpinnerHandler: SpinnerHandler?=null
+    private  var genderSpinnerHandler: SpinnerHandler?=null
+    private  var spinner_languages: Spinner?=null
+    private  var spinner_gender: Spinner?=null
+
+
+
+    @SuppressLint("MissingInflatedId")
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val dateFormat = DateFormat.getDateFormat(applicationContext)
+        setContentView(R.layout.activity_record_audio)
+
+        spinner_languages=findViewById(R.id.SpinnerLanguages)
+//        spinner_gender=findViewById(R.id.SpinnerGender)
+        bottomNav = findViewById(R.id.bottomNavigationView) as BottomNavigationView
+        bottomNav.setOnItemSelectedListener {
+            when (it.itemId) {
+                R.id.navBtnBasicChat -> {
+                    checkServiceAndLoudFragment(BasicChatBotFragment())
+//                          loadFragment(BasicChatBotFragment())
+                    true
+                }
+                R.id.navBtnAutomatedChat -> {
+
+                    loadFragment(AutomatedChatBotFragment())
+                    true
+                }
+                R.id.navBtnTextChat -> {
+                    checkServiceAndLoudFragment(ChatBotTextFragment())
+//                          loadFragment(ChatBotTextFragment())
+                    true
+                }
+                R.id.navBtnCloseSession -> {
+                    sessionManagement?.logOutSession()
+                    true
+                }
+                else -> false
+
+
+            }
+        }
+
+        sessionManagement=SessionManagement(this)
+
+      if(!TestConnection.isOnline(this)) {
+          val intent = Intent(this, MainActivity::class.java)
+          intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+          startActivity(intent)
+      }
+      else {
+              if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                  checkPermission()
+              }
+              loadFragment(AutomatedChatBotFragment())
+
+          languageCodes = resources.getStringArray(R.array.language_codes)
+          languageNames = resources.getStringArray(R.array.language_names)
+          languagesSpinnerHandler= SpinnerHandler(this,spinner_languages!!,this)
+          languagesSpinnerHandler?.initialize(languageNames?.toList()!!)
+          loadPresetUserLanguage()
+
+//              genderSpinnerHandler= SpinnerHandler(this,spinner_gender!!,this)
+//              genderSpinnerHandler?.initialize(genderList?.toList()!!)
+          }
+
+    }
+
+    private fun loadPresetUserLanguage() {
+        val languageInfo = LanguageInfo.getStorageSelcetedLanguage(this);
+        if(languageInfo!=null) {
+            languagesSpinnerHandler?.setItemSelected(languageInfo.index)
+        }
+    }
+    private  fun checkServiceAndLoudFragment(fragment: Fragment){
+
+        try {
+            if (Helper.isRecordServiceRunningInForeground(this, RecordVoiceService::class.java)) {
+
+                AlertDialog.Builder(this)
+                    .setTitle("warning")
+                    .setIcon(R.drawable.baseline_warning_24)
+                    .setMessage(getString(R.string.msg_stop_automated_chat))
+                    .setPositiveButton(getString(R.string.btn_yes)) { dialog, which ->
+                        val  serviceIntent = Intent(this, RecordVoiceService::class.java)
+                        stopService(serviceIntent)
+                        loadFragment(fragment)
+                    }.setNegativeButton(getString(R.string.btn_no)) { dialog, which ->}
+                    .create()
+                    .show()
+            }
+            else
+                loadFragment(fragment)
+
+        }catch (e:Exception){
+            Log.d("Erorr-Close Forground Service",e.message.toString())
+        }
+    }
+    private  fun loadFragment(fragment: Fragment){
+        val transaction = supportFragmentManager.beginTransaction()
+        transaction.replace(R.id.fragment_container,fragment)
+        transaction.commit()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        BasicChatBotFragment.speechRecognizer?.destroy()
+    }
+
+
+    private fun checkPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.RECORD_AUDIO),
+                BasicChatBotFragment.RecordAudioRequestCode!!
+            )
+        }
+
+        }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == BasicChatBotFragment.RecordAudioRequestCode && grantResults.size > 0) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) Toast.makeText(
+                this,
+                "Permission Granted",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    override fun onCallBackExecuted(item: String?) {
+
+    }
+
+    override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+        selectedLanguageCode = languageCodes?.get(position).toString()
+        if(selectedLanguageCode!=null){
+            LanguageInfo.setStorageSelcetedLanguage(this, selectedLanguageCode, position)
+        }
+
+        Toast.makeText(this, selectedLanguageCode, Toast.LENGTH_SHORT).show();
+    }
+
+    override fun onNothingSelected(parent: AdapterView<*>?) {
+        TODO("Not yet implemented")
+    }
+}

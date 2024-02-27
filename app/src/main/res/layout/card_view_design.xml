@@ -2,13 +2,13 @@
 <androidx.cardview.widget.CardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    app:cardCornerRadius="10sp"
+    app:cardCornerRadius="5sp"
     android:layout_width="match_parent"
     android:layout_height="80dp"
-    android:layout_marginVertical="20dp"
-    android:layout_marginHorizontal="10dp"
+    android:layout_marginVertical="3dp"
+    android:layout_marginHorizontal="3dp"
     android:layout_alignParentRight="true"
-    android:backgroundTint="#e7e7e7"
+    android:backgroundTint="#f8f9fa"
     android:padding="4dp"
     android:id="@+id/ResycleChatMainItem"
     app:cardElevation="6dp">
@@ -21,7 +21,6 @@
             android:layout_margin="0dp"
             android:gravity="center"
             android:layout_gravity="center">
-
             <com.google.android.material.card.MaterialCardView
                 app:cardCornerRadius="300sp"
                 android:layout_width="70dp"
@@ -50,7 +49,6 @@
                 android:textStyle="bold"
                 android:gravity="right"
                 android:text="Chat " />
-
         </RelativeLayout>
 
 

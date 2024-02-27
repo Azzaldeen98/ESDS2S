@@ -1,7 +1,6 @@
-package com.example.esds2s
+package com.example.esds2s.Activies
 
 import android.content.Intent
-import android.content.IntentFilter
 import android.os.Bundle
 import android.os.Handler
 import android.widget.LinearLayout
@@ -9,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.esds2s.ContentApp.ContentApp
 import com.example.esds2s.Helpers.Helper
 import com.example.esds2s.Helpers.JsonStorageManager
+import com.example.esds2s.R
 import com.example.esds2s.Services.Broadcasts.ConnectivityReceiver
 
 
@@ -25,6 +25,7 @@ class SplashActivity : AppCompatActivity() {
 
             // Start the main activity
             val intent = Intent(this@SplashActivity, MainActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)
 
             // Close the splash screen activity

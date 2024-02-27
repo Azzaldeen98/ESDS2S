@@ -23,12 +23,11 @@ import com.example.esds2s.ApiClient.Controlls.SpeechChatControl
 import com.example.esds2s.ContentApp.ContentApp
 import com.example.esds2s.Helpers.AndroidAudioRecorder
 import com.example.esds2s.Helpers.AudioPlayer
-import com.example.esds2s.Helpers.Enums.AudioPlayerStatus
 import com.example.esds2s.Helpers.ExternalStorage
 import com.example.esds2s.Helpers.Helper
 import com.example.esds2s.Helpers.LanguageInfo
 import com.example.esds2s.Interface.IGeminiServiceEventListener
-import com.example.esds2s.MainActivity
+import com.example.esds2s.Activies.MainActivity
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
 import com.example.esds2s.R
 import java.util.*
@@ -69,13 +68,9 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
             handler = Handler()
             audioPlayer = AudioPlayer(this);
             if(intent!=null) {
-
                 if (intent != null && intent?.hasExtra(ContentApp.LANGUAGE) == true) {
-                    LANG = intent?.getStringExtra(ContentApp.LANGUAGE) ?: "en-Us";
-                }
-                else{
-                    LANG= ExternalStorage.getValue(this@RecordVoiceService,ContentApp.LANGUAGE).toString()
-                }
+                    LANG = intent?.getStringExtra(ContentApp.LANGUAGE) ?: "en-Us"; }
+                else{ LANG= ExternalStorage.getValue(this@RecordVoiceService,ContentApp.LANGUAGE).toString() }
             }
         } catch (e:Exception){
             Toast.makeText(this, e.message.toString(), Toast.LENGTH_SHORT).show()
@@ -86,15 +81,14 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
         startSpeechRecognizerListening();
         return START_STICKY
     }
+
     private fun InitializeSpeechRecognizer(intent: Intent?) {
         try {
             if(this==null) return
             speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this@RecordVoiceService);
             speechRecognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
             // Define the language model used for voice recognition
-            speechRecognizerIntent?.putExtra(
-                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            speechRecognizerIntent?.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             speechRecognizerIntent?.putExtra(RecognizerIntent.EXTRA_PROMPT, "")
             // Specify the preferred language for voice recognition
             speechRecognizerIntent?.putExtra(RecognizerIntent.EXTRA_LANGUAGE, LANG);
@@ -169,7 +163,6 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
             }
         })
     }
-
     private fun startSpeechRecognizerListening() {
         if (!speechRecognizerIsListening!!) speechRecognizerIsListening=true
         if (this@RecordVoiceService.speechRecognizer != null && this@RecordVoiceService.speechRecognizerIntent != null){
@@ -190,7 +183,7 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
             Log.d("Error ! ", e.message.toString())
         }
     }
-     fun speechRecognizerListenAgain() {
+    fun speechRecognizerListenAgain() {
              if (speechRecognizerIsListening!!) {
                  speechRecognizerIsListening = false;
                  speechRecognizer?.cancel();
@@ -212,8 +205,25 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
     // Method to start the foreground service with notification
     private fun startForegroundServiceWithNotification(context: Context) {
         val notificationIntent = Intent(context, MainActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(context, 0,
-            notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+//        val pendingIntent = PendingIntent.getActivity(context, 0,
+//            notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+        val pendingIntent:PendingIntent
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            pendingIntent = PendingIntent.getActivity(
+                context,
+                0,
+                notificationIntent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+        } else {
+            pendingIntent = PendingIntent.getActivity(
+                context,
+                0,
+                notificationIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT
+            )
+        }
+
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setContentTitle(" خدمة الاستماع")
             .setContentText("هذه الخدمة تعمل بشكل مستمر دون انقطاع ")

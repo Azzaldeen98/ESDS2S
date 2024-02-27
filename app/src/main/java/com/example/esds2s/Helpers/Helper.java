@@ -8,12 +8,15 @@ import android.content.Context;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.example.esds2s.ContentApp.ContentApp;
+import com.example.esds2s.Helpers.Enums.AudioPlayerStatus;
 import com.example.esds2s.R;
 
 import java.util.List;
@@ -50,6 +53,7 @@ public class Helper {
 
         return false;
     }
+
 
 
 

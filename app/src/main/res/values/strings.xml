@@ -21,9 +21,7 @@
     <string name="stop_playing">Stop Playing</string>
     <string name="status">Status</string>
     <string name="title_activity_record_audio">RecordAudioActivity</string>
-    <string name="tab_text_1">Basic Chat</string>
-    <string name="tab_text_2">Automated Chat</string>
-    <string name="tab_text_3">Text ChatBot</string>
+
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <!--==================================================-->
@@ -46,55 +44,24 @@
     <string name="btn_register"> Register </string>
 
 
+
     <!--========================[EditText]==========================-->
 
     <string name="input_chat_name">  Enter Chat Name  </string>
     <string name="input_chat_desript">  Enter Chat Description  </string>
     <string name="input_chat_language">  Enter Chat Language   </string>
 
-    <!--========================[EditText Message Errors]==========================-->
-    <string name="input_is_empty">  This field cannot be left empty   </string>
+
 <!--    <string name="input_chat_name">  Enter the chat name   </string>-->
 <!--    <string name="input_chat_description">  Enter the chat description   </string>-->
 <!--    <string name="input_chat_description">  Enter the chat description   </string>-->
 
-<!--    <plurals name="input_chat_name">-->
-<!--        <item quantity="input_chat_name">%d Photo</item>-->
-<!--        <item quantity="other">%d Photos</item>-->
-<!--    </plurals>-->
-    <!--==================================================-->
-    <string name="notify1_Automated_msg"> This service will work continuously without stopping, even when the application is closed </string>
 
 
-    <string-array name="language_names">
-        <item>Arabic</item>
-        <item>English</item>
-        <item>Spanish</item>
-        <item>French</item>
-<!--        <item>German</item>-->
-<!--        <item>Chinese</item>-->
-<!--        <item>Japan</item>-->
-    </string-array>
-
-
-
-    <string-array name="language_codes">
-        <item>ar-SA-1</item>
-        <item>en-US-3</item>
-        <item>es-ES-1</item>
-        <item>fr-FR-1</item>
-<!--        <item>de</item>-->
-<!--        <item>zh</item>-->
-<!--        <item>ja-JP-3</item>-->
-    </string-array>
-    <!--=========================================================================-->
-    <string name="msg_stop_record_service">The Automated Chat background service will be stopped</string>
-    <string name="msg_stop_automated_chat">You must close the automated chat service before moving to any other service</string>
-    <string name="msg_stop_session_chat">The entire current chat session will be stopped. Do you agree to this?</string>
-    <string name="msg_choose_the_chat">Choose the chat</string>
-    <string name="msg_choose_the_language">Choose the language</string>
-    <string name="msg_failed_the_session_create">Failed to send the request</string>
-    <string name="msg_no_internet"> !! No Internet Connection</string>
-    <string name="retry_button">Retry Connection</string>
+    <!--========================[Navbar buttons Names]==========================-->
+    <string name="nav_basic_chat">Basic Chat</string>
+    <string name="nav_automated_chat">Automated Chat</string>
+    <string name="nav_text_chat">Text Chat</string>
+    <string name="nav_close_session">Close Session</string>
 
 </resources>

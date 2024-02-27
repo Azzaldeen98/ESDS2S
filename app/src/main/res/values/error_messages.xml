@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--========================[EditText Message Errors]==========================-->
+    <string name="input_is_empty">  This field cannot be left empty   </string>
+</resources>

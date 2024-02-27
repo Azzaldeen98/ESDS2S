@@ -1,4 +1,4 @@
-package com.example.esds2s
+package com.example.esds2s.Activies
 
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -15,6 +15,7 @@ import androidx.core.content.ContextCompat
 import com.example.esds2s.ContentApp.ContentApp
 import com.example.esds2s.Helpers.ExternalStorage
 import com.example.esds2s.Helpers.Helper
+import com.example.esds2s.R
 import com.example.esds2s.Services.TestConnection
 import com.example.esds2s.Ui.MainHomeFragment
 
