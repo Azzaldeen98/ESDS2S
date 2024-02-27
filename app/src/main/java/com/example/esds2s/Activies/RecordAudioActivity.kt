@@ -10,11 +10,10 @@ import android.os.Bundle
 import android.text.format.DateFormat
 import android.util.Log
 import android.view.View
-import android.widget.AdapterView
-import android.widget.Spinner
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.esds2s.ApiClient.Controlls.SessionChatControl
@@ -36,6 +35,10 @@ import java.util.Objects
 
 class RecordAudioActivity : AppCompatActivity(), IBaseCallbackListener<String>, AdapterView.OnItemSelectedListener {
 
+
+    private var arrayAdapterLanguage: ArrayAdapter<String>? =null
+    private var selectedLanguageIndex: Int=-1
+    private var autocompleteTV: AutoCompleteTextView? = null
     private lateinit var selectedLanguageCode: String
     private lateinit var sessionManagement: SessionManagement<RecordAudioActivity>
     lateinit var bottomNav : BottomNavigationView
@@ -55,9 +58,8 @@ class RecordAudioActivity : AppCompatActivity(), IBaseCallbackListener<String>, 
         val dateFormat = DateFormat.getDateFormat(applicationContext)
         setContentView(R.layout.activity_record_audio)
 
-        spinner_languages=findViewById(R.id.SpinnerLanguages)
-//        spinner_gender=findViewById(R.id.SpinnerGender)
         bottomNav = findViewById(R.id.bottomNavigationView) as BottomNavigationView
+        autocompleteTV = findViewById(R.id.autoCompleteTextViewLanguage)
         bottomNav.setOnItemSelectedListener {
             when (it.itemId) {
                 R.id.navBtnBasicChat -> {
@@ -66,7 +68,6 @@ class RecordAudioActivity : AppCompatActivity(), IBaseCallbackListener<String>, 
                     true
                 }
                 R.id.navBtnAutomatedChat -> {
-
                     loadFragment(AutomatedChatBotFragment())
                     true
                 }
@@ -84,7 +85,6 @@ class RecordAudioActivity : AppCompatActivity(), IBaseCallbackListener<String>, 
 
             }
         }
-
         sessionManagement=SessionManagement(this)
 
       if(!TestConnection.isOnline(this)) {
@@ -93,16 +93,18 @@ class RecordAudioActivity : AppCompatActivity(), IBaseCallbackListener<String>, 
           startActivity(intent)
       }
       else {
+
+          loadPresetUserLanguage()
+          initializationLanguagesList()
+
               if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                   checkPermission()
               }
               loadFragment(AutomatedChatBotFragment())
 
-          languageCodes = resources.getStringArray(R.array.language_codes)
-          languageNames = resources.getStringArray(R.array.language_names)
-          languagesSpinnerHandler= SpinnerHandler(this,spinner_languages!!,this)
-          languagesSpinnerHandler?.initialize(languageNames?.toList()!!)
-          loadPresetUserLanguage()
+//          languagesSpinnerHandler= SpinnerHandler(this,spinner_languages!!,this)
+//          languagesSpinnerHandler?.initialize(languageNames?.toList()!!)
+
 
 //              genderSpinnerHandler= SpinnerHandler(this,spinner_gender!!,this)
 //              genderSpinnerHandler?.initialize(genderList?.toList()!!)
@@ -112,9 +114,35 @@ class RecordAudioActivity : AppCompatActivity(), IBaseCallbackListener<String>, 
 
     private fun loadPresetUserLanguage() {
         val languageInfo = LanguageInfo.getStorageSelcetedLanguage(this);
+
         if(languageInfo!=null) {
-            languagesSpinnerHandler?.setItemSelected(languageInfo.index)
+            selectedLanguageCode=languageInfo.code!!
+            selectedLanguageIndex=languageInfo.index!!
         }
+
+    }
+    private  fun initializationLanguagesList(){
+
+        languageCodes = resources.getStringArray(R.array.language_codes)
+        languageNames = resources.getStringArray(R.array.language_names)
+
+        if(selectedLanguageIndex>-1)
+        autocompleteTV?.setText(languageNames?.get(0))
+
+        arrayAdapterLanguage = ArrayAdapter<String>(this, R.layout.dropdown_item, languageNames!!)
+        autocompleteTV?.setAdapter(arrayAdapterLanguage)
+        autocompleteTV?.setOnItemClickListener { parent, view, position, id -> onSelectedLanguage(position)}
+
+    }
+    fun onSelectedLanguage(position:Int){
+
+        selectedLanguageCode = languageCodes?.get(position) as String
+        selectedLanguageIndex=position
+        selectedLanguageCode = languageCodes?.get(position).toString()
+        if(selectedLanguageCode!=null){
+            LanguageInfo.setStorageSelcetedLanguage(this, selectedLanguageCode, position)
+        }
+        Toast.makeText(this, "Selected: $selectedLanguageCode", Toast.LENGTH_SHORT).show()
     }
     private  fun checkServiceAndLoudFragment(fragment: Fragment){
 
@@ -145,13 +173,10 @@ class RecordAudioActivity : AppCompatActivity(), IBaseCallbackListener<String>, 
         transaction.replace(R.id.fragment_container,fragment)
         transaction.commit()
     }
-
     override fun onDestroy() {
         super.onDestroy()
         BasicChatBotFragment.speechRecognizer?.destroy()
     }
-
-
     private fun checkPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             ActivityCompat.requestPermissions(
@@ -162,7 +187,6 @@ class RecordAudioActivity : AppCompatActivity(), IBaseCallbackListener<String>, 
         }
 
         }
-
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,

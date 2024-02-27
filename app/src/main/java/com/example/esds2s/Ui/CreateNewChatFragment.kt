@@ -90,12 +90,9 @@ class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<Ba
 
         internaal_header?.setText(getString(R.string.chat_info_page))
         btn_back?.setOnClickListener {
-            Helper.LoadFragment(MainHomeFragment(),
-                activity?.supportFragmentManager,
-                R.id.main_frame_layout)
+            Helper.LoadFragment(MainHomeFragment(), activity?.supportFragmentManager, R.id.main_frame_layout)
         }
     }
-
     override fun onStart() {
         super.onStart()
 
@@ -116,7 +113,6 @@ class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<Ba
         insilizationLanguagesList()
         laoudAllChats()
     }
-
     private  fun uplaodAllChatsFromLocalStorage():Boolean{
 
         var storage :JsonStorageManager?=null
@@ -163,10 +159,9 @@ class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<Ba
 
         progressPar?.visibility=View.GONE
         arrayAdapter = ArrayAdapter<String>(this?.context!!, R.layout.dropdown_item, chats.map { it.scope })
-         autocompleteTV = activity?.findViewById<AutoCompleteTextView>(R.id.autoCompleteTextViewChat)
+        autocompleteTV = activity?.findViewById<AutoCompleteTextView>(R.id.autoCompleteTextViewChat)
         autocompleteTV?.setAdapter(arrayAdapter)
-        autocompleteTV?.setOnItemClickListener { parent, view, position, id ->
-          selectedChat=chats?.get(position)
+        autocompleteTV?.setOnItemClickListener { parent, view, position, id -> selectedChat=chats?.get(position)
             Toast.makeText(requireContext(), "Selected: ", Toast.LENGTH_SHORT).show()
         }
     }

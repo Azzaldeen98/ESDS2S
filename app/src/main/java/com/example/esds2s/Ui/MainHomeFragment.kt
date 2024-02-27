@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.RelativeLayout
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -20,6 +21,7 @@ import com.example.esds2s.Interface.IBaseItemClickListener
 import com.example.esds2s.Interface.IBaseServiceEventListener
 import com.example.esds2s.Models.ResponseModels.BaseChatResponse
 import com.example.esds2s.Services.TestConnection
+import com.example.esds2s.Ui.Helpers.UiOptions
 import com.example.esds2s.databinding.FragmentMainHomeBinding
 import com.google.android.flexbox.*
 import com.google.gson.Gson
@@ -85,7 +87,7 @@ class MainHomeFragment : Fragment(), IBaseServiceEventListener<ArrayList<BaseCha
     }
     private  fun uplaodAllChatsFromLocalStorage():Boolean{
 
-        progressPar?.visibility = View.VISIBLE
+
         var storage :JsonStorageManager?=null
         var chatsList :List<BaseChatResponse>?=null
 
@@ -95,19 +97,18 @@ class MainHomeFragment : Fragment(), IBaseServiceEventListener<ArrayList<BaseCha
             if(!storage.exists(ContentApp.CHATS_LIST_STORAGE))
                 return  false
             chatsList = storage.getList(ContentApp.CHATS_LIST_STORAGE, BaseChatResponse::class.java)
-        } catch (e:java.lang.Exception){
-            return  false
-        } finally {
-            if (chatsList == null)
-                return false
-            else {
+            if(chatsList != null) {
                 insilizationChatsList(chatsList as ArrayList<BaseChatResponse>)
                 return true
             }
+        } catch (e:java.lang.Exception){
+            return  false
         }
+        return false
     }
     private  fun laoudAllChats(){
-        progressPar?.visibility = View.VISIBLE
+        progressPar?.let { UiOptions.isVisibility(it,true) }
+        
         try {
             // upload data from local storage
             if(!uplaodAllChatsFromLocalStorage()) {
@@ -123,7 +124,7 @@ class MainHomeFragment : Fragment(), IBaseServiceEventListener<ArrayList<BaseCha
             }
         } catch (e: java.lang.Exception) {
             Log.e("Error-laoudAllChats!! ", e?.message.toString())
-            progressPar?.visibility = View.GONE
+            progressPar?.let { UiOptions.isVisibility(it,false) }
         }
     }
     override fun onRequestIsSuccess(response: ArrayList<BaseChatResponse>) {
@@ -142,12 +143,12 @@ class MainHomeFragment : Fragment(), IBaseServiceEventListener<ArrayList<BaseCha
             Log.e("Error-laoudAllChats-response  ", e?.message.toString())
         }
         finally {
-            progressPar?.visibility = View.GONE
+            progressPar?.let { UiOptions.isVisibility(it,false) }
         }
 
     }
     override fun onRequestIsFailure(error: String) {
-        progressPar?.visibility = View.GONE
+        progressPar?.let { UiOptions.isVisibility(it,false) }
         Log.e("onRequestIsFailure",error)
     }
     private  fun insilizationChatsList(chats: ArrayList<BaseChatResponse>){
@@ -156,7 +157,8 @@ class MainHomeFragment : Fragment(), IBaseServiceEventListener<ArrayList<BaseCha
         Helper.setAnimateAlphaForTool(binding?.mainContinerChatButtons,0)
          adapter = CustomAdapter(chats,this,this.activity!!)
         recyclerview?.adapter = adapter
-        progressPar?.visibility = View.GONE
+        if(progressPar?.visibility ==View.VISIBLE)
+                 progressPar?.let { UiOptions.isVisibility(it,false) }
     }
     override fun onSelectedItem(item: BaseChatResponse) {
         if(item!=null) {
@@ -166,7 +168,7 @@ class MainHomeFragment : Fragment(), IBaseServiceEventListener<ArrayList<BaseCha
     @SuppressLint("SuspiciousIndentation")
     fun onClickChatButton(typeChat: TypeChat, spacificChat:BaseChatResponse?=null) {
         try {
-            progressPar?.visibility = View.VISIBLE
+            progressPar?.let { UiOptions.isVisibility(it,true) }
             val newFragment = CreateNewChatFragment()
             val bundle = Bundle()
             bundle.putInt("typeChat", typeChat.ordinal)
@@ -178,16 +180,11 @@ class MainHomeFragment : Fragment(), IBaseServiceEventListener<ArrayList<BaseCha
                 com.example.esds2s.R.id.main_frame_layout)
 
         }catch (e:Exception){
+            progressPar?.let { UiOptions.isVisibility(it,false) }
             Log.e("Error - go to  CreateNewChatFragment",e.message.toString())
         }
-//        Toast.makeText(this.context,"Chat: "+ typeChat?.toString(), Toast.LENGTH_SHORT).show()
+//
     }
-//    override fun onResume() {
-//        super.onResume()
-////        progressPar?.visibility = View.VISIBLE
-//    }
-
-
     companion object {
         /**
          * Use this factory method to create a new instance of
@@ -207,8 +204,5 @@ class MainHomeFragment : Fragment(), IBaseServiceEventListener<ArrayList<BaseCha
                 }
             }
     }
-
-
-
 
 }

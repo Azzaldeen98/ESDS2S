@@ -1,15 +1,20 @@
 package com.example.esds2s.Ui.Helpers
 
 import android.content.Context
+import android.view.View
 import android.widget.ImageView
 import com.example.esds2s.ContentApp.ContentApp
 import com.example.esds2s.Helpers.Enums.AudioPlayerStatus
 import com.example.esds2s.Helpers.ExternalStorage
 import com.example.esds2s.R
 
-class Options {
+class UiOptions {
 
     companion object {
+
+        fun isVisibility(view:View,value: Boolean=false){
+            view?.visibility=if (value) View.VISIBLE else View.GONE
+        }
         fun controlStopRobotVoice(
             context: Context?,
             robotSpeekerBtn: ImageView?,

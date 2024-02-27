@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="80dp"
     android:layout_marginVertical="3dp"
-    android:layout_marginHorizontal="3dp"
+    android:layout_marginHorizontal="5dp"
     android:layout_alignParentRight="true"
     android:backgroundTint="#f8f9fa"
     android:padding="4dp"

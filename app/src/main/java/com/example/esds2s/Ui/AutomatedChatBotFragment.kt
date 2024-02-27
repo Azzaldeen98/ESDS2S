@@ -29,6 +29,7 @@ import com.example.esds2s.Services.RecordVoiceService
 import com.example.esds2s.Services.SessionManagement
 import com.example.esds2s.Services.TestConnection
 import com.example.esds2s.databinding.FragmentAutomatedChatBotBinding
+import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 // TODO: Rename parameter arguments, choose names that match
@@ -43,9 +44,12 @@ private const val ARG_PARAM2 = "param2"
 class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener {
 
 
+    private var dropDownListLanguage: com.google.android.material.textfield.TextInputLayout? = null
+    private var autocompleteTV: AutoCompleteTextView? = null
     // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
+    private var arrayAdapterLanguage: ArrayAdapter<String>? =null
     private  var alert_btn_ok: TextView?=null
     private  var languageCodes : Array<String>?=null
     private  var languageNames : Array<String>?=null
@@ -55,18 +59,16 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
     private lateinit var sessionManagement: SessionManagement<RecordAudioActivity>
     private var alert_msg: TextView?=null
     private var selectedLanguageCode: String?=null
+    private var selectedLanguageIndex: Int=-1
     private var alert_btn_cancel: TextView?=null
     private var notify_layout_back : LinearLayout?=null
     private var alert_notify: LinearLayout?=null
     private var isMuteVoice: Boolean=false
     private var progressBar: RelativeLayout?=null
-    private var languagesSpinnerHandler: SpinnerHandler?=null
-    private var genderSpinnerHandler: SpinnerHandler?=null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         arguments?.let {
-
             param1 = it.getString(ARG_PARAM1)
             param2 = it.getString(ARG_PARAM2)
         }
@@ -82,6 +84,7 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
         loadPresetUserLanguage()
         internalHeader()
         initializationComponent()
+//        initializationLanguagesList()
         progressBar=activity?.findViewById(R.id.progressPar1)!!
         initializationEvents();
 
@@ -104,35 +107,25 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
         internaal_header?.setText(getString(R.string.automated_chat_page))
 //        btn_back?.setOnClickListener {onBack()}
     }
-    override fun onResume() {
-        super.onResume()
-//        internalHeader()
-    }
-
     private fun initializationComponent() {
 
-        languageCodes = resources.getStringArray(R.array.language_codes)
-        languageNames = resources.getStringArray(R.array.language_names)
-        genderList = resources.getStringArray(R.array.gender)
         notify_layout_back = activity?.findViewById(R.id.background_notify_dialog1)
         alert_msg = activity?.findViewById(R.id.alert_title)
         alert_btn_ok = activity?.findViewById(R.id.alert_btn_ok)
         alert_notify = activity?.findViewById(R.id.alert_notify)
         alert_btn_cancel = activity?.findViewById(R.id.alert_btn_cancel)
-
+        languageCodes = resources.getStringArray(R.array.language_codes)
         if(Helper.isRecordServiceRunningInForeground(this?.activity!!,RecordVoiceService::class.java))
             setStartRecordForGroundServiceMode();
         else
             setStopRecordForGroundServiceMode()
-
     }
     private fun loadPresetUserLanguage() {
-        val languageInfo = LanguageInfo.getStorageSelcetedLanguage(this?.context);
-        if(languageInfo!=null) {
-           selectedLanguageCode=languageInfo.code!!
-        }
-
-
+            val languageInfo = LanguageInfo.getStorageSelcetedLanguage(this?.context);
+            if(languageInfo!=null) {
+               selectedLanguageCode=languageInfo.code!!
+               selectedLanguageIndex=languageInfo.index!!
+            }
     }
     private fun initializationEvents() {
 
@@ -142,13 +135,26 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
         binding?.robotSpeekerBtn?.setOnClickListener{v-> ControllChatRobotVoice() }
 
         alert_btn_ok?.setOnClickListener{v->
-
             if(selectedLanguageCode!=null) {
-                checkMicrophonPermision()
-            }
+                checkMicrophonPermision() }
             notify_layout_back?.setVisibility(View.GONE)
         }
     }
+    private  fun initializationLanguagesList(){
+
+
+
+//        autocompleteTV = activity?.findViewById<AutoCompleteTextView>(R.id.autoCompleteTextViewLanguage)
+
+//        if(selectedLanguageIndex!! >-1)
+//            autocompleteTV?.setText(languageNames?.get(selectedLanguageIndex!!))
+//        arrayAdapterLanguage = ArrayAdapter<String>(this?.context!!, R.layout.dropdown_item, languageNames!!)
+//        autocompleteTV?.setAdapter(arrayAdapterLanguage)
+//        autocompleteTV?.setOnItemClickListener { parent, view, position, id -> onSelectedLanguage(position)}
+
+    }
+
+
     fun onClickGenerateAutomatedChatService(v: View) {
 
 //        if(!Helper.isRecordServiceRunningInForeground(this?.activity!!, RecordVoiceService::class.java)) {
@@ -159,7 +165,6 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
 
 //        }
     }
-
     private  fun  setStartRecordForGroundServiceMode(){
         binding?.btnAutomatedChat?.visibility = View.GONE
         binding?.btnCloseService?.visibility = View.VISIBLE
@@ -172,11 +177,6 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
     }
 
     override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-        selectedLanguageCode = languageCodes?.get(position)
-        if(selectedLanguageCode!=null){
-            LanguageInfo.setStorageSelcetedLanguage(this?.context, selectedLanguageCode, position)
-        }
-
         Toast.makeText(this?.context, selectedLanguageCode, Toast.LENGTH_SHORT).show();
     }
     override fun onNothingSelected(parent: AdapterView<*>?) {}

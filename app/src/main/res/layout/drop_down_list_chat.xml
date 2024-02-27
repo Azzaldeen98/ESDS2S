@@ -8,10 +8,10 @@
     android:layout_height="wrap_content"
     tools:ignore="MissingDefaultResource"
     style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-    android:layout_margin="20dp"
+    android:layout_margin="0dp"
     android:paddingHorizontal="10dp"
     app:layout_constraintLeft_toLeftOf="parent"
-    android:padding="10dp"
+    android:paddingVertical="10dp"
     app:layout_constraintRight_toRightOf="parent"
     app:layout_constraintTop_toTopOf="parent">
 
