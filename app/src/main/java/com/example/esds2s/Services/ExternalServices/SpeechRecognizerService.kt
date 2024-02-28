@@ -18,6 +18,8 @@ class SpeechRecognizerService(private val context: Context,
                               private val  speechListenerCallback: ISpeechRecognizerServices)
     :IGeminiServiceEventListener{
 
+
+    private lateinit var mOnErrorListener: OnErrorListener
     private var speechChatControl: SpeechChatControl? = null
     private var speechRecognizerIsListening: Boolean? = false
     private var recognizer:Boolean=true
@@ -27,26 +29,25 @@ class SpeechRecognizerService(private val context: Context,
     private var _lang:String="ar"
     var speechRecognizerIntent: Intent?=null
     private var speechRecognizer: SpeechRecognizer?=null
-//    private var context: Context?=null
     var Language: String
         get() { return _lang }
         set(value) { _lang = value }
 
-    fun  Initialization(_recognizer: Boolean?=true,_shareWithApiGenerator: Boolean?=true,_workingInTheContinuously: Boolean?=false,lang:String?="ar"):SpeechRecognizerService {
+    fun  Initialization(_recognizer: Boolean?=true,_shareWithApiGenerator: Boolean?=true,
+                        _workingInTheContinuously: Boolean?=false,lang:String?="ar")
+    :SpeechRecognizerService {
 
         setOptions(lang!!,_recognizer!!,_shareWithApiGenerator!!,_workingInTheContinuously!!)
-
         try {
             speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context);
             speechRecognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
             // Define the language model used for voice recognition
-            speechRecognizerIntent?.putExtra(
-                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
-            )
+            speechRecognizerIntent?.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             // Specify the preferred language for voice recognition
             speechRecognizerIntent?.putExtra(RecognizerIntent.EXTRA_LANGUAGE, lang);
-            Toast.makeText(context, "Language88 : " + lang, Toast.LENGTH_SHORT)
+            Toast.makeText(context, "Language : " + lang, Toast.LENGTH_SHORT)
+
             speechRecognizer?.setRecognitionListener(object : RecognitionListener {
 
                 override fun onReadyForSpeech(bundle: Bundle) {
@@ -67,9 +68,14 @@ class SpeechRecognizerService(private val context: Context,
                 override fun onError(i: Int) {
 
                     Toast.makeText(context, "onError:"+i, Toast.LENGTH_SHORT)
+//                    //TODO
+//                    mOnErrorListener?.onError(i)
+
                     when(i) {
                         //1
-                        SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> {}
+                        SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> {
+//                            mOnErrorListener?.onError(i)
+                        }
                         //2
                         SpeechRecognizer.ERROR_NETWORK -> {
                             Log.d("ERROR_NETWORK", i.toString() + "")
@@ -180,17 +186,17 @@ class SpeechRecognizerService(private val context: Context,
         }
     }
 
-
+    fun setOnErrorListener(listener:OnErrorListener ){
+        mOnErrorListener=listener
+    }
     override fun onRequestIsSuccess(response: GeminiResponse) {
 
 //        if(workingInTheContinuously==false)
           callBack?.onRequestIsSuccess(response)
     }
-
     override fun onRequestIsFailure(error: String) {
         callBack?.onRequestIsFailure(error)
     }
-
     fun stopSpeechRecognizer(){
         try {
             speechRecognizer?.stopListening()
@@ -217,6 +223,15 @@ class SpeechRecognizerService(private val context: Context,
         catch (e: Exception) {
             Log.d("Error ! ", e.message.toString())
         }
+    }
+
+    /**
+     * ---------------------------------------------------------
+     **/
+
+    interface OnErrorListener {
+
+        fun onError(errorId: Int): Boolean
     }
 
 }

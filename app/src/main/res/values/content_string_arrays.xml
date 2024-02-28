@@ -4,6 +4,14 @@
         <item>Male</item>
         <item>Female</item>
     </string-array>
+
+
+    <declare-styleable name="stopWords">
+        <attr name="ar">
+
+        </attr>
+    </declare-styleable>
+
     <string-array name="language_names">
         <item>Arabic - Male</item>
         <item>Arabic - Female</item>

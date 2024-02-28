@@ -9,6 +9,8 @@ public class LanguageInfo {
         private String code;
         private int index;
 
+
+
         public LanguageInfo(String code, int index) {
             this.code = code;
             this.index = index;
@@ -31,9 +33,10 @@ public class LanguageInfo {
 
         if(ExternalStorage.existing(context,ContentApp.LANGUAGE) && ExternalStorage.existing(context,ContentApp.LANGUAGE_INDEX)) {
 
-            String code = ExternalStorage.getValue(context, ContentApp.LANGUAGE).toString().trim();
+            Object code = ExternalStorage.getValue(context, ContentApp.LANGUAGE);
+            if(code==null) return null;
             int index = ExternalStorage.getIntValue(context,ContentApp.LANGUAGE_INDEX);
-            LanguageInfo languageInfo = new LanguageInfo(code,index);
+            LanguageInfo languageInfo = new LanguageInfo(code.toString().trim(),index);
             return languageInfo;
         }
         return null;

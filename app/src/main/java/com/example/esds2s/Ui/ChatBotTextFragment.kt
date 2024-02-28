@@ -3,17 +3,22 @@ package com.example.esds2s.Ui
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.media.MediaPlayer
+import android.net.http.BidirectionalStream
 import android.os.Bundle
+import android.text.TextDirectionHeuristic
+import android.text.TextDirectionHeuristics
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.esds2s.ApiClient.Controlls.SpeechChatControl
 import com.example.esds2s.Helpers.AudioPlayer
 import com.example.esds2s.Helpers.Helper
+import com.example.esds2s.Helpers.LanguageInfo
 import com.example.esds2s.Interface.IGeminiServiceEventListener
 import com.example.esds2s.Interface.IUplaodAudioEventListener
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
@@ -60,14 +65,11 @@ class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener, IGeminiServic
         super.onStart()
         btnSend=this.activity?.findViewById<TextView>(R.id.btnSend1);
         textResult=this.activity?.findViewById<TextView>(R.id.textResult1);
-        textInput=this.activity?.findViewById<TextInputEditText>(R.id.textInput1);
+        textInput=this.activity?.findViewById<TextInputEditText>(R.id.textInputMessage);
         text_gchat_message_me=this.activity?.findViewById<TextView>(R.id.text_gchat_message_me);
-
         speechChatControl= SpeechChatControl(this.context!!)
-
         btnSend?.setOnClickListener{v->
             btnSend?.backgroundTintList= ColorStateList.valueOf(Color.GRAY);
-            Thread.sleep(1000)
             val color = ContextCompat.getColor(
                 this@ChatBotTextFragment.context!!,
                 R.color.purple_700
@@ -75,6 +77,8 @@ class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener, IGeminiServic
             btnSend?.backgroundTintList= ColorStateList.valueOf(color);
             sendMessage();
         }
+        changeLanguageMode()
+        loadPresetUserLanguage()
     }
     fun sendMessage() {
 
@@ -100,7 +104,29 @@ class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener, IGeminiServic
                 } } }.start()
         }
     }
+    fun changeLanguageMode() {
+        if(getPresetUserLanguage()!=null
+            && getPresetUserLanguage()?.trim()?.contains("ar")!!){
+            textInput?.textDirection=View.TEXT_DIRECTION_RTL
+            textInput?.setHint(getString(R.string.input_chat_message_ar))
+        }
+        else{
+            textInput?.textDirection=View.TEXT_DIRECTION_LTR
+            textInput?.setHint(getString(R.string.input_chat_message_en))
+        }
+    }
 
+//    override fun onResume() {
+//        super.onResume()
+//        Toast.makeText(this.context, "onResume: onResume", Toast.LENGTH_SHORT).show()
+//        changeLanguageMode()
+//    }
+    private fun loadPresetUserLanguage() {
+        val languageInfo = LanguageInfo.getStorageSelcetedLanguage(this?.context);
+        if(languageInfo!=null) {
+            Toast.makeText(this.context,  languageInfo.code!!,Toast.LENGTH_SHORT).show()
+        }
+    }
     override fun onRequestIsSuccess(response: GeminiResponse) {
         count=0
         if (response != null ){ //&&  Helper.isAudioFile(response?.description)) {
@@ -135,7 +161,12 @@ class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener, IGeminiServic
         else
             count=0
     }
-
+    private fun getPresetUserLanguage():String? {
+        val languageInfo = LanguageInfo.getStorageSelcetedLanguage(this?.context);
+        if(languageInfo!=null)
+            return  languageInfo.code!!
+        return  null
+    }
     companion object {
         /**
          * Use this factory method to create a new instance of

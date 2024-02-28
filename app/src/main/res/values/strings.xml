@@ -50,6 +50,8 @@
     <string name="input_chat_name">  Enter Chat Name  </string>
     <string name="input_chat_desript">  Enter Chat Description  </string>
     <string name="input_chat_language">  Enter Chat Language   </string>
+    <string name="input_chat_message_en">  Enter your message  </string>
+    <string name="input_chat_message_ar"> إكتب النص هنا </string>
 
 
 <!--    <string name="input_chat_name">  Enter the chat name   </string>-->

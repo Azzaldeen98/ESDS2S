@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".Ui.ChatBotTextFragment"
+    android:id="@+id/containerChatText"
     tools:ignore="MissingDefaultResource">
 
     <RelativeLayout
@@ -139,7 +140,7 @@
                     android:gravity="center"/>
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/textInput1"
+                    android:id="@+id/textInputMessage"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_alignParentLeft="true"
@@ -151,7 +152,7 @@
                     android:paddingHorizontal="10dp"
                     android:background="@drawable/border"
                     android:inputType="text|textMultiLine"
-                    android:hint="Enter your message"
+                    android:hint="@string/input_chat_message_en"
                     android:textDirection="rtl"
                     android:padding="10dp" />
 

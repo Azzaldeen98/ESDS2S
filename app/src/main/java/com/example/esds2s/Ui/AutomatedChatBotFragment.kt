@@ -2,8 +2,11 @@ package com.example.esds2s.Ui
 
 import android.Manifest
 import android.app.AlertDialog
+import android.app.NotificationManager
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -14,6 +17,7 @@ import android.view.animation.AnimationUtils
 import android.widget.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.fragment.app.Fragment
 import com.example.esds2s.Activies.MainActivity
 import com.example.esds2s.Activies.RecordAudioActivity
@@ -27,6 +31,7 @@ import com.example.esds2s.Helpers.Tools.SpinnerHandler
 import com.example.esds2s.R
 import com.example.esds2s.Services.RecordVoiceService
 import com.example.esds2s.Services.SessionManagement
+import com.example.esds2s.Services.SettingsResourceForRecordServices
 import com.example.esds2s.Services.TestConnection
 import com.example.esds2s.databinding.FragmentAutomatedChatBotBinding
 import com.google.android.material.textfield.TextInputLayout
@@ -84,7 +89,7 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
         loadPresetUserLanguage()
         internalHeader()
         initializationComponent()
-//        initializationLanguagesList()
+
         progressBar=activity?.findViewById(R.id.progressPar1)!!
         initializationEvents();
 
@@ -127,6 +132,19 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
                selectedLanguageIndex=languageInfo.index!!
             }
     }
+//    private fun VibrateMode() {
+//
+//        val audioManager = activity?.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+//        val notificationManager: NotificationManager = activity?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+//        if (audioManager.isVolumeFixed) {
+//            val intent= Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
+//            startActivity(intent)
+//        } else  if( audioManager.ringerMode != AudioManager.RINGER_MODE_VIBRATE) {
+//            // قم بتحويل الهاتف إلى وضع الاهتزاز
+//            audioManager.ringerMode = AudioManager.RINGER_MODE_VIBRATE
+//        }
+//
+//    }
     private fun initializationEvents() {
 
         alert_btn_cancel?.setOnClickListener{v-> notify_layout_back?.setVisibility(View.GONE)}
@@ -137,10 +155,13 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
         alert_btn_ok?.setOnClickListener{v->
             if(selectedLanguageCode!=null) {
                 AlertDialog.Builder(this.context)
-                                .setTitle("Info")
-                                .setIcon(R.drawable.baseline_info_24)
+                                .setTitle("Switch to vibration sound mode ")
+                                .setIcon(R.drawable.baseline_vibration_24)
                                 .setMessage(getString(R.string.msg_mute_microphone_alarm_tone))
-                                .setPositiveButton(getString(R.string.btn_ok)) { dialog, which ->  checkMicrophonPermision() }
+                                .setPositiveButton(getString(R.string.btn_ok)) { dialog, which ->
+                                    SettingsResourceForRecordServices.vibrateSoundMode(this@AutomatedChatBotFragment.activity!!)
+                                    checkMicrophonPermision() }
+                                .setNegativeButton(getString(R.string.btn_cancel)) { dialog, which ->}
                                 .create()
                                 .show()
                 }

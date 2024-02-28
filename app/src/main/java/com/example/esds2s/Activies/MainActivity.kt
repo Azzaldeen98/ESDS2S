@@ -9,6 +9,7 @@ import android.view.View
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -32,6 +33,28 @@ class MainActivity : AppCompatActivity() {
         val dateFormat = DateFormat.getDateFormat(applicationContext)
         setContentView(R.layout.activity_main)
         initialization()
+
+        val sentence = " توقف"
+        val wordSet = setOf("توقف", "قف", "اصمت", "تكفى", "كفى", "يكفي", "لا تتحدث")
+
+        val similarity = jaccardSimilarity(sentence.split(" ").toSet(), wordSet)
+        println("Jaccard Similarity: $similarity")
+
+        val similarity2 = jaccardSimilarity(("لا تتحدث").split(" ").toSet(), wordSet)
+        println("Jaccard Similarity: $similarity2")
+    }
+
+    fun jaccardSimilarity(set1: Set<String>, set2: Set<String>): Double {
+        val intersectionSize = set1.intersect(set2).size
+        val unionSize = set1.union(set2).size
+        return intersectionSize.toDouble() / unionSize.toDouble()
+    }
+
+    fun jaccardSimilarity2(sentence: String, wordSet: Set<String>): Double {
+        val sentenceSet = sentence.split(" ").toSet()
+        val intersectionSize = sentenceSet.intersect(wordSet).size
+        val unionSize = sentenceSet.union(wordSet).size
+        return intersectionSize.toDouble() / unionSize.toDouble()
     }
 
     fun initialization(){
@@ -49,12 +72,20 @@ class MainActivity : AppCompatActivity() {
                 val intent = Intent(this, RecordAudioActivity::class.java)
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 startActivity(intent)
-                return }
-            Helper.LoadFragment(MainHomeFragment(), supportFragmentManager, R.id.main_frame_layout)
+
+            }else {
+                Helper.LoadFragment(MainHomeFragment(), supportFragmentManager, R.id.main_frame_layout)
+            }
         }else{
             noConnectionLayout?.visibility=View.VISIBLE
             frameLayout?.visibility=View.GONE
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Toast.makeText(this, "Selected: ", Toast.LENGTH_SHORT).show()
+
     }
     fun checkMicrophonPermision(){
 

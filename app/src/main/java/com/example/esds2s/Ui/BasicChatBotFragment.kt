@@ -10,13 +10,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.example.esds2s.ApiClient.Controlls.SpeechChatControl
 import com.example.esds2s.ContentApp.ContentApp
-import com.example.esds2s.Helpers.AndroidAudioRecorder
-import com.example.esds2s.Helpers.AudioPlayer
-import com.example.esds2s.Helpers.ExternalStorage
-import com.example.esds2s.Helpers.Helper
+import com.example.esds2s.Helpers.*
 import com.example.esds2s.Interface.IGeminiServiceEventListener
 import com.example.esds2s.Interface.ISpeechRecognizerServices
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
@@ -97,15 +95,53 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener, ISpeechRe
             if(TestConnection.isOnline(this.context!!, true)) {
                 speechChatControl?.messageToGeneratorAudio(data, this)
             }
+            if(audioPlayer==null)
+                audioPlayer= AudioPlayer(this.context!!)
+            try {
+                val player: MediaPlayer
+                val sound_id = Helper.getDefaultSoundResource()
+                player = audioPlayer?.startFromRowResource(this.context!!, sound_id)!!
+
+//                    val backgroundTask = BackgroundTask()
+//                    backgroundTask.execute(Pair(audioPlayer!!, this))
+                player?.setOnErrorListener { mp, what, extra ->
+                    // Handle the error here
+                    try {
+                        if (mp.isPlaying)
+                            mp?.stop();
+                        mp.reset();
+                        mp.release();
+                    } catch (e: Exception) {
+                        Log.e("error", e.message.toString());
+                    }
+                    Log.e("error Plyer", "");
+                    true // Return true if the error is considered handled, false otherwise
+                }
+                player?.setOnCompletionListener { mp ->
+                    mp?.stop();
+                    mp.reset();
+                    mp.release();
+                }
+            }catch (e:Exception){
+                Log.d("Error ! ", e.message.toString())
+            }
         }catch (e:java.lang.Exception){
 
         }
 
     }
+
+    private fun loadPresetUserLanguage() {
+        val languageInfo = LanguageInfo.getStorageSelcetedLanguage(this?.context);
+        if(languageInfo!=null) {
+         Toast.makeText(this.context,  languageInfo.code!!,Toast.LENGTH_SHORT).show()
+        }
+    }
     @SuppressLint("SuspiciousIndentation")
     override fun onStart() {
         super.onStart()
 
+        loadPresetUserLanguage()
         speechChatControl= this.context?.let { SpeechChatControl(it) }
         file_record_Path="${this.context?.externalCacheDir?.absolutePath}/audiorecordtest.3gp"  //com.example.esds2s.ApiClient.BuildConfig.AudioFilePath
         audioRecorder = AndroidAudioRecorder(this.context!!)
@@ -128,7 +164,9 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener, ISpeechRe
                 Log.d("startRecorder", "Recorder....");
                 speechRecognizerService?.startSpeechRecognizerListening()
 
-            } else{
+
+            }
+            else{
                 micButton!!.setImageResource(R.drawable.ic_mic_black_off)
                 micButton?.isEnabled=false;
                 Log.d("stopRecorder", "Recorder....");
@@ -137,7 +175,6 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener, ISpeechRe
             }
 
             isRecord=(!isRecord!!)
-
 
         }
 
@@ -160,11 +197,15 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener, ISpeechRe
 
                     if (audioPlayer == null )
                         audioPlayer= AudioPlayer(this@BasicChatBotFragment.context)
-
-                        if (audioPlayer!!.isPlayer()) {
-                            audioPlayer!!.stop()
-                            Thread.sleep(1000)
-                         }
+                        try {
+                            if (audioPlayer!!.isPlayer()) {
+                                audioPlayer!!.stop()
+                                Thread.sleep(1000)
+                            }
+                        }
+                        catch (e:Exception){
+                            Log.e("error", e.message.toString());
+                        }
                         editText?.hint = "Listen ...";
                         var media_player: MediaPlayer
                         if(!Helper.isAudioFile(response?.description)) {

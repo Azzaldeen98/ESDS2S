@@ -28,8 +28,13 @@ import com.example.esds2s.Helpers.Helper
 import com.example.esds2s.Helpers.LanguageInfo
 import com.example.esds2s.Interface.IGeminiServiceEventListener
 import com.example.esds2s.Activies.MainActivity
+import com.example.esds2s.Helpers.Enums.AvailableLanguages
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
 import com.example.esds2s.R
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.util.*
 
 
@@ -46,25 +51,25 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
     }
 
     private var speechRecognizerIsListening: Boolean? = false
-    private var audioRecorder: AndroidAudioRecorder? = null
+//    private var audioRecorder: AndroidAudioRecorder? = null
     private var handler: Handler? = null
-    private val isRecording = true
+//    private val isRecording = true
     private var audioPlayer: AudioPlayer? = null
     private var speechChatControl: SpeechChatControl? = null
-    private var record_audio_path = ""
+//    private var record_audio_path = ""
     private var LANG = "ar"
     private var speechRecognizerIntent: Intent? = null
     private var speechRecognizer: SpeechRecognizer? = null
     private var reorderCounter:Int?=0;
     private var textSpeachResult:String?=null;
-    private var registrationIsAllowed:Boolean=true;
-    private var allowSpeaking:Boolean=false;
+//    private var registrationIsAllowed:Boolean=true;
+    var isSpeaking: Boolean = false
+    get() { return audioPlayer?.isPlayer() ?: false }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-
+       override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         try {
             speechChatControl = SpeechChatControl(this);
-            record_audio_path = "${externalCacheDir?.absolutePath}/audiorecordtest.3gp"
+//            record_audio_path = "${externalCacheDir?.absolutePath}/audiorecordtest.3gp"
             handler = Handler()
             audioPlayer = AudioPlayer(this);
             if(intent!=null) {
@@ -81,6 +86,8 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
         startSpeechRecognizerListening();
         return START_STICKY
     }
+
+
 
     private fun InitializeSpeechRecognizer(intent: Intent?) {
         try {
@@ -149,13 +156,46 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
             override fun onResults(bundle: Bundle) {
                 val data = bundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                 textSpeachResult=data!![0]
-                Toast.makeText(this@RecordVoiceService,textSpeachResult, Toast.LENGTH_SHORT).show()
-                if(textSpeachResult?.length!!>1) {
-                    sendRequestToGenerator(textSpeachResult!!);
-                    allowSpeaking=true
+                textSpeachResult=textSpeachResult.toString().trim() ?:""
+                if(!textSpeachResult.isNullOrEmpty() && textSpeachResult?.length!!>0) {
+                    if(!isSpeaking) {
+                        Toast.makeText(this@RecordVoiceService,textSpeachResult, Toast.LENGTH_SHORT).show()
+                        sendRequestToGenerator(textSpeachResult!!);
+                    }
+                    else {
+                        Log.d("isSpeaking",textSpeachResult.toString()?:"")
+                        Toast.makeText(this@RecordVoiceService,textSpeachResult, Toast.LENGTH_SHORT).show()
+//                        val lang= speechRecognizerIntent?.getStringExtra(RecognizerIntent.EXTRA_LANGUAGE).toString() ?:null
+                        if(SettingsResourceForRecordServices()?.isStopWord(AvailableLanguages.ARABIC,textSpeachResult!!)==true){
+                            isSpeaking=true
+                            runBlocking {
+                                val mutex= Mutex()
+                                val job = launch {
+                                    mutex?.withLock {
+                                        if (audioPlayer != null) {
+                                            try {
+                                                val player = audioPlayer?.mediaPlayer
+                                                if (player != null && player.isPlaying == true) {
+                                                    player?.seekTo(player!!.duration)
+                                                    isSpeaking=false
+                                                }
+                                            } catch (e: Exception) {
+                                                Log.e("StopWords", e.message.toString())
+                                            }
+//                                            finally { isSpeaking=false }
+                                        }
+                                    }
+                                }
+                                try{ job.join() }
+                                catch (e: Exception) { Log.e("job", e.message.toString()) }
+                            }
+                        }
+                    }
+                    speechRecognizerListenAgain();
                 }
-                else
-                speechRecognizerListenAgain();
+                else {
+                    speechRecognizerListenAgain();
+                }
             }
             override fun onPartialResults(bundle: Bundle) {}
             override fun onEvent(i: Int, bundle: Bundle) {
@@ -168,7 +208,8 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
         if (this@RecordVoiceService.speechRecognizer != null && this@RecordVoiceService.speechRecognizerIntent != null){
 
             val lang= LanguageInfo.getStorageSelcetedLanguage(this)
-            if(lang!=null && speechRecognizerIntent?.getStringExtra(RecognizerIntent.EXTRA_LANGUAGE)?.lowercase()!=lang.code?.lowercase())
+//            if(lang!=null && speechRecognizerIntent?.getStringExtra(RecognizerIntent.EXTRA_LANGUAGE)?.lowercase()!=lang.code?.lowercase())
+            if(lang!=null && speechRecognizerIntent?.getStringExtra(RecognizerIntent.EXTRA_LANGUAGE)?.equals(lang?.code,true) == false)
                  speechRecognizerIntent?.putExtra(RecognizerIntent.EXTRA_LANGUAGE, lang.code);
 
             this@RecordVoiceService.speechRecognizer ?.startListening(this@RecordVoiceService.speechRecognizerIntent !!) }
@@ -176,8 +217,41 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
     private fun sendRequestToGenerator(speechText:String) {
         try {
             if(TestConnection.isOnline(this@RecordVoiceService,false)) {
+
                 if (speechChatControl != null)
                     speechChatControl?.messageToGeneratorAudio(speechText, this@RecordVoiceService);
+
+                if(audioPlayer!=null) {
+                    try {
+                        val player: MediaPlayer
+                        val sound_id = Helper.getDefaultSoundResource()
+                        player = audioPlayer?.startFromRowResource(this, sound_id)!!
+//                    val backgroundTask = BackgroundTask()
+//                    backgroundTask.execute(Pair(audioPlayer!!, this))
+                        player?.setOnErrorListener { mp, what, extra ->
+                            // Handle the error here
+                            try {
+
+                                if (mp.isPlaying)
+                                    mp?.stop();
+                                mp.reset();
+                                mp.release();
+                            } catch (e: Exception) {
+                                Log.e("error", e.message.toString());
+                            }
+                            Log.e("error Plyer", "");
+                            true // Return true if the error is considered handled, false otherwise
+                        }
+                        player?.setOnCompletionListener { mp ->
+                            mp?.stop();
+                            mp.reset();
+                            mp.release();
+                        }
+                    }catch (e:Exception){
+                        Log.d("Error ! ", e.message.toString())
+                    }
+                }
+
             }
         } catch (e: Exception) {
             Log.d("Error ! ", e.message.toString())
@@ -186,6 +260,7 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
     fun speechRecognizerListenAgain() {
              if (speechRecognizerIsListening!!) {
                  speechRecognizerIsListening = false;
+
                  speechRecognizer?.cancel();
                  startSpeechRecognizerListening();
              }
@@ -236,105 +311,69 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
         // Start the foreground service with the notification
         startForeground(NOTIFICATION_ID, notification)
     }
-
     override fun onRequestIsSuccess(response:GeminiResponse) {
 
              if(response!=null) {
                  if (response?.description != null) {
-                     if (audioPlayer != null ){
 
-                         val player:MediaPlayer
-                         if(!Helper.isAudioFile(response?.description)) {
-                             val sound_id = Helper.getDefaultSoundResource()
-                             Log.e("isAudioFile", sound_id.toString());
-                             player =  audioPlayer?.startFromRowResource(this,sound_id)!!
-                         }
-                         else {
-                             player = audioPlayer?.start(response?.description)!!
-                         }
-                         val backgroundTask = BackgroundTask()
-                         backgroundTask.execute(Pair(audioPlayer!!, this))
+                     if (audioPlayer == null )
+                         audioPlayer=AudioPlayer(this@RecordVoiceService)
 
-                         player?.setOnErrorListener { mp, what, extra ->
-                             // Handle the error here
-                             try {
-                                 Log.e("errorPlyer", "");
-                                 backgroundTask?.cancel(true)
-                                 allowSpeaking = false
-                                 if (mp.isPlaying)
-                                     mp?.stop();
-                                 mp.reset();
-                                 mp.release();
-                             } catch (e: Exception) {
-                                 Log.e("error", e.message.toString());
-                             } finally {
-
-
-                                 speechRecognizerListenAgain();
+                     isSpeaking=true
+                     val player:MediaPlayer
+                     if(!Helper.isAudioFile(response?.description)) {
+                         val sound_id = Helper.getDefaultSoundResource()
+                         Log.e("isAudioFile", sound_id.toString());
+                         player =  audioPlayer?.startFromRowResource(this,sound_id)!!
+                     }
+                     else {
+                         try {
+                             if (audioPlayer!!.isPlayer()) {
+                                 audioPlayer!!.stop()
                              }
-                             Log.e("error Plyer", "");
-                             true // Return true if the error is considered handled, false otherwise
+                         } catch (e:Exception){
+                             Log.e("error", e.message.toString());
                          }
-                         player?.setOnCompletionListener { mp ->
+                         player = audioPlayer?.start(response?.description)!!
+                     }
+
+                     if(player==null) return
+
+
+
+                     val backgroundTask = BackgroundTask()
+                     backgroundTask.execute(Pair(audioPlayer!!, this))
+                     player?.setOnErrorListener { mp, what, extra ->
+                         // Handle the error here
+                         try {
+                             Log.e("errorPlyer", "");
                              backgroundTask?.cancel(true)
+                             player.stop()
+                         }
+                         catch (e: Exception) { Log.e("error", e.message.toString()); }
+                         finally {
+                             isSpeaking=false
+                             speechRecognizerListenAgain(); }
+                         Log.e("errorPlyer", "");
+                         true // Return true if the error is considered handled, false otherwise
+                     }
+                     player?.setOnCompletionListener { mp ->
+                         try {
                              Log.e("Complate Plyer", "Complate Plyer Museic");
-                             mp?.stop();
-                             mp.reset();
-                             mp.release();
+                             player.stop()
+                             backgroundTask?.cancel(true)
+                         }
+                         catch (e: Exception) { Log.e("error", e.message.toString()); }
+                         finally {
+                             isSpeaking=false
                              speechRecognizerListenAgain();
                          }
-
-//                             if(!Helper.isAudioFile(response?.description)) {
-//                                 val sound_id = Helper.getDefaultSoundResource()
-//                                 Log.e("isAudioFile", sound_id.toString());
-//                                 val st =  audioPlayer?.startFromRowResource(sound_id)
-//                                 st?.setOnCompletionListener{v->
-//                                     v?.stop()
-//                                     v?.reset()
-//                                     v?.release()
-//                                 }
-//                                 st?.setOnErrorListener { mp, what, extra ->  }
-//                             }
-//                            else {
-//
-//                                 val player = audioPlayer?.start(response?.description)
-//
-//
-//                                 player?.setOnErrorListener { mp, what, extra ->
-//                                     // Handle the error here
-//                                     try {
-//                                         Log.e("errorPlyer", "");
-//                                         backgroundTask?.cancel(true)
-//                                         allowSpeaking = false
-//                                         if (mp.isPlaying)
-//                                             mp?.stop();
-//                                         mp.reset();
-//                                         mp.release();
-//                                     } catch (e: Exception) {
-//                                         Log.e("error", e.message.toString());
-//                                     } finally {
-//
-//
-//                                         speechRecognizerListenAgain();
-//                                     }
-//                                     Log.e("error Plyer", "");
-//                                     true // Return true if the error is considered handled, false otherwise
-//                                 }
-//
-//                                 player?.setOnCompletionListener { mp ->
-//                                     backgroundTask?.cancel(true)
-//                                     Log.e("Complate Plyer", "Complate Plyer Museic");
-//                                     mp?.stop();
-//                                     mp.reset();
-//                                     mp.release();
-//                                     speechRecognizerListenAgain();
-//                                 }
-//                         }
                      }
                  }
              }
-             else
-             { Log.e("responseError","!! response is empty or  null"); }
+             else {
+                 Log.e("responseError","!! response is empty or  null");
+             }
 
 
 

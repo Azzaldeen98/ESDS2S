@@ -68,15 +68,17 @@ class SessionManagement<T>(private val activity:Activity,private val callBackLis
     }
     fun onClickStopService() {
 
-        AlertDialog.Builder(activity)
-            .setTitle(context?.getString(R.string.nav_close_session))
-            .setIcon(R.drawable.baseline_warning_24)
-            .setMessage(context?.getString(R.string.msg_stop_session_chat))
-            .setPositiveButton(context?.getString(R.string.btn_yes)) { dialog, which ->
-                stopSession()
-            }.setNegativeButton(context?.getString(R.string.btn_no)) { dialog, which ->}
-            .create()
-            .show()
+        try {
+            AlertDialog.Builder(activity)
+                .setTitle(context?.getString(R.string.nav_close_session))
+                .setIcon(R.drawable.baseline_warning_24)
+                .setMessage(context?.getString(R.string.msg_stop_session_chat))
+                .setPositiveButton(context?.getString(R.string.btn_yes)) { dialog, which ->
+                    stopSession()
+                }.setNegativeButton(context?.getString(R.string.btn_no)) { dialog, which -> }
+                .create()
+                .show()
+        }catch (e:Exception){Log.e("Error",e.message.toString())}
     }
     fun stopRecordForGroundService(){
 

@@ -44,11 +44,11 @@ class RecordAudioActivity : AppCompatActivity() {
     lateinit var bottomNav : BottomNavigationView
     private  var languageCodes : Array<String>?=null
     private  var languageNames : Array<String>?=null
+    private var activeFragment :Fragment?=null
 
 
 
-
-    @SuppressLint("MissingInflatedId")
+        @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val dateFormat = DateFormat.getDateFormat(applicationContext)
@@ -59,20 +59,24 @@ class RecordAudioActivity : AppCompatActivity() {
         bottomNav.setOnItemSelectedListener {
             when (it.itemId) {
                 R.id.navBtnBasicChat -> {
+                    activeFragment=BasicChatBotFragment()
                     checkServiceAndLoudFragment(BasicChatBotFragment())
 //                          loadFragment(BasicChatBotFragment())
                     true
                 }
                 R.id.navBtnAutomatedChat -> {
+                    activeFragment=AutomatedChatBotFragment()
                     loadFragment(AutomatedChatBotFragment())
                     true
                 }
                 R.id.navBtnTextChat -> {
+                    activeFragment=ChatBotTextFragment()
                     checkServiceAndLoudFragment(ChatBotTextFragment())
 //                          loadFragment(ChatBotTextFragment())
                     true
                 }
                 R.id.navBtnCloseSession -> {
+
                     sessionManagement?.logOutSession()
                     true
                 }
@@ -93,7 +97,9 @@ class RecordAudioActivity : AppCompatActivity() {
                   checkPermission() }
               loadPresetUserLanguage()
               initializationLanguagesList()
+              activeFragment=AutomatedChatBotFragment()
               loadFragment(AutomatedChatBotFragment())
+
           }
 
     }
@@ -112,19 +118,26 @@ class RecordAudioActivity : AppCompatActivity() {
         languageCodes = resources.getStringArray(R.array.language_codes)
         languageNames = resources.getStringArray(R.array.language_names)
         if(selectedLanguageIndex>-1)
-            autocompleteTV?.setText(languageNames?.get(0))
+            autocompleteTV?.setText(languageNames?.get(selectedLanguageIndex))
         arrayAdapterLanguage = ArrayAdapter<String>(this, R.layout.dropdown_item, languageNames!!)
         autocompleteTV?.setAdapter(arrayAdapterLanguage)
         autocompleteTV?.setOnItemClickListener { parent, view, position, id -> onSelectedLanguage(position)}
     }
     fun onSelectedLanguage(position:Int){
+
+//        if (activeFragment is ChatBotTextFragment) {
+//           loadFragment(ChatBotTextFragment())
+//        }
+
         selectedLanguageCode = languageCodes?.get(position) as String
         selectedLanguageIndex=position
         selectedLanguageCode = languageCodes?.get(position).toString()
         if(selectedLanguageCode!=null){
             LanguageInfo.setStorageSelcetedLanguage(this, selectedLanguageCode, position)
         }
-        Toast.makeText(this, "Selected: $selectedLanguageCode", Toast.LENGTH_SHORT).show()
+//        Toast.makeText(this, "Selected: $selectedLanguageCode", Toast.LENGTH_SHORT).show()
+
+
     }
     private  fun checkServiceAndLoudFragment(fragment: Fragment){
 
