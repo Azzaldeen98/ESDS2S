@@ -8,9 +8,7 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.media.MediaPlayer
-import android.os.AsyncTask
 import android.os.Bundle
-import android.os.Handler
 import android.os.IBinder
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
@@ -20,18 +18,12 @@ import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.esds2s.ApiClient.Controlls.SpeechChatControl
-import com.example.esds2s.ContentApp.ContentApp
-import com.example.esds2s.Helpers.AndroidAudioRecorder
 import com.example.esds2s.Helpers.AudioPlayer
-import com.example.esds2s.Helpers.ExternalStorage
 import com.example.esds2s.Helpers.Helper
 import com.example.esds2s.Helpers.LanguageInfo
 import com.example.esds2s.Interface.IGeminiServiceEventListener
 import com.example.esds2s.Activies.MainActivity
-import com.example.esds2s.Helpers.Enums.AudioPlayerStatus
-import com.example.esds2s.Helpers.Enums.AvailableLanguages
 import com.example.esds2s.Helpers.Enums.TypesOfVoiceResponses
-import com.example.esds2s.Interface.IBaseCallbackListener
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
 import com.example.esds2s.R
 import kotlinx.coroutines.*
@@ -51,7 +43,7 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
     }
     private var isResponse: Boolean=false
     private var speechRecognizerIsListening: Boolean? = false
-    private var backgroundJob: Job? = null
+    private var backgroundMonitorOrderStatusJob: Job? = null
     private var audioPlayer: AudioPlayer? = null
     private var speechChatControl: SpeechChatControl? = null
     private var speechRecognizerIntent: Intent? = null
@@ -276,11 +268,13 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
     @SuppressLint("SuspiciousIndentation")
     private   fun startDefaultVoiceResponse(sound_num:Int=-1){
 
-           backgroundJob = GlobalScope.launch(Dispatchers.Default) {
+           backgroundMonitorOrderStatusJob?.takeIf { it.isActive }?.cancel()
+           backgroundMonitorOrderStatusJob = GlobalScope.launch(Dispatchers.Default) {
                Mutex().withLock {
-                   while (!isResponse) {
+
                        delay(5000)
-                       if(isResponse) break
+                       if(isResponse) return@launch
+
                        Log.d("SuspiciousIndentation","5000" )
                        if (audioPlayer == null)
                            audioPlayer = AudioPlayer(this@RecordVoiceService)
@@ -288,23 +282,30 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
 
                        if(voiceResponseCount==0)
                            sound_id=Helper.getDefaultSoundResource(TypesOfVoiceResponses.MIDDLE.ordinal)
-                      else if(voiceResponseCount==2)
+                      else if(voiceResponseCount==1)
                            sound_id=Helper.getDefaultSoundResource(TypesOfVoiceResponses.ASKYOU.ordinal)
-                       else if(voiceResponseCount>3)
+                       else if(voiceResponseCount>2)
                            sound_id=Helper.getDefaultSoundResource(TypesOfVoiceResponses.AGAINQUESTION.ordinal)
 
                        try {
                            val player = audioPlayer?.startFromRowResource(this@RecordVoiceService, sound_id) ?: return@launch
                            player?.setOnErrorListener { mp, what, extra ->
                                audioPlayer?.stop()
+                               playDefaultVoiceResponse(TypesOfVoiceResponses.AGAINQUESTION.ordinal,true)
                                true // Return true if the error is considered handled, false otherwise
                            }
                            player?.setOnCompletionListener { mp ->
                                audioPlayer?.stop()
-                               if (isResponse == false && voiceResponseCount < 3) {
-                                   voiceResponseCount++
-                                   startDefaultVoiceResponse()
-                               } else
+                               if(isResponse == false) {
+                                   if (voiceResponseCount < 3) {
+                                       voiceResponseCount++
+                                       startDefaultVoiceResponse()
+                                   } else {
+                                       playDefaultVoiceResponse(TypesOfVoiceResponses.AGAINQUESTION.ordinal,true)
+                                       voiceResponseCount = 0
+                                   }
+                               }
+                               else
                                    voiceResponseCount = 0
                            }
 
@@ -312,11 +313,11 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
                            e.printStackTrace()
                        }
 
-                   }
+
 
                }
 
-//               backgroundJob?.join()
+//               backgroundMonitorOrderStatusJob?.join()
            }
 //
 //        val mtx:Mutex=Mutex()
@@ -418,49 +419,70 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
 
         try {
 
+                            if (audioPlayer?.isPlayer() == true ) {
+//                                audioPlayer?.stop()
 
-            if (response != null) {
-                if (response?.description != null) {
-
-                    if (audioPlayer == null)
-                        audioPlayer = AudioPlayer(this@RecordVoiceService)
-
-                        if (audioPlayer?.isPlayer() == true) {
-
-                            complatePlayerJop = GlobalScope.launch(Dispatchers.Default) {
-                            val duration = audioPlayer?.getRemainingDuration()?.toLong() ?: 0
-                                try {
-    //                                audioPlayer?.stop()
+                                complatePlayerJop = GlobalScope.launch(Dispatchers.Default) {
+                                val duration = audioPlayer?.getRemainingDuration()?.toLong() ?: 0
                                     delay(duration)
-                                    audioPlayer?.takeIf { it.isPlayer() }?.stop()
-    //                                audioPlayer?.mediaPlayer?.takeIf { it.isPlaying }
-    //                                    ?.apply { seekTo(duration.toInt()) }
-
-                                } catch (e: Exception) {
-                                    Log.e("stop audioPlayer", e.message.toString());
-                                }
-                        }
-                        complatePlayerJop?.invokeOnCompletion { throwable ->
-                            backgroundJob?.takeIf { it.isActive }?.cancel()
-
-                                    if (throwable != null) {
-                                    } else {
-                                        Log.d("complatePlayerJop", "complatePlayerJop");
-                                        speechResponseResult(response?.description)
+                                    Log.e("duration audioPlayer", "duration");
+                                    try{ audioPlayer?.takeIf { it.isPlayer() }?.stop()
+                                    } catch (e: Exception) {
+                                        Log.e("stop audioPlayer", e.message.toString());
                                     }
+                                    finally {
+                                        speechResponseResult(response?.description!!)
+                                    }
+                                }
+
+//                                complatePlayerJop?.invokeOnCompletion { throwable ->
+//                                    if (throwable == null) {
+//                                        Log.d("complatePlayerTalk", "complatePlayerJop");
+//                                    }
+//
+//
+//                                  }
+
+                            } else {
+                                Log.d("audioPlayerIsPlayer", "audioPlayerIsPlayer");
+                                backgroundMonitorOrderStatusJob?.takeIf { it.isActive }?.cancel()
+                                speechResponseResult(response?.description!!)
                             }
-                      }else{
-                            backgroundJob?.takeIf { it.isActive }?.cancel()
-                            speechResponseResult(response?.description)
-                        }
-                }
-            } else {
-                Log.e("responseError", "!! response is empty or  null");
-            }
+
+//                            complatePlayerJop = GlobalScope.launch(Dispatchers.Default) {
+//                            val duration = audioPlayer?.getRemainingDuration()?.toLong() ?: 0
+//                                try {
+//    //                                audioPlayer?.stop()
+//                                    delay(duration)
+//                                    audioPlayer?.takeIf { it.isPlayer() }?.stop()
+//    //                                audioPlayer?.mediaPlayer?.takeIf { it.isPlaying }
+//    //                                    ?.apply { seekTo(duration.toInt()) }
+//
+//                                } catch (e: Exception) {
+//                                    Log.e("stop audioPlayer", e.message.toString());
+//                                }
+//                        }
+//                        complatePlayerJop?.invokeOnCompletion { throwable ->
+//                            backgroundMonitorOrderStatusJob?.takeIf { it.isActive }?.cancel()
+//
+//                                    if (throwable == null) {
+//                                        Log.d("complatePlayerJop", "complatePlayerJop");
+//                                        speechResponseResult(response?.description)
+//                                    }
+////                            }
+//                      }else{
+//
+//
+////                            speechResponseResult(response?.description)
+//                        }
+//                }
+//            } else {
+//                Log.e("responseError", "!! response is empty or  null");
+//            }
         }catch (e:Exception){
             Log.e("responseError", e.message.toString());
             complatePlayerJop?.takeIf { it.isActive }?.cancel()
-            backgroundJob?.takeIf { it.isActive }?.cancel()
+            backgroundMonitorOrderStatusJob?.takeIf { it.isActive }?.cancel()
         }
         finally {
 //            mybackgroundJop?.takeIf { it.isActive }?.cancel()
@@ -475,34 +497,35 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
 //        } else {
 //            player = audioPlayer?.start(result)
 //        }
+         backgroundMonitorOrderStatusJob?.takeIf { it.isActive }?.cancel()
          var mybackgroundJop:Job?=null
          try {
 
-             var player: MediaPlayer = if (result.isNullOrEmpty() || !Helper.isAudioFile(result)) {
-                 audioPlayer?.startFromRowResource(this@RecordVoiceService,
+             if (audioPlayer == null)
+                 audioPlayer = AudioPlayer(this@RecordVoiceService)
+
+
+             var player: MediaPlayer ?=null
+                 if (result.isNullOrEmpty() || !Helper.isAudioFile(result)) {
+                     player=audioPlayer?.startFromRowResource(this@RecordVoiceService,
                      Helper.getDefaultSoundResource(TypesOfVoiceResponses.AGAINQUESTION.ordinal))
              } else {
-                 audioPlayer?.start(result)
-             } ?: throw IllegalStateException("MediaPlayer creation failed")
+                     player= audioPlayer?.start(result)
+             }
 
-             var mybackgroundJop = GlobalScope.launch(Dispatchers.Default) {
+              mybackgroundJop = GlobalScope.launch(Dispatchers.Default) {
                  Mutex().withLock {
-
                      while (isSpeaking) {
-                         SettingsResourceForRecordServices.checkAudioPlayerSettings(
-                             this@RecordVoiceService,
-                             audioPlayer
-                         )
+                         SettingsResourceForRecordServices.checkAudioPlayerSettings(this@RecordVoiceService, audioPlayer)
                          delay(1000)
                      }
                  }
-
              }
 
              mybackgroundJop?.invokeOnCompletion { throwable ->
-                 if (throwable != null) {
+                 isSpeaking=false
+                 if (throwable == null) {
 
-                 } else {
                      Log.d("complateCheckAudioPlayerSettings", "complate Lisetining");
                  } }
 
@@ -528,6 +551,7 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
              }
 
          }catch (e:Exception){
+             isSpeaking = false
              mybackgroundJop?.takeIf { it.isActive }?.cancel()
              e.printStackTrace()
          }
@@ -537,7 +561,7 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
     override fun onRequestIsFailure(error: String) {
 
         isResponse=true
-        backgroundJob?.takeIf { it.isActive }?.cancel()
+        backgroundMonitorOrderStatusJob?.takeIf { it.isActive }?.cancel()
 
         try {
             Log.d("onRequestIsFailure", error);
@@ -594,8 +618,8 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
     override fun onDestroy() {
         super.onDestroy()
         stopSpeechRecognizer();
-        backgroundJob?.takeIf { it.isActive }?.cancel()
-        backgroundJob=null
+        backgroundMonitorOrderStatusJob?.takeIf { it.isActive }?.cancel()
+        backgroundMonitorOrderStatusJob=null
 
     }
 
@@ -614,15 +638,15 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
 //
 //    class CheckResponseBackgroundTask<T> {
 //
-//        var backgroundJob: Job? = null
+//        var backgroundMonitorOrderStatusJob: Job? = null
 //
 //        fun startListener(callBack: IBaseCallbackListener<T>) {
-//            backgroundJob?.cancel()
-//            backgroundJob = GlobalScope.launch(Dispatchers.Default) {
+//            backgroundMonitorOrderStatusJob?.cancel()
+//            backgroundMonitorOrderStatusJob = GlobalScope.launch(Dispatchers.Default) {
 //                delay(3000)
 //                callBack.onCallBackExecuted(null)
 //
-//                backgroundJob = null
+//                backgroundMonitorOrderStatusJob = null
 //            }
 //        }
 //    }

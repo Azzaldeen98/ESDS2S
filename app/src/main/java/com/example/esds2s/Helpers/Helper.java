@@ -115,36 +115,36 @@ public static  void  deleteFile(String filePath)
         if(soundNum>-1 && soundNum < TypesOfVoiceResponses.values().length)
             randomValues=soundNum;
 
-        randomValues+=6;
+//        randomValues+=6;
         switch (randomValues) {
+//            case 0:
+//                sound = com.example.esds2s.R.raw.res1;
+//                break;
+//            case 1:
+//                sound = com.example.esds2s.R.raw.res2;
+//                break;
+//            case 2:
+//                sound = com.example.esds2s.R.raw.res4;
+//                break;
+//            case 3:
+//                sound = com.example.esds2s.R.raw.res5;
+//                break;
+//            case 4:
+//                sound = com.example.esds2s.R.raw.res6;
+//                break;
+//            case 5:
+//                sound = com.example.esds2s.R.raw.res7;
+//                break;
             case 0:
-                sound = com.example.esds2s.R.raw.res1;
-                break;
-            case 1:
-                sound = com.example.esds2s.R.raw.res2;
-                break;
-            case 2:
-                sound = com.example.esds2s.R.raw.res4;
-                break;
-            case 3:
-                sound = com.example.esds2s.R.raw.res5;
-                break;
-            case 4:
-                sound = com.example.esds2s.R.raw.res6;
-                break;
-            case 5:
-                sound = com.example.esds2s.R.raw.res7;
-                break;
-            case 6:
                 sound = R.raw.row8;
                 break;
-            case 7:
+            case 1:
                 sound = R.raw.row9;
                 break;
-            case 8:
+            case 2:
                 sound = R.raw.row10;
                 break;
-            case 9:
+            case 3:
                 sound = R.raw.row11;
                 break;
 
