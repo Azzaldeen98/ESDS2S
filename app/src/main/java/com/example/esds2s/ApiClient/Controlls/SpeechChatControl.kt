@@ -51,6 +51,7 @@ class SpeechChatControl(private val context: Context):BaseControl(context) {
                             val responseData: GeminiResponse? = response.body()
                             Log.d("response", Gson().toJson(responseData));
                             if (callBack != null) {
+//                                callBack.onRequestIsFailure("error")
                                 callBack.onRequestIsSuccess(responseData!!)
 //                                callBack.onRequestIsSuccess(GeminiResponse(description = "$$$$"))
                             }

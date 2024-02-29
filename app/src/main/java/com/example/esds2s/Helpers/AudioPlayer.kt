@@ -39,20 +39,20 @@ class AudioPlayer(private val context: Context?) {
 
     fun startFromRowResource(context:Context,row_id: Int): MediaPlayer? {
 
-
         try {
             if(isResourceExist(context,row_id)) {
                 mediaPlayer = MediaPlayer.create(context, row_id)
                 if (mediaPlayer != null) {
                     mediaPlayer?.start()
                 }
+                return  mediaPlayer
             }else{
                 throw   IllegalStateException("ot found resource!!")
             }
         } catch (e: Exception) {
             throw  Exception(e.message.toString())
         }
-        return  null
+        return  mediaPlayer
     }
     @SuppressLint("SuspiciousIndentation")
     fun stop() {

@@ -168,6 +168,7 @@ class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<Ba
     private  fun insilizationLanguagesList(){
 
         val languages = resources.getStringArray(R.array.language_names)
+
         arrayAdapterLanguage = ArrayAdapter<String>(this?.context!!, R.layout.dropdown_item, languages)
         val autocompleteTV = activity?.findViewById<AutoCompleteTextView>(R.id.autoCompleteTextViewLanguage)
         autocompleteTV?.setAdapter(arrayAdapterLanguage)
