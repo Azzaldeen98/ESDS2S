@@ -17,6 +17,7 @@ import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.esds2s.ApiClient.Controlls.SessionChatControl
+import com.example.esds2s.Helpers.Enums.GenderType
 import com.example.esds2s.Ui.AutomatedChatBotFragment
 import com.example.esds2s.Ui.BasicChatBotFragment
 import com.example.esds2s.Ui.ChatBotTextFragment
@@ -95,6 +96,9 @@ class RecordAudioActivity : AppCompatActivity() {
       else {
               if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                   checkPermission() }
+
+//          genderType=if(selectedChat?.modeldescription=="Male") GenderType.MALE else GenderType.FEMALE
+//          insilizationLanguagesList(genderType)
               loadPresetUserLanguage()
               initializationLanguagesList()
               activeFragment=AutomatedChatBotFragment()

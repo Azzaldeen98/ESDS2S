@@ -23,6 +23,8 @@ import com.example.esds2s.Models.RequestModels.CustomerChatRequest
 import com.example.esds2s.Models.ResponseModels.BaseChatResponse
 import com.example.esds2s.R
 import com.example.esds2s.Activies.RecordAudioActivity
+import com.example.esds2s.Helpers.Enums.GenderType
+import com.example.esds2s.Services.ModelLanguages
 import com.example.esds2s.databinding.FragmentCreateNewChatBinding
 import com.google.android.material.textfield.TextInputLayout
 import com.google.gson.Gson
@@ -58,7 +60,8 @@ class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<Ba
     private var arrayAdapterChats: ArrayAdapter<BaseChatResponse>? =null
     private var sessionChatControl: SessionChatControl? =null
     private var   arrayAdapter : ArrayAdapter<String>? =null
-
+    private var  modelLanguages:ModelLanguages ?=null
+    private var  genderType:GenderType =GenderType.MALE
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
@@ -110,7 +113,8 @@ class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<Ba
         }
         binding?.btnSubmitChatInfo?.setOnClickListener{ submitCreateChat() }
         progressPar.visibility = View.VISIBLE
-        insilizationLanguagesList()
+        genderType=if(selectedChat?.modeldescription=="Male") GenderType.MALE else GenderType.FEMALE
+        insilizationLanguagesList(genderType)
         laoudAllChats()
     }
     private  fun uplaodAllChatsFromLocalStorage():Boolean{
@@ -165,15 +169,16 @@ class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<Ba
             Toast.makeText(requireContext(), "Selected: ", Toast.LENGTH_SHORT).show()
         }
     }
-    private  fun insilizationLanguagesList(){
+    private  fun insilizationLanguagesList(gender:GenderType){
 
-        val languages = resources.getStringArray(R.array.language_names)
-
-        arrayAdapterLanguage = ArrayAdapter<String>(this?.context!!, R.layout.dropdown_item, languages)
+        modelLanguages = ModelLanguages(this?.context!!).getGenderLanguages(gender)
+        val languageNames =ArrayList(modelLanguages?.getLanguagesName())
+        arrayAdapterLanguage = ArrayAdapter<String>(this?.context!!, R.layout.dropdown_item, languageNames)
         val autocompleteTV = activity?.findViewById<AutoCompleteTextView>(R.id.autoCompleteTextViewLanguage)
         autocompleteTV?.setAdapter(arrayAdapterLanguage)
         autocompleteTV?.setOnItemClickListener { parent, view, position, id ->
-            val languagesCode =  resources.getStringArray(R.array.language_codes)
+//            val languagesCode =  resources.getStringArray(R.array.language_codes)
+            val languagesCode =ArrayList(modelLanguages?.getLanguagesCode())
             selectedLanguage = languagesCode?.get(position) as String
             selectedLanguageIndex=position
             Toast.makeText(requireContext(), "Selected: $selectedLanguage", Toast.LENGTH_SHORT).show()
