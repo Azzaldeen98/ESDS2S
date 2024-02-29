@@ -227,7 +227,7 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
             binding?.robotSpeekerBtn?.setImageResource(R.drawable.baseline_voice_over_off_24)
             ExternalStorage.storage(
                 activity, ContentApp.ROBOT_CHAT_SETTINGS, ContentApp.PLAYER_ROBOT_AUDIO,
-                AudioPlayerStatus.PAUSE.ordinal.toString()
+                AudioPlayerStatus.STOP.ordinal.toString()
             )
         }
         else {

@@ -15,12 +15,18 @@ import androidx.fragment.app.Fragment
 import com.example.esds2s.ApiClient.Controlls.SpeechChatControl
 import com.example.esds2s.ContentApp.ContentApp
 import com.example.esds2s.Helpers.*
+import com.example.esds2s.Helpers.Enums.TypesOfVoiceResponses
 import com.example.esds2s.Interface.IGeminiServiceEventListener
 import com.example.esds2s.Interface.ISpeechRecognizerServices
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
 import com.example.esds2s.R
 import com.example.esds2s.Services.ExternalServices.SpeechRecognizerService
 import com.example.esds2s.Services.TestConnection
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -56,6 +62,9 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener, ISpeechRe
                 }
             }
     }
+
+    private var voiceResponseCount: Int = 0
+    private var isResponse: Boolean=false
 
     // TODO: Rename and change types of parameters
     private var param1: String? = null
@@ -95,36 +104,39 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener, ISpeechRe
             if(TestConnection.isOnline(this.context!!, true)) {
                 speechChatControl?.messageToGeneratorAudio(data, this)
             }
-            if(audioPlayer==null)
-                audioPlayer= AudioPlayer(this.context!!)
-            try {
-                val player: MediaPlayer
-                val sound_id = Helper.getDefaultSoundResource()
-                player = audioPlayer?.startFromRowResource(this.context!!, sound_id)!!
 
-//                    val backgroundTask = BackgroundTask()
-//                    backgroundTask.execute(Pair(audioPlayer!!, this))
-                player?.setOnErrorListener { mp, what, extra ->
-                    // Handle the error here
-                    try {
-                        if (mp.isPlaying)
-                            mp?.stop();
-                        mp.reset();
-                        mp.release();
-                    } catch (e: Exception) {
-                        Log.e("error", e.message.toString());
-                    }
-                    Log.e("error Plyer", "");
-                    true // Return true if the error is considered handled, false otherwise
-                }
-                player?.setOnCompletionListener { mp ->
-                    mp?.stop();
-                    mp.reset();
-                    mp.release();
-                }
-            }catch (e:Exception){
-                Log.d("Error ! ", e.message.toString())
-            }
+            startDefaultVoiceResponse()
+
+//            if(audioPlayer==null)
+//                audioPlayer= AudioPlayer(this.context!!)
+//            try {
+//                val player: MediaPlayer
+//                val sound_id = Helper.getDefaultSoundResource()
+//                player = audioPlayer?.startFromRowResource(this.context!!, sound_id)!!
+//
+////                    val backgroundTask = BackgroundTask()
+////                    backgroundTask.execute(Pair(audioPlayer!!, this))
+//                player?.setOnErrorListener { mp, what, extra ->
+//                    // Handle the error here
+//                    try {
+//                        if (mp.isPlaying)
+//                            mp?.stop();
+//                        mp.reset();
+//                        mp.release();
+//                    } catch (e: Exception) {
+//                        Log.e("error", e.message.toString());
+//                    }
+//                    Log.e("error Plyer", "");
+//                    true // Return true if the error is considered handled, false otherwise
+//                }
+//                player?.setOnCompletionListener { mp ->
+//                    mp?.stop();
+//                    mp.reset();
+//                    mp.release();
+//                }
+//            }catch (e:Exception){
+//                Log.d("Error ! ", e.message.toString())
+//            }
         }catch (e:java.lang.Exception){
 
         }
@@ -157,13 +169,11 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener, ISpeechRe
 
 //        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this.activity)
 
-
         micButton?.setOnClickListener{v->
             if(isRecord==false){
                 micButton!!.setImageResource(R.drawable.ic_mic_black_24dp)
                 Log.d("startRecorder", "Recorder....");
                 speechRecognizerService?.startSpeechRecognizerListening()
-
 
             }
             else{
@@ -172,6 +182,7 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener, ISpeechRe
                 Log.d("stopRecorder", "Recorder....");
                 editText?.hint="Wait ...";
                 speechRecognizerService?.stopSpeechRecognizer()
+                isResponse=false
             }
 
             isRecord=(!isRecord!!)
@@ -179,8 +190,51 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener, ISpeechRe
         }
 
     }
+    private   fun startDefaultVoiceResponse(sound_num:Int=-1){
+
+        val mtx = Mutex()
+        GlobalScope.launch(Dispatchers.Default) {
+            if(isResponse==false) {
+                mtx?.withLock {
+                    try {
+                        if (audioPlayer == null)
+                            audioPlayer = AudioPlayer(this@BasicChatBotFragment.context)
+                        val sound_id = Helper.getDefaultSoundResource(sound_num)
+                        val player = audioPlayer?.startFromRowResource(this@BasicChatBotFragment.context!!, sound_id) ?: null
+                        if (player == null) return@launch
+                        player?.setOnErrorListener { mp, what, extra ->
+                            audioPlayer?.stop()
+                            true // Return true if the error is considered handled, false otherwise
+                        }
+                        player?.setOnCompletionListener { mp ->
+                            audioPlayer?.stop()
+                            if (isResponse == false && voiceResponseCount < 3) {
+                                voiceResponseCount++
+                                startDefaultVoiceResponse(TypesOfVoiceResponses.ASKYOU.ordinal)
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.d("Error", e.message.toString())
+                    }
+                }
+            }
+        }
+
+    }
+    private   fun playDefaultVoiceResponse(sound_num:Int){
+
+        val player = audioPlayer?.startFromRowResource(this.context!!, sound_num)
+            ?: null
+        if (player != null) {
+            player?.setOnErrorListener { mp, what, extra ->
+                audioPlayer?.stop()
+                true
+            }
+            player?.setOnCompletionListener { mp -> audioPlayer?.stop() }
+        }
 
 
+    }
     override fun onDestroy() {
         super.onDestroy()
         speechRecognizerService?.destroy()
@@ -190,6 +244,7 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener, ISpeechRe
     override fun onRequestIsSuccess(response: GeminiResponse) {
 
         try {
+            isResponse=true
             reorderCounter = 0;
             speechTextResult = null;
             if (response != null) {
@@ -197,36 +252,41 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener, ISpeechRe
 
                     if (audioPlayer == null )
                         audioPlayer= AudioPlayer(this@BasicChatBotFragment.context)
-                        try {
-                            if (audioPlayer!!.isPlayer()) {
-                                audioPlayer!!.stop()
-                                Thread.sleep(1000)
+
+                        GlobalScope.launch(Dispatchers.Default) {
+
+                            if (audioPlayer?.isPlayer() ?: false) {
+                                val duration = audioPlayer?.getRemainingDuration()?.toLong()
+                                Thread.sleep(duration!!)
+                                try {
+                                    audioPlayer?.stop()
+                                } catch (e: Exception) {
+                                    Log.e("stop audioPlayer", e.message.toString());
+                                }
+                            }
+                            editText?.hint = "Listen ...";
+                            var media_player: MediaPlayer
+                            if (!Helper.isAudioFile(response?.description)) {
+
+                                val sound_id = Helper.getDefaultSoundResource()
+                                Log.e("isAudioFile", sound_id.toString());
+                                media_player =
+                                    audioPlayer?.startFromRowResource(this@BasicChatBotFragment.context!!, sound_id!!)!!
+                            } else {
+                                media_player = audioPlayer?.start(response?.description)!!
+                            }
+                            if (media_player != null) {
+
+
+                                media_player?.setOnCompletionListener { mPlayer ->
+                                    Log.e("onUplaodAudioIsSuccess", "Complate Plyer Museic");
+                                    audioPlayer?.stop();
+                                    micButton?.isEnabled = true;
+                                    editText?.hint = "Speaking ...";
+                                }
+
                             }
                         }
-                        catch (e:Exception){
-                            Log.e("error", e.message.toString());
-                        }
-                        editText?.hint = "Listen ...";
-                        var media_player: MediaPlayer
-                        if(!Helper.isAudioFile(response?.description)) {
-
-                            val sound_id = Helper.getDefaultSoundResource()
-                            Log.e("isAudioFile", sound_id.toString());
-                            media_player=audioPlayer?.startFromRowResource(this.context!!,sound_id!!)!!
-                        } else {
-                            media_player = audioPlayer?.start(response?.description)!!
-                        }
-                        if(media_player!=null) {
-
-
-                            media_player?.setOnCompletionListener { mPlayer ->
-                                Log.e("onUplaodAudioIsSuccess", "Complate Plyer Museic");
-                                audioPlayer?.stop();
-                                micButton?.isEnabled = true;
-                                editText?.hint = "Speaking ...";
-                            }
-
-                    }
                 }
             } else {
                 // Handle unsuccessful response here
@@ -238,6 +298,8 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener, ISpeechRe
     }
     override fun onRequestIsFailure(error: String) {
 
+        isResponse=true
+        
         try {
             if(reorderCounter!!<3 && speechTextResult!=null) {
                 speechChatControl?.messageToGeneratorAudio(speechTextResult,this);

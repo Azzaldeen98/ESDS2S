@@ -13,22 +13,24 @@ import com.example.esds2s.Helpers.AudioPlayer
 import com.example.esds2s.Helpers.Enums.AudioPlayerStatus
 import com.example.esds2s.Helpers.Enums.AvailableLanguages
 import com.example.esds2s.Helpers.ExternalStorage
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class SettingsResourceForRecordServices {
 
 
 
-   private val stopWords: Array<List<String>> = emptyArray()
-    init{
-        stopWords[0] = listOf("توقف", "قف", "اصمت","تكفى","كفى","يكفي","لا تتحدث")
-        stopWords[1] = listOf("stop")
-        stopWords[2] = listOf("stop")
-        stopWords[3] = listOf("stop")
-    }
+//   private val stopWords: Array<List<String>> = emptyArray()
+//    init{
+//        stopWords[0] = listOf("توقف", "قف", "اصمت","تكفى","كفى","يكفي","لا تتحدث")
+//        stopWords[1] = listOf("stop")
+//        stopWords[2] = listOf("stop")
+//        stopWords[3] = listOf("stop")
+//    }
 
-    fun getStopWords(lang:AvailableLanguages):List<String>{
-        return stopWords.get(lang.ordinal)
-    }
+//    fun getStopWords(lang:AvailableLanguages):List<String>{
+//        return stopWords.get(lang.ordinal)
+//    }
 
     fun jaccardSimilarity(sentence: String, wordSet: Set<String>): Double {
         val sentenceSet = sentence.split(" ").toSet()
@@ -37,50 +39,59 @@ class SettingsResourceForRecordServices {
         return intersectionSize.toDouble() / unionSize.toDouble()
     }
 
-    fun isStopWord(lang:AvailableLanguages,word:String):Boolean{
+    fun isStopWord(lang:Int=0,word:String):Boolean{
         if(word.isNullOrEmpty())
             return  false
 
-        val num=jaccardSimilarity(word,setOf("توقف", "قف", "اصمت","تكفى","كفى","يكفي","لا تتحدث"))
-
+        val similarity=jaccardSimilarity(word,setOf("توقف", "قف", "اصمت","تكفى","كفى","يكفي","لا تتحدث"))
+        println("JaccardSimilarity: $similarity")
 //            getStopWords(lang).toSet())
 //            return  getStopWords(lang)?.contains(word.trim()) ?: false
-         return  num>0.0f
+         return  similarity>0.0
     }
 
     companion object {
 
 
-        fun checkAudioPlayerSettings(context: Context, player: AudioPlayer) {
+      suspend  fun checkAudioPlayerSettings(context: Context?, player: AudioPlayer?) {
 
 
-            if(player==null || context==null)
-                return
 
-            val status = ExternalStorage.getValue(context!!,ContentApp.ROBOT_CHAT_SETTINGS,ContentApp.PLAYER_ROBOT_AUDIO) as String?
+                if (player == null || context == null)
+                    return
 
-            Log.d("player444",status.toString())
-            if (status !=null && status.equals(AudioPlayerStatus.PAUSE.ordinal.toString()) && player.isPlayer()) {
-
-                ExternalStorage.storage(context,
+                val status = ExternalStorage.getValue(
+                    context!!,
                     ContentApp.ROBOT_CHAT_SETTINGS,
-                    ContentApp.PLAYER_ROBOT_AUDIO,
-                    AudioPlayerStatus.START.ordinal.toString())
+                    ContentApp.PLAYER_ROBOT_AUDIO
+                ) as String?
 
-                player?.mediaPlayer?.seekTo(player?.mediaPlayer!!.duration)
-                Log.d("player33","Stop")
-            }
-            else if (status !=null && status.equals(AudioPlayerStatus.RESUME.ordinal.toString())  && !player.isPlayer())
-            {
-                player.resume()
+//            Log.d("player444",status.toString())
+                if (status != null && (status.equals(AudioPlayerStatus.STOP.ordinal.toString()) ||
+                            status.equals(AudioPlayerStatus.PAUSE.ordinal.toString())) && player.isPlayer()
+                ) {
 
-                Log.d("player33","resume")
+                    ExternalStorage.storage(
+                        context,
+                        ContentApp.ROBOT_CHAT_SETTINGS,
+                        ContentApp.PLAYER_ROBOT_AUDIO,
+                        AudioPlayerStatus.START.ordinal.toString()
+                    )
+
+                    player?.mediaPlayer?.seekTo(player?.mediaPlayer!!.duration)
+//                Log.d("player","Stop")
+
             }
-            else if (status !=null && status.equals(AudioPlayerStatus.STOP.ordinal.toString())  && !player.isPlayer())
-            {
-                player.stop()
-                Log.d("player33","stop")
-            }
+//            } else if (status != null && status.equals(AudioPlayerStatus.RESUME.ordinal.toString()) && !player.isPlayer()) {
+//                player.resume()
+//
+//                Log.d("player", "resume")
+//            }
+//            else if (status !=null && status.equals(AudioPlayerStatus.STOP.ordinal.toString())  && !player.isPlayer())
+//            {
+//                player.stop()
+//                Log.d("player","stop")
+//            }
 
 
         }

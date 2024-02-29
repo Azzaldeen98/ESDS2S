@@ -2,67 +2,89 @@ package com.example.esds2s.Helpers
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.res.Resources
 import android.media.MediaPlayer
 import android.net.Uri
 import android.util.Log
 
 class AudioPlayer(private val context: Context?) {
      var mediaPlayer: MediaPlayer? =null
+
     fun start(filePath: String?): MediaPlayer? {
-        if(filePath==null) return  null
+
+        if(filePath?.isNullOrEmpty()==true)
+            return  null
+
         mediaPlayer = MediaPlayer()
         try {
             mediaPlayer?.setDataSource(filePath)
             mediaPlayer?.prepare()
             mediaPlayer?.start()
-//            mediaPlayer?.setOnCompletionListener({mp -> stop()});
             return mediaPlayer
         } catch (e: Exception) {
             e.printStackTrace()
-            return  null
+        }
+        return null
+        //  mediaPlayer?.setOnCompletionListener({mp -> stop()});
+    }
+
+    fun isResourceExist(context: Context, resourceId: Int): Boolean {
+        return try {
+            context?.resources?.getResourceName(resourceId)
+            true
+        } catch (e: Resources.NotFoundException) {
+            false
         }
     }
+
     fun startFromRowResource(context:Context,row_id: Int): MediaPlayer? {
 
+
         try {
-
-            mediaPlayer=MediaPlayer.create(context,row_id)
-
-            mediaPlayer?.start()
-//            mediaPlayer?.setOnCompletionListener({mp -> stop()});
-            return mediaPlayer
+            if(isResourceExist(context,row_id)) {
+                mediaPlayer = MediaPlayer.create(context, row_id)
+                if (mediaPlayer != null) {
+                    mediaPlayer?.start()
+                }
+            }else{
+                throw   IllegalStateException("ot found resource!!")
+            }
         } catch (e: Exception) {
-            e.printStackTrace()
-            return  null
+            throw  Exception(e.message.toString())
         }
+        return  null
     }
     @SuppressLint("SuspiciousIndentation")
     fun stop() {
 
         try{
-            if (mediaPlayer != null) {
-                if (mediaPlayer?.isPlaying()!!)
-                    mediaPlayer?.stop()
-                    mediaPlayer?.reset()
-                mediaPlayer?.release()
-                mediaPlayer = null
-            }
+            mediaPlayer?.takeIf { it.isPlaying }?.let { it.stop() }
+            mediaPlayer?.reset()
+            mediaPlayer?.release()
+            mediaPlayer = null
+
         } catch (e: Exception) {
             e.printStackTrace()
         }
 
     }
+    fun getRemainingDuration():Int {
+        if(mediaPlayer==null) return  0
+        var totalDuration = mediaPlayer?.duration?:0
+        var currentPosition = mediaPlayer?.currentPosition?:0
+        return totalDuration - currentPosition
+    }
     fun isPlayer():Boolean {
         try {
-            return (mediaPlayer != null && mediaPlayer?.isPlaying() ?: false)?:false
-        }catch (e: Exception) { return  false}
+            return mediaPlayer?.isPlaying==true
+        }catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return  false
     }
     fun pause() {
         try{
-            if (mediaPlayer != null) {
-                if (mediaPlayer?.isPlaying()!!)
-                    mediaPlayer?.pause()
-            }
+            mediaPlayer?.takeIf { it.isPlaying }?.pause()
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -70,9 +92,8 @@ class AudioPlayer(private val context: Context?) {
     }
     fun resume() {
         try{
+            mediaPlayer?.takeIf { !it.isPlaying }?.start()
 
-            if (mediaPlayer != null &&  !mediaPlayer?.isPlaying!!)
-                    mediaPlayer?.start()
         } catch (e: Exception) {
             e.printStackTrace()
         }

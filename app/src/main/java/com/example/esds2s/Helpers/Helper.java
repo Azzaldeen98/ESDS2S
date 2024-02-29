@@ -17,6 +17,7 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.example.esds2s.ContentApp.ContentApp;
 import com.example.esds2s.Helpers.Enums.AudioPlayerStatus;
+import com.example.esds2s.Helpers.Enums.TypesOfVoiceResponses;
 import com.example.esds2s.R;
 
 import java.util.List;
@@ -104,9 +105,17 @@ public static  void  deleteFile(String filePath)
     }
 
     public static int getDefaultSoundResource() {
-        int randomValues = new Random().nextInt(7);
-        int sound = com.example.esds2s.R.raw.res1;
+       return getDefaultSoundResource(-1);
+    }
+    public static int getDefaultSoundResource(int soundNum) {
+        int randomValues = new Random().nextInt(TypesOfVoiceResponses.values().length);
+        int sound = R.raw.row11;
 
+        Log.d("getDefaultSoundResource",randomValues+"");
+        if(soundNum>-1 && soundNum < TypesOfVoiceResponses.values().length)
+            randomValues=soundNum;
+
+        randomValues+=6;
         switch (randomValues) {
             case 0:
                 sound = com.example.esds2s.R.raw.res1;
@@ -126,6 +135,21 @@ public static  void  deleteFile(String filePath)
             case 5:
                 sound = com.example.esds2s.R.raw.res7;
                 break;
+            case 6:
+                sound = R.raw.row8;
+                break;
+            case 7:
+                sound = R.raw.row9;
+                break;
+            case 8:
+                sound = R.raw.row10;
+                break;
+            case 9:
+                sound = R.raw.row11;
+                break;
+
+            default:
+                return  -1;
         }
 
         return sound;
