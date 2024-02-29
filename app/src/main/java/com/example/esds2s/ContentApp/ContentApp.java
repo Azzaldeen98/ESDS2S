@@ -12,5 +12,7 @@ public class ContentApp {
     public static final  String  API_TEMP_STORAGE="TempStorage";
     public static final  String  PLAYER_ROBOT_AUDIO="PlayerAudio";
     public static final  String  ROBOT_CHAT_SETTINGS="RobotChatSettings";
+    public static final  String  MODEL_GENDER_TYPE="ModelGenderType";
+    public static final  String  CURRENT_MODEL_INFO="CurrentModelInfo";
 
 }

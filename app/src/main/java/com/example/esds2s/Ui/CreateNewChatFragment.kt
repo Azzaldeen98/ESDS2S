@@ -24,6 +24,7 @@ import com.example.esds2s.Models.ResponseModels.BaseChatResponse
 import com.example.esds2s.R
 import com.example.esds2s.Activies.RecordAudioActivity
 import com.example.esds2s.Helpers.Enums.GenderType
+import com.example.esds2s.Helpers.ExternalStorage
 import com.example.esds2s.Services.ModelLanguages
 import com.example.esds2s.databinding.FragmentCreateNewChatBinding
 import com.google.android.material.textfield.TextInputLayout
@@ -238,6 +239,10 @@ class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<Ba
             name = selectedChat?.scope.toString(),
             description=binding?.InputChatDescriptionData?.text.toString())
         LanguageInfo.setStorageSelcetedLanguage(this?.context,selectedLanguage,selectedLanguageIndex!!)
+        LanguageInfo.setStorageSelcetedLanguage(this?.context,selectedLanguage,selectedLanguageIndex!!)
+        if(selectedChat!=null)
+            ExternalStorage.storage(this?.activity,ContentApp.CURRENT_MODEL_INFO,Gson().toJson(selectedChat))
+
         GlobalScope.async {
             withContext(Dispatchers.IO) {
                 try {

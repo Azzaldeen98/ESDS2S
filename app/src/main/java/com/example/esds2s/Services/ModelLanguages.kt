@@ -18,6 +18,7 @@ class ModelLanguages(private  val context: Context) {
     }
 
     fun getGenderLanguages(gender: GenderType):ModelLanguages{
+
         val codes = context?.resources?.getStringArray(R.array.language_codes)
         val names = context?.resources?.getStringArray(R.array.language_names)
 

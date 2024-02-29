@@ -17,7 +17,9 @@ import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.esds2s.ApiClient.Controlls.SessionChatControl
+import com.example.esds2s.ContentApp.ContentApp
 import com.example.esds2s.Helpers.Enums.GenderType
+import com.example.esds2s.Helpers.ExternalStorage
 import com.example.esds2s.Ui.AutomatedChatBotFragment
 import com.example.esds2s.Ui.BasicChatBotFragment
 import com.example.esds2s.Ui.ChatBotTextFragment
@@ -25,11 +27,14 @@ import com.example.esds2s.Helpers.Helper
 import com.example.esds2s.Helpers.LanguageInfo
 import com.example.esds2s.Helpers.Tools.SpinnerHandler
 import com.example.esds2s.Interface.IBaseCallbackListener
+import com.example.esds2s.Models.ResponseModels.BaseChatResponse
 import com.example.esds2s.R
+import com.example.esds2s.Services.ModelLanguages
 import com.example.esds2s.Services.RecordVoiceService
 import com.example.esds2s.Services.SessionManagement
 import com.example.esds2s.Services.TestConnection
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.gson.Gson
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.util.Objects
@@ -37,6 +42,8 @@ import java.util.Objects
 class RecordAudioActivity : AppCompatActivity() {
 
 
+    private lateinit var modelLanguages: ModelLanguages
+    private  var genderType: GenderType= GenderType.MALE
     private var arrayAdapterLanguage: ArrayAdapter<String>? =null
     private var selectedLanguageIndex: Int=-1
     private var autocompleteTV: AutoCompleteTextView? = null
@@ -46,7 +53,7 @@ class RecordAudioActivity : AppCompatActivity() {
     private  var languageCodes : Array<String>?=null
     private  var languageNames : Array<String>?=null
     private var activeFragment :Fragment?=null
-
+    private var currentModelinfo :BaseChatResponse?=null
 
 
         @SuppressLint("MissingInflatedId")
@@ -97,8 +104,18 @@ class RecordAudioActivity : AppCompatActivity() {
               if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                   checkPermission() }
 
-//          genderType=if(selectedChat?.modeldescription=="Male") GenderType.MALE else GenderType.FEMALE
+//
+           val currentModelinfoString=ExternalStorage.getValue(this, ContentApp.CURRENT_MODEL_INFO)?.toString()
+          if(currentModelinfoString?.isNullOrEmpty()==false) {
+              currentModelinfo=Gson().fromJson(currentModelinfoString,BaseChatResponse::class.java)
+
+              if(currentModelinfo!=null) {
+                  genderType = if (currentModelinfo?.modeldescription == "Male") GenderType.MALE else GenderType.FEMALE
+              }
 //          insilizationLanguagesList(genderType)
+          }
+
+              modelLanguages = ModelLanguages(this)?.getGenderLanguages(genderType)!!
               loadPresetUserLanguage()
               initializationLanguagesList()
               activeFragment=AutomatedChatBotFragment()
@@ -119,9 +136,15 @@ class RecordAudioActivity : AppCompatActivity() {
     }
     private  fun initializationLanguagesList(){
 
-        languageCodes = resources.getStringArray(R.array.language_codes)
-        languageNames = resources.getStringArray(R.array.language_names)
-        if(selectedLanguageIndex>-1)
+
+        languageNames = modelLanguages?.getLanguagesName()?.toTypedArray()
+        languageCodes = modelLanguages?.getLanguagesCode()?.toTypedArray()
+
+//        languageCodes = resources.getStringArray(R.array.language_codes)
+//        languageNames = resources.getStringArray(R.array.language_names)
+//
+        Log.d("languageNames",Gson().toJson(languageNames))
+        if(selectedLanguageIndex>-1 && selectedLanguageIndex<languageNames?.size!!)
             autocompleteTV?.setText(languageNames?.get(selectedLanguageIndex))
         arrayAdapterLanguage = ArrayAdapter<String>(this, R.layout.dropdown_item, languageNames!!)
         autocompleteTV?.setAdapter(arrayAdapterLanguage)
