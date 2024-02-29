@@ -236,7 +236,7 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
                 activity,
                 ContentApp.ROBOT_CHAT_SETTINGS,
                 ContentApp.PLAYER_ROBOT_AUDIO,
-                AudioPlayerStatus.RESUME.ordinal.toString()
+                AudioPlayerStatus.START.ordinal.toString()
             )
         }
 

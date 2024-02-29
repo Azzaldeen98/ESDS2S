@@ -282,9 +282,8 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
                        if(isResponse || audioPlayer == null) return@launch
 
                        Log.d("SuspiciousIndentation","5000" )
-//                       if (audioPlayer == null)
-//                           return@launch
-//                           audioPlayer = AudioPlayer(this@RecordVoiceService)
+                       if (audioPlayer == null)
+                           audioPlayer = AudioPlayer(this@RecordVoiceService)
 
                        var sound_id = Helper.getDefaultSoundResource()
 
@@ -379,8 +378,7 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 "Record_Audio_Service",
-                NotificationManager.IMPORTANCE_HIGH
-            )
+                NotificationManager.IMPORTANCE_HIGH)
             notificationManager.createNotificationChannel(channel)
         }
     }
@@ -491,7 +489,9 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
 //        }
 
     }
+     @SuppressLint("SuspiciousIndentation")
      fun speechResponseResult(result: String) {
+
 
 //        var player: MediaPlayer
 //        if (result.isNullOrEmpty() || !Helper.isAudioFile(result)) {
@@ -502,10 +502,9 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
          backgroundMonitorOrderStatusJob?.takeIf { it.isActive }?.cancel()
          backgroundMonitorSpeakerStatusJob?.takeIf { it.isActive }?.cancel()
          try {
-
+             isSpeaking=true
              if(audioPlayer == null)
-                 return
-//                 audioPlayer = AudioPlayer(this@RecordVoiceService)
+                  audioPlayer = AudioPlayer(this@RecordVoiceService)
 
 
 //             var player: MediaPlayer ?=null
@@ -523,21 +522,16 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
                      }
              }
 
-             backgroundMonitorSpeakerStatusJob = GlobalScope.launch(Dispatchers.Default) {
-                 Mutex().withLock {
-                     while (isSpeaking) {
-                         SettingsResourceForRecordServices.checkAudioPlayerSettings(this@RecordVoiceService, audioPlayer)
-                         delay(1000)
-                     }
-                 }
+             var  player:MediaPlayer?=null
+             if(Helper.isAudioFile(result)) {
+                 player = audioPlayer?.start(result)
              }
 
-             if(Helper.isAudioFile(result)) {
-
-                 var  player = audioPlayer?.start(result)
+             if(player!=null){
                  player?.setOnErrorListener { mp, what, extra ->
                      try {
                          isSpeaking = false
+                         Log.e("errorPlyer","99999");
                          backgroundMonitorSpeakerStatusJob?.takeIf { it.isActive }?.cancel()
                          audioPlayer?.takeIf { it.isPlayer() }?.stop()
                      } catch (e: Exception) {
@@ -545,7 +539,6 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
                          speechRecognizerListenAgain(); }
                      true // Return true if the error is considered handled, false otherwise
                  }
-
                  player?.setOnCompletionListener { mp ->
                      try {
                          isSpeaking = false
@@ -556,6 +549,21 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
                          Log.e("Complate Plyer", e.message.toString()); } finally {
                          speechRecognizerListenAgain(); }
                  }
+             }
+             if(audioPlayer?.isPlayer()==true){
+                     backgroundMonitorSpeakerStatusJob = GlobalScope.launch(Dispatchers.Default) {
+                 Mutex().withLock {
+                     while (isSpeaking) {
+                         SettingsResourceForRecordServices.checkAudioPlayerSettings(this@RecordVoiceService, audioPlayer)
+                         delay(1000)
+                     }
+                 }
+             }
+             }else{
+                 isSpeaking=false
+                 speechRecognizerListenAgain();
+                 backgroundMonitorSpeakerStatusJob?.takeIf { it.isActive }?.cancel()
+
              }
 
 //             backgroundMonitorSpeakerStatusJob?.invokeOnCompletion { throwable ->

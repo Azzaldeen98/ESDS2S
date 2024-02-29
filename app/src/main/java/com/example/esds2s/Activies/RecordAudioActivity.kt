@@ -137,18 +137,23 @@ class RecordAudioActivity : AppCompatActivity() {
     private  fun initializationLanguagesList(){
 
 
-        languageNames = modelLanguages?.getLanguagesName()?.toTypedArray()
-        languageCodes = modelLanguages?.getLanguagesCode()?.toTypedArray()
+        try {
+            languageNames = modelLanguages?.getLanguagesName()?.toTypedArray()
+            languageCodes = modelLanguages?.getLanguagesCode()?.toTypedArray()
+
 
 //        languageCodes = resources.getStringArray(R.array.language_codes)
 //        languageNames = resources.getStringArray(R.array.language_names)
 //
-        Log.d("languageNames",Gson().toJson(languageNames))
-        if(selectedLanguageIndex>-1 && selectedLanguageIndex<languageNames?.size!!)
-            autocompleteTV?.setText(languageNames?.get(selectedLanguageIndex))
-        arrayAdapterLanguage = ArrayAdapter<String>(this, R.layout.dropdown_item, languageNames!!)
-        autocompleteTV?.setAdapter(arrayAdapterLanguage)
-        autocompleteTV?.setOnItemClickListener { parent, view, position, id -> onSelectedLanguage(position)}
+            Log.d("languageNames",Gson().toJson(languageNames))
+            if(selectedLanguageIndex>-1 && selectedLanguageIndex<languageNames?.size!!)
+                autocompleteTV?.setText(languageNames?.get(selectedLanguageIndex))
+            arrayAdapterLanguage = ArrayAdapter<String>(this, R.layout.dropdown_item, languageNames!!)
+            autocompleteTV?.setAdapter(arrayAdapterLanguage)
+            autocompleteTV?.setOnItemClickListener { parent, view, position, id -> onSelectedLanguage(position)}
+        }catch (e:Exception){
+
+        }
     }
     fun onSelectedLanguage(position:Int){
 

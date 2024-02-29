@@ -67,16 +67,13 @@ class SettingsResourceForRecordServices {
                 ) as String?
 
 
-                if (status != null && (status.equals(AudioPlayerStatus.STOP.ordinal.toString()) ||
-                            status.equals(AudioPlayerStatus.PAUSE.ordinal.toString())) && player.isPlayer()
-                ) {
+                if (status != null && (status.equals(AudioPlayerStatus.STOP.ordinal.toString())  && player.isPlayer())) {
                     Log.d("checkAudioPlayerSettings",status.toString())
-                    ExternalStorage.storage(
-                        context,
-                        ContentApp.ROBOT_CHAT_SETTINGS,
-                        ContentApp.PLAYER_ROBOT_AUDIO,
-                        AudioPlayerStatus.START.ordinal.toString()
-                    )
+//                    ExternalStorage.storage(
+//                        context,
+//                        ContentApp.ROBOT_CHAT_SETTINGS,
+//                        ContentApp.PLAYER_ROBOT_AUDIO,
+//                        AudioPlayerStatus.START.ordinal.toString())
 
                     player?.mediaPlayer?.seekTo(player?.mediaPlayer!!.duration)
 
