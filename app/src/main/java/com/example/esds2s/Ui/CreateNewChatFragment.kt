@@ -250,11 +250,15 @@ class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<Ba
                 try {
                     var response = sessionChatControl?.createSessionChat(body)
                     if (response != null) {
+                        mainHandler.post(java.lang.Runnable { binding?.btnSubmitChatInfo?.isEnabled=true
                         Log.d("CustomerChatResponse55", Gson().toJson(response))
                         val intent = Intent(this@CreateNewChatFragment.context, RecordAudioActivity::class.java)
                         startActivity(intent)
+                    })
                     } else {
+
                         mainHandler.post(java.lang.Runnable {
+                            binding?.btnSubmitChatInfo?.isEnabled=true
                             AlertDialog.Builder(this@CreateNewChatFragment.context)
                                 .setTitle("Alert")
                                 .setIcon(R.drawable.baseline_warning_24)

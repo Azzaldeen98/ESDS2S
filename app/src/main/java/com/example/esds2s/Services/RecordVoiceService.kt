@@ -475,7 +475,7 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
         backgroundMonitorOrderStatusJob?.takeIf { it.isActive }?.cancel()
             try {
 
-                complatePlayerJop?.takeIf { it.isActive }?.cancel()
+
 
                 if (audioPlayer==null)
                     audioPlayer=AudioPlayer(this@RecordVoiceService)
@@ -483,7 +483,7 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
 
                         if (audioPlayer?.isPlayer() == true) {
 
-
+                            complatePlayerJop?.takeIf { it.isActive }?.cancel()
                             complatePlayerJop = GlobalScope?.launch {
                                 try {
 //                        if(audioPlayer?.isPlayer() == true)
@@ -696,6 +696,9 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
                     if (reorderCounter!! < 3 && textSpeachResult?.isNullOrEmpty() == false) {
                         speechChatControl?.messageToGeneratorAudio(textSpeachResult!!, this@RecordVoiceService);
 
+
+                        if(audioPlayer!=null && audioPlayer?.isPlayer()==true)
+                             audioPlayer?.stop()
 
                         if(reorderCounter==1)
                              playDefaultVoiceResponse(Helper.getDefaultSoundResource(TypesOfVoiceResponses.ASKYOU.ordinal))

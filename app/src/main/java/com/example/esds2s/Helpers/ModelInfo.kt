@@ -34,6 +34,6 @@ class ModelInfo(private  val context: Context) {
     }
 
     fun getGender(): GenderType? {
-        return if(modelData?.modeldescription!=="Male") GenderType.MALE else GenderType.FEMALE
+        return if(modelData?.modeldescription=="Male") GenderType.MALE else GenderType.FEMALE
     }
 }
