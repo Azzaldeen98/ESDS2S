@@ -6,6 +6,9 @@ import android.content.res.Resources
 import android.media.MediaPlayer
 import android.net.Uri
 import android.util.Log
+import com.example.esds2s.Helpers.Enums.AvailableLanguages
+import com.example.esds2s.Helpers.Enums.GenderType
+import com.google.gson.Gson
 
 class AudioPlayer(private val context: Context?) {
      var mediaPlayer: MediaPlayer? =null
@@ -39,20 +42,31 @@ class AudioPlayer(private val context: Context?) {
 
     fun startFromRowResource(context:Context,row_id: Int): MediaPlayer? {
 
-        try {
-            if(isResourceExist(context,row_id)) {
-                mediaPlayer = MediaPlayer.create(context, row_id)
-                if (mediaPlayer != null) {
-                    mediaPlayer?.start()
+
+//       val lang=LanguageInfo.getStorageSelcetedLanguage(context)
+        val modelInfo=ModelInfo(context)
+        Log.d("startFromRowResourcemodelInfo",Gson().toJson(modelInfo?.getInfo()))
+        if(modelInfo!=null && modelInfo?.getLanguage() == AvailableLanguages.ARABIC && modelInfo?.getGender()==GenderType.MALE ) {
+
+            try {
+
+                if (isResourceExist(context, row_id)) {
+                    mediaPlayer = MediaPlayer.create(context, row_id)
+                    if (mediaPlayer != null) {
+                        mediaPlayer?.start()
+                    }
+                    return mediaPlayer
+                } else {
+                    throw IllegalStateException("ot found resource!!")
                 }
-                return  mediaPlayer
-            }else{
-                throw   IllegalStateException("ot found resource!!")
+            } catch (e: Exception) {
+                throw Exception(e.message.toString())
             }
-        } catch (e: Exception) {
-            throw  Exception(e.message.toString())
+            return  mediaPlayer
+        }else{
+            return  null
         }
-        return  mediaPlayer
+
     }
     @SuppressLint("SuspiciousIndentation")
     fun stop() {

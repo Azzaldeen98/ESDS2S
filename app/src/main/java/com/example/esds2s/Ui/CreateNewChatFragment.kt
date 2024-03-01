@@ -112,6 +112,7 @@ class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<Ba
             binding?.inputChatName?.visibility=View.GONE
             binding?.InputChatNameData?.setText(selectedChat?.scope)
         }
+        binding?.btnSubmitChatInfo?.isEnabled=true
         binding?.btnSubmitChatInfo?.setOnClickListener{ submitCreateChat() }
         progressPar.visibility = View.VISIBLE
         genderType=if(selectedChat?.modeldescription=="Male") GenderType.MALE else GenderType.FEMALE
@@ -119,7 +120,7 @@ class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<Ba
         laoudAllChats()
     }
     private  fun uplaodAllChatsFromLocalStorage():Boolean{
-
+        progressPar?.visibility=View.GONE
         var storage :JsonStorageManager?=null
         var chatsList :List<BaseChatResponse>?=null
 
@@ -232,6 +233,7 @@ class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<Ba
     private  fun submitCreateChat(){
 
         progressPar.visibility = View.VISIBLE
+        binding?.btnSubmitChatInfo?.isEnabled=false
         val mainHandler = Handler(Looper.getMainLooper())
         if(!checkInputData()) return;
         val body=CustomerChatRequest(

@@ -9,6 +9,7 @@ import android.speech.SpeechRecognizer
 import android.util.Log
 import android.widget.Toast
 import com.example.esds2s.ApiClient.Controlls.SpeechChatControl
+import com.example.esds2s.Helpers.LanguageInfo
 import com.example.esds2s.Interface.IGeminiServiceEventListener
 import com.example.esds2s.Interface.ISpeechRecognizerServices
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
@@ -173,6 +174,9 @@ class SpeechRecognizerService(private val context: Context,
     fun startSpeechRecognizerListening() {
         if (speechRecognizerIsListening==false) speechRecognizerIsListening=true
         if (speechRecognizer != null && speechRecognizerIntent != null){
+            val lang= LanguageInfo.getStorageSelcetedLanguage(this?.context)
+            if(lang!=null && speechRecognizerIntent?.getStringExtra(RecognizerIntent.EXTRA_LANGUAGE)?.equals(lang?.code,true) == false)
+                speechRecognizerIntent?.putExtra(RecognizerIntent.EXTRA_LANGUAGE, lang.code);
             Log.e("startSpeechRecognizerListening","Start")
             speechRecognizer?.startListening(speechRecognizerIntent)
         }

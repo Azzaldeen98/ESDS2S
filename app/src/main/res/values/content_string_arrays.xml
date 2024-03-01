@@ -13,14 +13,14 @@
     </declare-styleable>
 
     <string-array name="language_names">
-        <item>Arabic - Male</item>
-        <item>Arabic - Female</item>
-        <item>English - Male</item>
-        <item>English - Female</item>
-        <item>Spanish - Male</item>
-        <item>Spanish - Female</item>
-        <item>French - Male</item>
-        <item>French - Female</item>
+        <item>Arabic </item><!--Male-->
+        <item>Arabic </item><!--Female-->
+        <item>English </item>
+        <item>English </item>
+        <item>Spanish </item>
+        <item>Spanish </item>
+        <item>French  </item>
+        <item>French  </item>
         <!--        <item>German</item>-->
         <!--        <item>Chinese</item>-->
         <!--        <item>Japan</item>-->
