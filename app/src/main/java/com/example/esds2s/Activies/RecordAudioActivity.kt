@@ -9,14 +9,11 @@ import android.os.Build
 import android.os.Bundle
 import android.text.format.DateFormat
 import android.util.Log
-import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import com.example.esds2s.ApiClient.Controlls.SessionChatControl
 import com.example.esds2s.ContentApp.ContentApp
 import com.example.esds2s.Helpers.Enums.GenderType
 import com.example.esds2s.Helpers.ExternalStorage
@@ -25,19 +22,14 @@ import com.example.esds2s.Ui.BasicChatBotFragment
 import com.example.esds2s.Ui.ChatBotTextFragment
 import com.example.esds2s.Helpers.Helper
 import com.example.esds2s.Helpers.LanguageInfo
-import com.example.esds2s.Helpers.Tools.SpinnerHandler
-import com.example.esds2s.Interface.IBaseCallbackListener
 import com.example.esds2s.Models.ResponseModels.BaseChatResponse
 import com.example.esds2s.R
 import com.example.esds2s.Services.ModelLanguages
-import com.example.esds2s.Services.RecordVoiceService
+import com.example.esds2s.Services.RecordVoiceService3
 import com.example.esds2s.Services.SessionManagement
 import com.example.esds2s.Services.TestConnection
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.gson.Gson
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import java.util.Objects
 
 class RecordAudioActivity : AppCompatActivity() {
 
@@ -174,14 +166,14 @@ class RecordAudioActivity : AppCompatActivity() {
     private  fun checkServiceAndLoudFragment(fragment: Fragment){
 
         try {
-            if (Helper.isRecordServiceRunningInForeground(this, RecordVoiceService::class.java)) {
+            if (Helper.isRecordServiceRunningInForeground(this, RecordVoiceService3::class.java)) {
 
                 AlertDialog.Builder(this)
                     .setTitle("warning")
                     .setIcon(R.drawable.baseline_warning_24)
                     .setMessage(getString(R.string.msg_stop_automated_chat))
                     .setPositiveButton(getString(R.string.btn_yes)) { dialog, which ->
-                        val  serviceIntent = Intent(this, RecordVoiceService::class.java)
+                        val  serviceIntent = Intent(this, RecordVoiceService3::class.java)
                         stopService(serviceIntent)
                         loadFragment(fragment)
                     }.setNegativeButton(getString(R.string.btn_no)) { dialog, which ->}

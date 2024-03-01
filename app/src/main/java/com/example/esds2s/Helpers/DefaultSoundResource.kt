@@ -10,6 +10,9 @@ import java.util.*
 class DefaultSoundResource(private  val gender: GenderType,private  val  language: AvailableLanguages){
 
 
+    val fourValuesArray: Array<Int> = arrayOf(R.raw.mus1,R.raw.mus2,R.raw.mus3,R.raw.mus4)
+
+
     fun getAudioResources(){
 
     }

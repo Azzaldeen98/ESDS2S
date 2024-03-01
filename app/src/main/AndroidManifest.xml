@@ -45,7 +45,7 @@
             </intent-filter>
         </activity> <!-- ======================= Services ================================ -->
         <service
-            android:name=".Services.RecordVoiceService"
+            android:name=".Services.RecordVoiceService3"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="microphone|mediaPlayback|dataSync|remoteMessaging" />

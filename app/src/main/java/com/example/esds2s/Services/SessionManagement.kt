@@ -36,7 +36,7 @@ class SessionManagement<T>(private val activity:Activity,private val callBackLis
 
     fun logOutSession() {
         activity.applicationContext
-        if(Helper.isRecordServiceRunningInForeground(context, RecordVoiceService::class.java)) {
+        if(Helper.isRecordServiceRunningInForeground(context, RecordVoiceService3::class.java)) {
             onClickStopService()
         } else{
             AlertDialog.Builder(activity)
@@ -84,8 +84,8 @@ class SessionManagement<T>(private val activity:Activity,private val callBackLis
 
         try {
             if (Helper.isRecordServiceRunningInForeground(activity,
-                    RecordVoiceService::class.java)) {
-                val serviceIntent = Intent(activity!!, RecordVoiceService::class.java)
+                    RecordVoiceService3::class.java)) {
+                val serviceIntent = Intent(activity!!, RecordVoiceService3::class.java)
                 activity.stopService(serviceIntent)
                 callBackListener?.onCallBackExecuted()
 //                setStopRecordForGroundServiceMode()

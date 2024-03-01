@@ -5,13 +5,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 
-import com.example.esds2s.Services.RecordVoiceService;
+import com.example.esds2s.Services.RecordVoiceService3;
 
 public class MyBroadcastReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         if (intent.getAction() != null && intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED)) {
-            Intent serviceIntent = new Intent(context, RecordVoiceService.class);
+            Intent serviceIntent = new Intent(context, RecordVoiceService3.class);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
                 context.startForegroundService(serviceIntent);
             else

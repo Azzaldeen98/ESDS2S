@@ -136,17 +136,24 @@ public static  void  deleteFile(String filePath)
 //                sound = com.example.esds2s.R.raw.res7;
 //                break;
             case 0:
-                sound = R.raw.row8;
+                sound = R.raw.mus1;
                 break;
             case 1:
-                sound = R.raw.row9;
+                sound = R.raw.mus2;
                 break;
             case 2:
-                sound = R.raw.row10;
+                sound = R.raw.mus3;
                 break;
             case 3:
-                sound = R.raw.row11;
+                sound = R.raw.mus4;
                 break;
+            //            case 4:
+//                sound = com.example.esds2s.R.raw.res6;
+//                break;
+//            case 5:
+//                sound = com.example.esds2s.R.raw.res7;
+//                break;
+
 
             default:
                 return  -1;

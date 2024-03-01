@@ -2,14 +2,10 @@ package com.example.esds2s.Ui
 
 import android.Manifest
 import android.app.AlertDialog
-import android.app.NotificationManager
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,26 +13,19 @@ import android.view.animation.AnimationUtils
 import android.widget.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.getSystemService
 import androidx.fragment.app.Fragment
-import com.example.esds2s.Activies.MainActivity
 import com.example.esds2s.Activies.RecordAudioActivity
-import com.example.esds2s.ApiClient.Controlls.SessionChatControl
 import com.example.esds2s.ContentApp.ContentApp
 import com.example.esds2s.Helpers.Enums.AudioPlayerStatus
 import com.example.esds2s.Helpers.ExternalStorage
 import com.example.esds2s.Helpers.Helper
 import com.example.esds2s.Helpers.LanguageInfo
-import com.example.esds2s.Helpers.Tools.SpinnerHandler
 import com.example.esds2s.R
-import com.example.esds2s.Services.RecordVoiceService
+import com.example.esds2s.Services.RecordVoiceService3
 import com.example.esds2s.Services.SessionManagement
 import com.example.esds2s.Services.SettingsResourceForRecordServices
-import com.example.esds2s.Services.TestConnection
 import com.example.esds2s.databinding.FragmentAutomatedChatBotBinding
-import com.google.android.material.textfield.TextInputLayout
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
 private const val ARG_PARAM1 = "param1"
@@ -120,7 +109,7 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
         alert_notify = activity?.findViewById(R.id.alert_notify)
         alert_btn_cancel = activity?.findViewById(R.id.alert_btn_cancel)
         languageCodes = resources.getStringArray(R.array.language_codes)
-        if(Helper.isRecordServiceRunningInForeground(this?.activity!!,RecordVoiceService::class.java))
+        if(Helper.isRecordServiceRunningInForeground(this?.activity!!,RecordVoiceService3::class.java))
             setStartRecordForGroundServiceMode();
         else
             setStopRecordForGroundServiceMode()
@@ -185,7 +174,7 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
 
     fun onClickGenerateAutomatedChatService(v: View) {
 
-//        if(!Helper.isRecordServiceRunningInForeground(this?.activity!!, RecordVoiceService::class.java)) {
+//        if(!Helper.isRecordServiceRunningInForeground(this?.activity!!, RecordVoiceService3::class.java)) {
             notify_layout_back?.visibility = View.VISIBLE;
             val animation = AnimationUtils.loadAnimation(this.context, R.anim.entry_to_top_animation)
             alert_msg?.text = getString(R.string.notify1_Automated_msg)
@@ -211,9 +200,9 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
     fun startRecordServicesOnForground(){
 
         setStartRecordForGroundServiceMode()
-        if(!Helper.isRecordServiceRunningInForeground(this?.activity!!, RecordVoiceService::class.java
+        if(!Helper.isRecordServiceRunningInForeground(this?.activity!!, RecordVoiceService3::class.java
             )) {
-             serviceIntent = Intent(this?.context!!, RecordVoiceService::class.java)
+             serviceIntent = Intent(this?.context!!, RecordVoiceService3::class.java)
              serviceIntent.putExtra(ContentApp.LANGUAGE,selectedLanguageCode)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                 this?.activity?.startForegroundService(serviceIntent)
@@ -303,7 +292,7 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
 
     //    private fun onBack() {
     //
-    //        if(Helper.isRecordServiceRunningInForeground(this?.context, RecordVoiceService::class.java)) {
+    //        if(Helper.isRecordServiceRunningInForeground(this?.context, RecordVoiceService3::class.java)) {
     //            onClickStopService()
     //        } else{
     //            AlertDialog.Builder(this.context)
@@ -356,10 +345,10 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
     //        try {
     //            if (Helper.isRecordServiceRunningInForeground(
     //                    this@AutomatedChatBotFragment?.context,
-    //                    RecordVoiceService::class.java
+    //                    RecordVoiceService3::class.java
     //                )
     //            ) {
-    //                 serviceIntent = Intent(this?.context!!, RecordVoiceService::class.java)
+    //                 serviceIntent = Intent(this?.context!!, RecordVoiceService3::class.java)
     //                activity?.stopService(serviceIntent)
     //                setStopRecordForGroundServiceMode()
     //            }
