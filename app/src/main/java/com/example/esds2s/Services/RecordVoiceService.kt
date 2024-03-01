@@ -297,10 +297,11 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
 
                 if (speechChatControl != null) {
                     speechChatControl?.messageToGeneratorAudio(speechText, this@RecordVoiceService);
-                    voiceResponseCount = 0
-                    startDefaultVoiceResponse()
                 }
-            }else{
+                voiceResponseCount = 0
+                startDefaultVoiceResponse()
+            }
+            else{
                 Log.d("Not Connection Internet !! ", "Faild!!")
             }
         } catch (e: Exception) {
@@ -312,6 +313,8 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
     private  fun playDefaultVoiceResponse(sound_num:Int,listenSpeechRecognizer:Boolean=false){
 
         try {
+
+
             val sound=Helper.getDefaultSoundResource(sound_num)
             val player = audioPlayer?.startFromRowResource(this@RecordVoiceService, sound)
 
@@ -325,7 +328,10 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
                 player?.setOnErrorListener { mp, what, extra ->
                     isSpeaking = false
                     try {
-                    audioPlayer?.takeIf { it.isPlayer() }?.stop()
+                        mp.stop()
+                        mp.reset()
+                        mp.release()
+//                    audioPlayer?.takeIf { it.isPlayer() }?.stop()
                     }catch (e:Exception){ }
                     finally {
                         if (listenSpeechRecognizer)
@@ -336,7 +342,10 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
                 player?.setOnCompletionListener { mp ->
                     isSpeaking = false
                     try {
-                    audioPlayer?.takeIf { it.isPlayer() }?.stop()
+                        mp.stop()
+                        mp.reset()
+                        mp.release()
+//                    audioPlayer?.takeIf { it.isPlayer() }?.stop()
                     }catch (e:Exception){ }
                     finally {
                         if (listenSpeechRecognizer)
@@ -360,20 +369,20 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
             Mutex().withLock {
 
                 delay(5000)
-                if(isResponse || audioPlayer == null) return@launch
+                if(isResponse || audioPlayer == null){
+                    return@launch
+                }
 
                 Log.d("SuspiciousIndentation","5000" )
-                if (audioPlayer == null)
-                    audioPlayer = AudioPlayer(this@RecordVoiceService)
 
-                var sound_id = Helper.getDefaultSoundResource()
+//                var sound_id = Helper.getDefaultSoundResource()
 
-                if(voiceResponseCount==0)
-                    sound_id=Helper.getDefaultSoundResource(TypesOfVoiceResponses.MIDDLE.ordinal)
-                else if(voiceResponseCount==1)
-                    sound_id=Helper.getDefaultSoundResource(TypesOfVoiceResponses.ASKYOU.ordinal)
-                if(voiceResponseCount==2)
-                    sound_id=Helper.getDefaultSoundResource(TypesOfVoiceResponses.AGAINQUESTION.ordinal)
+//                if(voiceResponseCount==0)
+                var  sound_id=Helper.getDefaultSoundResource(TypesOfVoiceResponses.MIDDLE.ordinal)
+//                else if(voiceResponseCount==1)
+//                    sound_id=Helper.getDefaultSoundResource(TypesOfVoiceResponses.ASKYOU.ordinal)
+//                if(voiceResponseCount==2)
+//                    sound_id=Helper.getDefaultSoundResource(TypesOfVoiceResponses.AGAINQUESTION.ordinal)
 
                 try {
                     val player = audioPlayer?.startFromRowResource(this@RecordVoiceService, sound_id)
@@ -392,16 +401,16 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
                             isSpeaking = false
                             audioPlayer?.takeIf { it.isPlayer() }?.stop()
 
-                            if (isResponse == false) {
-                                if (voiceResponseCount < 3) {
-                                    startDefaultVoiceResponse()
-                                } else {
-                                    voiceResponseCount = 0
-                                    speechRecognizerListenAgain()
-                                    return@setOnCompletionListener
-//                                       playDefaultVoiceResponse(TypesOfVoiceResponses.AGAINQUESTION.ordinal,true)
-                                }
-                            } else
+//                            if (isResponse == false) {
+//                                if (voiceResponseCount < 3) {
+////                                    startDefaultVoiceResponse()
+//                                } else {
+//                                    voiceResponseCount = 0
+////                                    speechRecognizerListenAgain()
+//                                    return@setOnCompletionListener
+////                                       playDefaultVoiceResponse(TypesOfVoiceResponses.AGAINQUESTION.ordinal,true)
+//                                }
+//                            } else
                                 voiceResponseCount = 0
                         }
                     }
@@ -410,9 +419,9 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
                     e.printStackTrace()
                 }
                 finally {
-                    if (voiceResponseCount < 3)
-                        voiceResponseCount++
-                    else
+//                    if (voiceResponseCount < 3)
+//                        voiceResponseCount++
+//                    else
                         voiceResponseCount=0
                 }
             }
@@ -463,28 +472,62 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
     override fun onRequestIsSuccess(response:GeminiResponse) {
 
         isResponse=true
-
+        backgroundMonitorOrderStatusJob?.takeIf { it.isActive }?.cancel()
             try {
 
                 complatePlayerJop?.takeIf { it.isActive }?.cancel()
-                if (audioPlayer?.isPlayer() == true) {
 
-                        complatePlayerJop = GlobalScope.launch(Dispatchers.Default) {
-                            try {
-                            val duration = audioPlayer?.getRemainingDuration()?.toLong() ?: 0
-                            delay(duration)
-                            Log.e("duration audioPlayer", "duration");
-                            audioPlayer?.takeIf { it.isPlayer() }?.stop()
-                            } catch (e: Exception) {
-                                Log.e("stop audioPlayer", e.message.toString());
-                            } finally {
-                                speechResponseResult(response?.description!!)
+                if (audioPlayer==null)
+                    audioPlayer=AudioPlayer(this@RecordVoiceService)
+
+
+                        if (audioPlayer?.isPlayer() == true) {
+
+
+                            complatePlayerJop = GlobalScope?.launch {
+                                try {
+//                        if(audioPlayer?.isPlayer() == true)
+//                             audioPlayer?.stop()
+                                    val duration =
+                                        audioPlayer?.getRemainingDuration()?.toLong() ?: 0
+                                    delay(duration)
+                                    Log.e("duration audioPlayer", "duration");
+
+
+                                } catch (e: Exception) {
+                                    Log.e("stop audioPlayer", e.message.toString());
+                                } finally {
+
+                                    speechResponseResult(response?.description!!)
+                                }
                             }
                         }
-                    } else {
-                        Log.d("audioPlayerIsPlayer", "audioPlayerIsPlayer");
-                        speechResponseResult(response?.description!!)
-                    }
+                        else{
+
+                             Log.e("description", response?.description!!);
+                              speechResponseResult(response?.description!!)
+                            }
+
+//
+//                        complatePlayerJop = GlobalScope.launch(Dispatchers.Default) {
+//                            try {
+////                            val duration = audioPlayer?.getRemainingDuration()?.toLong() ?: 0
+////                            delay(duration)
+//                            Log.e("duration audioPlayer", "duration");
+//                            audioPlayer?.stop()
+//                            } catch (e: Exception) {
+//                                Log.e("stop audioPlayer", e.message.toString());
+//                            } finally {
+//
+//                                speechResponseResult(response?.description!!)
+//                            }
+//                        }
+
+
+//                {
+
+
+//                    }
 
 
             }catch (e:Exception){
@@ -536,29 +579,30 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
      fun speechResponseResult(result: String) {
 
 
-
          backgroundMonitorOrderStatusJob?.takeIf { it.isActive }?.cancel()
          backgroundMonitorSpeakerStatusJob?.takeIf { it.isActive }?.cancel()
          try {
 
-
              if(audioPlayer == null)
                   audioPlayer = AudioPlayer(this@RecordVoiceService)
-
 
              var player: MediaPlayer ?=null
                  if (result.isNullOrEmpty() || !Helper.isAudioFile(result)) {
                      Log.e("$$$$", "$$$$");
                      try {
-
 //                         playDefaultVoiceResponse(TypesOfVoiceResponses.AGAINQUESTION.ordinal,false)
                          player = audioPlayer?.startFromRowResource(this@RecordVoiceService, Helper.getDefaultSoundResource(TypesOfVoiceResponses.AGAINQUESTION.ordinal))
                      }catch (e:Exception){
                          Log.e("startPlayerFromRowResource", e.message.toString());
-                         speechRecognizerListenAgain();
+//                         speechRecognizerListenAgain();
                      }
              }else{
+                 try {
+                     Log.e("audioPlayer","audioPlayer");
                      player = audioPlayer?.start(result)
+                 }catch (e:Exception){
+                     Log.e("audioPlayer_Error",e.message.toString());
+                 }
                  }
 
 
@@ -568,6 +612,8 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
 //
 //             }
              if(player!=null){
+
+                 Log.e("audioPlayer___MediaPlayer","audioPlayer");
                  isSpeaking=true
                  backgroundMonitorSpeakerStatusJob = GlobalScope.launch(Dispatchers.Default) {
                      Mutex().withLock {
@@ -583,11 +629,11 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
                          isSpeaking = false
                          backgroundMonitorSpeakerStatusJob?.takeIf { it.isActive }?.cancel()
                          Log.e("errorPlyer","99999");
-//                         mp.stop()
-//                         mp.reset()
-//                         mp.release()
+                         mp.stop()
+                         mp.reset()
+                         mp.release()
 
-                         audioPlayer?.takeIf { it.isPlayer() }?.stop()
+//                         audioPlayer?.takeIf { it.isPlayer() }?.stop()
                      } catch (e: Exception) {
                          Log.e("errorPlyer", e.message.toString()); }
                      finally {
@@ -598,10 +644,11 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
                      try {
                          isSpeaking = false
                          backgroundMonitorSpeakerStatusJob?.takeIf { it.isActive }?.cancel()
-                         audioPlayer?.takeIf { it.isPlayer() }?.stop()
-//                         mp.stop()
-//                         mp.reset()
-//                         mp.release()
+
+                         mp.stop()
+                         mp.reset()
+                         mp.release()
+//                         audioPlayer?.takeIf { it.isPlayer() }?.stop()
                          Log.d("Complate Plyer", "Complate Plyer Museic");
                      } catch (e: Exception) {
                          Log.e("Complate Plyer", e.message.toString()); }
@@ -672,7 +719,7 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
                         reorderCounter++
                     }
                     else {
-                        Log.e("onRequestIsFailure", "")
+                        Log.d("onRequestIsFailure", "")
                         reorderCounter = 0
 
                         playDefaultVoiceResponse(TypesOfVoiceResponses.AGAINQUESTION.ordinal, true)

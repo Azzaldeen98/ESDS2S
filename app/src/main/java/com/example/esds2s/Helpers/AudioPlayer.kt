@@ -23,11 +23,15 @@ class AudioPlayer(private val context: Context?) {
             mediaPlayer?.setDataSource(filePath)
             mediaPlayer?.prepare()
             mediaPlayer?.start()
+
             return mediaPlayer
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        return null
+        finally{
+            return mediaPlayer
+        }
+
         //  mediaPlayer?.setOnCompletionListener({mp -> stop()});
     }
 
@@ -90,7 +94,7 @@ class AudioPlayer(private val context: Context?) {
     }
     fun isPlayer():Boolean {
         try {
-            return mediaPlayer?.isPlaying==true
+            return mediaPlayer?.isPlaying==true?:false
         }catch (e: Exception) {
             e.printStackTrace()
         }
