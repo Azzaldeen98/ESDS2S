@@ -5,7 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 
-import com.example.esds2s.Services.RecordVoiceService3;
+import com.example.esds2s.Services.ExternalServices.RecordVoiceService3;
 
 public class MyBroadcastReceiver extends BroadcastReceiver {
     @Override

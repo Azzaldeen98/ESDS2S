@@ -21,7 +21,7 @@ import com.example.esds2s.Helpers.ExternalStorage
 import com.example.esds2s.Helpers.Helper
 import com.example.esds2s.Helpers.LanguageInfo
 import com.example.esds2s.R
-import com.example.esds2s.Services.RecordVoiceService3
+import com.example.esds2s.Services.ExternalServices.RecordVoiceService3
 import com.example.esds2s.Services.SessionManagement
 import com.example.esds2s.Services.SettingsResourceForRecordServices
 import com.example.esds2s.databinding.FragmentAutomatedChatBotBinding
@@ -109,7 +109,7 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
         alert_notify = activity?.findViewById(R.id.alert_notify)
         alert_btn_cancel = activity?.findViewById(R.id.alert_btn_cancel)
         languageCodes = resources.getStringArray(R.array.language_codes)
-        if(Helper.isRecordServiceRunningInForeground(this?.activity!!,RecordVoiceService3::class.java))
+        if(Helper.isRecordServiceRunningInForeground(this?.activity!!, RecordVoiceService3::class.java))
             setStartRecordForGroundServiceMode();
         else
             setStopRecordForGroundServiceMode()

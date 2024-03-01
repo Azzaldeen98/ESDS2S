@@ -25,7 +25,7 @@ import com.example.esds2s.Helpers.LanguageInfo
 import com.example.esds2s.Models.ResponseModels.BaseChatResponse
 import com.example.esds2s.R
 import com.example.esds2s.Services.ModelLanguages
-import com.example.esds2s.Services.RecordVoiceService3
+import com.example.esds2s.Services.ExternalServices.RecordVoiceService3
 import com.example.esds2s.Services.SessionManagement
 import com.example.esds2s.Services.TestConnection
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -57,6 +57,7 @@ class RecordAudioActivity : AppCompatActivity() {
         bottomNav = findViewById(R.id.bottomNavigationView) as BottomNavigationView
         autocompleteTV = findViewById(R.id.autoCompleteTextViewLanguage)
         bottomNav.setOnItemSelectedListener {
+
             when (it.itemId) {
                 R.id.navBtnBasicChat -> {
                     activeFragment=BasicChatBotFragment()
@@ -221,5 +222,12 @@ class RecordAudioActivity : AppCompatActivity() {
         }
     }
 
+    override fun onBackPressed() {
+//        val fragmentManager = supportFragmentManager
+//        while (fragmentManager.backStackEntryCount > 0) {
+//            fragmentManager.popBackStackImmediate()
+//        }
+        super.onBackPressed()
+    }
 
 }

@@ -14,6 +14,7 @@ import com.example.esds2s.Helpers.JsonStorageManager
 import com.example.esds2s.Helpers.LanguageInfo
 import com.example.esds2s.Interface.IBaseCallbackListener
 import com.example.esds2s.R
+import com.example.esds2s.Services.ExternalServices.RecordVoiceService3
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
@@ -35,6 +36,7 @@ class SessionManagement<T>(private val activity:Activity,private val callBackLis
     }
 
     fun logOutSession() {
+
         activity.applicationContext
         if(Helper.isRecordServiceRunningInForeground(context, RecordVoiceService3::class.java)) {
             onClickStopService()
@@ -56,10 +58,22 @@ class SessionManagement<T>(private val activity:Activity,private val callBackLis
                 try {
                     if(TestConnection.isOnline(context)) {
                         val respons = SessionChatControl(context!!).removeSession()
+                        throw Exception()
                         stopRecordForGroundService()
                         backToMainPage()
                     }
                 }catch (e:Exception){
+                    AlertDialog.Builder(activity)
+                        .setTitle(context?.getString(R.string.nav_close_session))
+                        .setIcon(R.drawable.baseline_warning_24)
+                        .setMessage(e.message.toString())
+                        .setPositiveButton(context?.getString(R.string.btn_yes)) { dialog, which ->
+                            stopSession()
+                        }.setNegativeButton(context?.getString(R.string.btn_no)) { dialog, which ->  backToMainPage()}
+                        .create()
+                        .show()
+
+
                  Log.e("StopSessionError!! ",e.message.toString())
                 }
             }}

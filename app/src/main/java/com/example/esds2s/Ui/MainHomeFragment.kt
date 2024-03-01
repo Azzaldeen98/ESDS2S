@@ -1,6 +1,7 @@
 package com.example.esds2s.Ui
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -8,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.RelativeLayout
 import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -76,11 +78,16 @@ class MainHomeFragment : Fragment(), IBaseServiceEventListener<ArrayList<BaseCha
         // getting the recyclerview by its id
         recyclerview = activity?.findViewById<RecyclerView>(com.example.esds2s.R.id.RecyclerViewChatsList)
         val flexLayoutManager = FlexboxLayoutManager(context)
-        flexLayoutManager.alignItems =   AlignItems.STRETCH  // يحدد flex-wrap: wrap
-        flexLayoutManager.justifyContent =   JustifyContent.SPACE_AROUND  // يحدد flex-wrap: wrap
-        flexLayoutManager.flexWrap =  FlexWrap.WRAP  // يحدد flex-wrap: wrap
+        flexLayoutManager.alignItems =   AlignItems.STRETCH  //
+        flexLayoutManager.justifyContent =   JustifyContent.SPACE_AROUND
+        flexLayoutManager.flexWrap =  FlexWrap.WRAP
         recyclerview?.layoutManager= flexLayoutManager
         binding?.btnMainCreateChat?.setOnClickListener({v-> onClickChatButton(TypeChat.NEWCHAT) })
+
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
+            onBackPressed()
+        }
+
 //        binding?.btnMainCreateChat?.visibility = View.INVISIBLE
         laoudAllChats()
 
@@ -107,8 +114,11 @@ class MainHomeFragment : Fragment(), IBaseServiceEventListener<ArrayList<BaseCha
         return false
     }
     private  fun laoudAllChats(){
+
+
         progressPar?.let { UiOptions.isVisibility(it,true) }
-        
+
+
         try {
             // upload data from local storage
             if(!uplaodAllChatsFromLocalStorage()) {
@@ -185,6 +195,20 @@ class MainHomeFragment : Fragment(), IBaseServiceEventListener<ArrayList<BaseCha
         }
 //
     }
+
+    fun onBackPressed() {
+        Log.e("onBackPressed ","Fragment")
+        AlertDialog.Builder(this.context)
+        .setTitle("Out")
+        .setIcon(com.example.esds2s.R.drawable.baseline_power_settings_new_24)
+        .setMessage(getString(com.example.esds2s.R.string.msg_close_app))
+        .setPositiveButton(getString(com.example.esds2s.R.string.btn_yes)) { dialog, which ->
+            this.activity?.finish()
+        }.setNegativeButton(getString(com.example.esds2s.R.string.btn_no)) { dialog, which ->}
+        .create()
+        .show()
+    }
+
     companion object {
         /**
          * Use this factory method to create a new instance of

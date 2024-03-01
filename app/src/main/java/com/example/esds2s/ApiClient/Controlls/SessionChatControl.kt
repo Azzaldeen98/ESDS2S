@@ -111,35 +111,42 @@ class SessionChatControl(private val context: Context): BaseControl(context) {
 
     suspend fun  removeSession() : GeminiResponse? = withContext(Dispatchers.IO) {
 
-        val client: ISessionChatServices by lazy {
-            ApiClient.getClient(
-                context, RequestMethod.POST,
-                BuildConfig.BASE_URL
-            )
-                ?.create(ISessionChatServices::class.java)!!
-        }
+        try {
 
-        var customer_token =
-            ExternalStorage.getValue(context, ContentApp.CURRENT_SESSION_TOKEN) as String?
-        Log.d("customer_token", customer_token!!)
-        if (customer_token == null) {
-            Log.d("Error", "Token is null")
-            return@withContext null
-        }
 
-        val body = GeminiRequest(_content = customer_token!!)
-        val call: Call<GeminiResponse?> by lazy { client?.removeSession(body)!! }
-        val response = call.execute()
+            val client: ISessionChatServices by lazy {
+                ApiClient.getClient(
+                    context, RequestMethod.POST,
+                    BuildConfig.BASE_URL
+                )
+                    ?.create(ISessionChatServices::class.java)!!
+            }
 
-        SessionManagement.OnLogOutFromSession(context)
+            var customer_token =
+                ExternalStorage.getValue(context, ContentApp.CURRENT_SESSION_TOKEN) as String?
+            Log.d("customer_token", customer_token!!)
+            if (customer_token == null) {
+                Log.d("Error", "Token is null")
+                return@withContext null
+            }
 
-        if (response.isSuccessful) {
-            Log.d("responseEndSession", Gson().toJson(response.body()))
+            val body = GeminiRequest(_content = customer_token!!)
+            val call: Call<GeminiResponse?> by lazy { client?.removeSession(body)!! }
+            val response = call.execute()
+
+            SessionManagement.OnLogOutFromSession(context)
+
+            if (response.isSuccessful) {
+                Log.d("responseEndSession", Gson().toJson(response.body()))
 //            ExternalStorage.remove(context,ContentApp.CURRENT_SESSION_TOKEN)
-            return@withContext response.body()
-        } else {
-            Log.e("removeSession", response.message())
-            return@withContext throw java.lang.Exception("")
+                return@withContext response.body()
+            } else {
+                Log.e("removeSession", response.message())
+                return@withContext throw java.lang.Exception(response.message())
+            }
+
+        }catch (e:Exception){
+            return@withContext throw java.lang.Exception(e.message)
         }
     }
 }

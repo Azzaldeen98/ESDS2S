@@ -11,6 +11,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.activity.addCallback
 import androidx.fragment.app.Fragment
 import com.example.esds2s.ApiClient.Controlls.SessionChatControl
 import com.example.esds2s.ContentApp.ContentApp
@@ -83,6 +84,10 @@ class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<Ba
             if(args.containsKey("spacificChat"))
                 selectedChat = (arguments?.getSerializable("spacificChat") as? BaseChatResponse)!!
 
+            requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
+                Log.e("onBackPressed ","From CreateNewChatFragment")
+            }
+
             // Use the data as needed
         }
         return binding?.getRoot()
@@ -93,9 +98,12 @@ class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<Ba
         val internaal_header:TextView?=activity?.findViewById(R.id.internal_head_title)
 
         internaal_header?.setText(getString(R.string.chat_info_page))
-        btn_back?.setOnClickListener {
-            Helper.LoadFragment(MainHomeFragment(), activity?.supportFragmentManager, R.id.main_frame_layout)
-        }
+        btn_back?.setOnClickListener { onClickButton() }
+    }
+    fun onClickButton(){
+
+        Helper.LoadFragment(MainHomeFragment(), activity?.supportFragmentManager, R.id.main_frame_layout)
+
     }
     override fun onStart() {
         super.onStart()

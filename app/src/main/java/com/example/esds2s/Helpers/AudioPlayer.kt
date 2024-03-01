@@ -94,7 +94,7 @@ class AudioPlayer(private val context: Context?) {
     }
     fun isPlayer():Boolean {
         try {
-            return mediaPlayer?.isPlaying==true?:false
+            return mediaPlayer?.isPlaying==true
         }catch (e: Exception) {
             e.printStackTrace()
         }

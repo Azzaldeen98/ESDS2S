@@ -1,4 +1,4 @@
-package com.example.esds2s.Services
+package com.example.esds2s.Services.ExternalServices
 
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
@@ -26,6 +26,8 @@ import com.example.esds2s.Activies.MainActivity
 import com.example.esds2s.Helpers.Enums.TypesOfVoiceResponses
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
 import com.example.esds2s.R
+import com.example.esds2s.Services.SettingsResourceForRecordServices
+import com.example.esds2s.Services.TestConnection
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -235,7 +237,7 @@ class RecordVoiceService3 : Service() , IGeminiServiceEventListener {
         try {
             isResponse=false
             voiceResponseCount = 0
-            if(TestConnection.isOnline(this@RecordVoiceService3,false)) {
+            if(TestConnection.isOnline(this@RecordVoiceService3, false)) {
                 Log.d("sendRequestToGenerator ! ", speechText)
 
                 if (speechChatControl != null) {
@@ -387,9 +389,9 @@ class RecordVoiceService3 : Service() , IGeminiServiceEventListener {
 
                 if (audioPlayer==null)
                     audioPlayer=AudioPlayer(this@RecordVoiceService3)
-                        if (audioPlayer?.isPlayer() == true) {
+                        if (audioPlayer?.mediaPlayer?.isPlaying!!) {
                             complatePlayerJop?.takeIf { it.isActive }?.cancel()
-                            complatePlayerJop = GlobalScope?.launch {
+                            complatePlayerJop = CoroutineScope(Dispatchers.Unconfined).launch {
                                 try {
                                     sim.acquire()
                                     val duration = audioPlayer?.getRemainingDuration()?.toLong() ?: 0
@@ -458,7 +460,10 @@ class RecordVoiceService3 : Service() , IGeminiServiceEventListener {
                  backgroundMonitorSpeakerStatusJob = GlobalScope.launch(Dispatchers.Default) {
                      Mutex().withLock {
                          while (isSpeaking) {
-                             SettingsResourceForRecordServices.checkAudioPlayerSettings(this@RecordVoiceService3, audioPlayer)
+                             SettingsResourceForRecordServices.checkAudioPlayerSettings(
+                                 this@RecordVoiceService3,
+                                 audioPlayer
+                             )
                              delay(1000)
                          }
                      }
@@ -522,7 +527,7 @@ class RecordVoiceService3 : Service() , IGeminiServiceEventListener {
                     if (reorderCounter!! < 3 && textSpeachResult?.isNullOrEmpty() == false) {
                         speechChatControl?.messageToGeneratorAudio(textSpeachResult!!, this@RecordVoiceService3);
 
-                        if(audioPlayer!=null && audioPlayer?.isPlayer()==true)
+                        if(audioPlayer!=null && audioPlayer?.isPlayer()!!)
                              audioPlayer?.stop()
 
                         if(reorderCounter==1)
