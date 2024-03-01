@@ -147,9 +147,8 @@ public static  void  deleteFile(String filePath)
             case 3:
                 sound = R.raw.mus4;
                 break;
-            //            case 4:
-//                sound = com.example.esds2s.R.raw.res6;
-//                break;
+
+
 //            case 5:
 //                sound = com.example.esds2s.R.raw.res7;
 //                break;

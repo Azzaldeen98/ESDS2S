@@ -360,6 +360,57 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
                 speechRecognizerListenAgain();
         }
     }
+    private  fun playDefaultVoiceResponseEnd(sound_num:Int,listenSpeechRecognizer:Boolean=false){
+
+        try {
+
+
+//            val sound=Helper.getDefaultSoundResource(sound_num)
+            val player = audioPlayer?.startFromRowResource(this@RecordVoiceService, sound_num)
+
+            if (player == null) {
+                isSpeaking=false
+                if(listenSpeechRecognizer)
+                    speechRecognizerListenAgain();
+                return
+            }
+            else {
+                player?.setOnErrorListener { mp, what, extra ->
+                    isSpeaking = false
+                    try {
+                        mp.stop()
+                        mp.reset()
+                        mp.release()
+//                    audioPlayer?.takeIf { it.isPlayer() }?.stop()
+                    }catch (e:Exception){ }
+                    finally {
+                        if (listenSpeechRecognizer)
+                            speechRecognizerListenAgain();
+                    }
+                    true
+                }
+                player?.setOnCompletionListener { mp ->
+                    isSpeaking = false
+                    try {
+                        mp.stop()
+                        mp.reset()
+                        mp.release()
+//                    audioPlayer?.takeIf { it.isPlayer() }?.stop()
+                    }catch (e:Exception){ }
+                    finally {
+                        if (listenSpeechRecognizer)
+                            speechRecognizerListenAgain();
+                    }
+                }
+            }
+
+        }catch (e:Exception){
+            e.printStackTrace()
+            isSpeaking=false
+            if(listenSpeechRecognizer)
+                speechRecognizerListenAgain();
+        }
+    }
     @SuppressLint("SuspiciousIndentation")
     private   fun startDefaultVoiceResponse(sound_num:Int=-1){
 
@@ -374,10 +425,10 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
 
                 Log.d("SuspiciousIndentation","5000" )
 
-//                var sound_id = Helper.getDefaultSoundResource()
+                var sound_id = Helper.getDefaultSoundResource()
 
 //                if(voiceResponseCount==0)
-                var  sound_id=Helper.getDefaultSoundResource(TypesOfVoiceResponses.MIDDLE.ordinal)
+//                var  sound_id=Helper.getDefaultSoundResource(TypesOfVoiceResponses.MIDDLE.ordinal)
 //                else if(voiceResponseCount==1)
 //                    sound_id=Helper.getDefaultSoundResource(TypesOfVoiceResponses.ASKYOU.ordinal)
 //                if(voiceResponseCount==2)
@@ -700,7 +751,7 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
                              audioPlayer?.stop()
 
                         if(reorderCounter==1)
-                             playDefaultVoiceResponse(Helper.getDefaultSoundResource(TypesOfVoiceResponses.ASKYOU.ordinal))
+                            playDefaultVoiceResponseEnd(R.raw.row10)
 
 //                        if (audioPlayer?.isPlayer() == true) {
 //                            complatePlayerJop?.takeIf { it.isActive }?.cancel()
@@ -724,7 +775,8 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
                         Log.d("onRequestIsFailure", "")
                         reorderCounter = 0
 
-                        playDefaultVoiceResponse(TypesOfVoiceResponses.AGAINQUESTION.ordinal, true)
+                        playDefaultVoiceResponseEnd(R.raw.row8,true)
+//                        playDefaultVoiceResponse(TypesOfVoiceResponses.AGAINQUESTION.ordinal, true)
 
 //                        val sound=Helper.getDefaultSoundResource(TypesOfVoiceResponses.AGAINQUESTION.ordinal)
 //                        val player = audioPlayer?.startFromRowResource(this@RecordVoiceService3, sound)
