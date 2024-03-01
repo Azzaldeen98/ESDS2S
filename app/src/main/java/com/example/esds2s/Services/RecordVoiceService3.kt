@@ -61,8 +61,6 @@ class RecordVoiceService3 : Service() , IGeminiServiceEventListener {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         try {
-
-
             speechChatControl = SpeechChatControl(this);
             audioPlayer = AudioPlayer(this);
 
@@ -612,8 +610,9 @@ class RecordVoiceService3 : Service() , IGeminiServiceEventListener {
     }
     override fun stopService(name: Intent?): Boolean {
         Log.d("Stopping","Stopping Service")
-            stopSpeechRecognizer();
         return super.stopService(name)
+            stopSpeechRecognizer();
+
     }
     override fun onBind(intent: Intent): IBinder {
         TODO("Return the communication channel to the service.")
@@ -621,8 +620,16 @@ class RecordVoiceService3 : Service() , IGeminiServiceEventListener {
     override fun onDestroy() {
         super.onDestroy()
         stopSpeechRecognizer();
-        backgroundMonitorOrderStatusJob?.takeIf { it.isActive }?.cancel()
-        backgroundMonitorOrderStatusJob=null
+
+        try {
+            sim.release()
+            backgroundMonitorSpeakerStatusJob?.takeIf { it.isActive }?.cancel()
+            backgroundMonitorOrderStatusJob?.takeIf { it.isActive }?.cancel()
+            backgroundMonitorOrderStatusJob = null
+            backgroundMonitorSpeakerStatusJob = null
+        }catch (e:Exception){
+
+        }
 
     }
 

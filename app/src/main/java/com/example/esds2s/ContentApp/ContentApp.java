@@ -14,5 +14,6 @@ public class ContentApp {
     public static final  String  ROBOT_CHAT_SETTINGS="RobotChatSettings";
     public static final  String  MODEL_GENDER_TYPE="ModelGenderType";
     public static final  String  CURRENT_MODEL_INFO="CurrentModelInfo";
+    public static final  String  DEFAULT_GENDER="Male";
 
 }
