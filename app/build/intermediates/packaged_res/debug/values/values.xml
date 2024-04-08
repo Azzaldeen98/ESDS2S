@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:ns1="http://schemas.android.com/tools">
+    <string-array name="gender">
+        <item>Male</item>
+        <item>Female</item>
+    </string-array>
+    <string-array name="language_codes">
+        <item>ar-SA-1</item>
+        <item>ar-SA-2</item>
+        <item>en-US-3</item>
+        <item>en-US-1</item>
+        <item>es-ES-1</item>
+        <item>es-ES-2</item>
+        <item>fr-FR-2</item>
+        <item>fr-FR-1</item>
+        
+        
+        
+    </string-array>
+    <string-array name="language_names">
+        <item>Arabic </item>
+        <item>Arabic </item>
+        <item>English </item>
+        <item>English </item>
+        <item>Spanish </item>
+        <item>Spanish </item>
+        <item>French  </item>
+        <item>French  </item>
+        
+        
+        
+    </string-array>
+    <color name="back_notify_color">#A9272525</color>
+    <color name="black">#FF000000</color>
+    <color name="black_alpha_6">#BB304FFE</color>
+    <color name="btn_main_label">#FFFFFF</color>
+    <color name="gradient_color1" ns1:ignore="ReferenceType">@drawable/gradient_color1</color>
+    <color name="gray">#A39696</color>
+    <color name="page_title">#A1373535</color>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">@color/teal_700</color>
+    <color name="purple_700">@color/teal_700</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="white">#FFFFFFFF</color>
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
+    <dimen name="appbar_padding">16dp</dimen>
+    <dimen name="appbar_padding_top">8dp</dimen>
+    <dimen name="fab_margin">16dp</dimen>
+    <item name="InputChatName" type="id"/>
+    <string name="action_settings">Settings</string>
+    <string name="app_name">VoiceBot</string>
+    <string name="atomated_chat_btn"> Generate </string>
+    <string name="audio_recorder">Audio Recorder</string>
+    <string name="automated_chat_page">Automated chat service</string>
+    <string name="btn_cancel"> no </string>
+    <string name="btn_close_service"> Close Service </string>
+    <string name="btn_create_chat"> Create Chat </string>
+    <string name="btn_no"> no </string>
+    <string name="btn_ok"> ok </string>
+    <string name="btn_register"> Register </string>
+    <string name="btn_yes"> yes </string>
+    <string name="chat_info_page"> Chat Information</string>
+    <string name="dropDown_chats_list_label"> Selected Chat  </string>
+    <string name="dropDown_languages_list_label"> Choose Chat language </string>
+    <string name="first_fragment_label">First Fragment</string>
+    <string name="gemini_api_key">AIzaSyDW35bfhBIy28pH39-vcKOGFRKNd2eo1NU</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="hello_first_fragment">Hello first fragment</string>
+    <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
+    <string name="home_page">Enter chat information</string>
+    <string name="input_chat_desript">  Enter Chat Description  </string>
+    <string name="input_chat_language">  Enter Chat Language   </string>
+    <string name="input_chat_message_ar"> إكتب النص هنا </string>
+    <string name="input_chat_message_en">  Enter your message  </string>
+    <string name="input_chat_name">  Enter Chat Name  </string>
+    <string name="input_is_empty">  This field cannot be left empty   </string>
+    <string name="msg_choose_the_chat">Choose the chat</string>
+    <string name="msg_choose_the_language">Choose the language</string>
+    <string name="msg_failed_the_session_create">Failed to send the request</string>
+    <string name="msg_mute_microphone_alarm_tone">The device s sound will be switched to vibrate mode to avoid notification sounds coming from the microphone.
+        Do you agree to this? You must agree to this in order to start the service.</string>
+    <string name="msg_no_internet"> !! No Internet Connection</string>
+    <string name="msg_stop_automated_chat">You must close the automated chat service before moving to any other service</string>
+    <string name="msg_stop_record_service">The Automated Chat  service  will be stopped </string>
+    <string name="msg_stop_session_chat">The entire current chat session will be stopped. Do you agree to this?</string>
+    <string name="nav_automated_chat">Automated Chat</string>
+    <string name="nav_basic_chat">Basic Chat</string>
+    <string name="nav_close_session">Close Session</string>
+    <string name="nav_text_chat">Text Chat</string>
+    <string name="next">Next</string>
+    <string name="notify1_Automated_msg"> This service will work continuously without stopping, even when the application is closed </string>
+    <string name="play_recording">Play Recording</string>
+    <string name="previous">Previous</string>
+    <string name="retry_button">Retry Connection</string>
+    <string name="scanned_data">Scanned Data</string>
+    <string name="second_fragment_label">Second Fragment</string>
+    <string name="start_recording">Start Recording</string>
+    <string name="status">Status</string>
+    <string name="stop_playing">Stop Playing</string>
+    <string name="stop_recording">Stop Recording</string>
+    <string name="title_activity_audio_record_test">AudioRecordTestActivity</string>
+    <string name="title_activity_record_audio">RecordAudioActivity</string>
+    <string name="toggle_flash">Toggle Flash</string>
+    <style name="AppTheme" parent="Theme.AppCompat.Light">
+        <item name="android:colorBackground">@color/btn_main_label</item>
+    </style>
+    <style name="Theme.ESDS2S" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        
+        <item name="colorPrimary">@color/purple_500</item>
+        <item name="colorPrimaryVariant">@color/purple_700</item>
+        <item name="colorOnPrimary">@color/white</item>
+        
+        <item name="colorSecondary">@color/teal_200</item>
+        <item name="colorSecondaryVariant">@color/teal_700</item>
+        <item name="colorOnSecondary">@color/black</item>
+        
+        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        
+    </style>
+    <style name="background_small_round1">
+        <item name="android:layout_width">100dp</item>
+        <item name="android:layout_height">100dp</item>
+        <item name="android:layout_marginVertical">30dp</item>
+        <item name="android:backgroundTint">@color/purple_700</item>
+    </style>
+    <style name="btnCircle_image">
+        <item name="android:layout_width">80dp</item>
+        <item name="android:layout_height">80dp</item>
+        <item name="android:layout_margin">15dp</item>
+        <item name="android:background">@drawable/rounded_shape</item>
+        <item name="android:padding">10dp</item>
+    </style>
+    <style name="btn_main_circle">
+        <item name="android:layout_width">100dp</item>
+        <item name="android:layout_height">100dp</item>
+        <item name="android:layout_marginHorizontal">30dp</item>
+        <item name="android:layout_marginVertical">30dp</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:layout_alignParentTop">true</item>
+        <item name="android:backgroundTint">@color/purple_500</item>
+        <item name="android:typeface">monospace</item>
+        <item name="android:textSize">12pt</item>
+    </style>
+    <style name="btn_main_label_name">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:padding">10dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:layout_marginTop">0dp</item>
+        <item name="android:layout_gravity">center_horizontal</item>
+        <item name="android:textColor">@color/btn_main_label</item>
+        <item name="android:textSize">20dp</item>
+    </style>
+    <declare-styleable name="stopWords">
+        <attr name="ar">
+
+        </attr>
+    </declare-styleable>
+</resources>

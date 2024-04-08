@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/dropdownTextView"
+    android:layout_width="match_parent"
+    android:textColor="@color/black"
+    android:textStyle="bold"
+    android:padding="14dp"
+    android:layout_height="wrap_content"
+    android:text="TextView"
+    android:layout_marginHorizontal="15dp"
+    tools:ignore="MissingDefaultResource" />
