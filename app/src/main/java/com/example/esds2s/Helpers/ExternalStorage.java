@@ -49,7 +49,10 @@ public class ExternalStorage {
 
 
     public  static boolean remove(Context activity,String key) {
-        SharedPreferences preferences = activity.getSharedPreferences(storageName, Context.MODE_PRIVATE);
+      return   remove(activity, storageName, key);
+    }
+    public  static boolean remove(Context activity,String _storageName,String key) {
+        SharedPreferences preferences = activity.getSharedPreferences(_storageName, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
         if(preferences.contains(key))
         {

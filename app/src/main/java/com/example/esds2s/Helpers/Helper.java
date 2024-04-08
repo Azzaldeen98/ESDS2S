@@ -104,6 +104,10 @@ public static  void  deleteFile(String filePath)
         return false;
     }
 
+
+    public static String removeStars(String input) {
+            return input.replaceAll("[*]", "");
+    }
     public static int getDefaultSoundResource() {
        return getDefaultSoundResource(-1);
     }
@@ -115,26 +119,8 @@ public static  void  deleteFile(String filePath)
         if(soundNum>-1 && soundNum < TypesOfVoiceResponses.values().length)
             randomValues=soundNum;
 
-//        randomValues+=6;
         switch (randomValues) {
-//            case 0:
-//                sound = com.example.esds2s.R.raw.res1;
-//                break;
-//            case 1:
-//                sound = com.example.esds2s.R.raw.res2;
-//                break;
-//            case 2:
-//                sound = com.example.esds2s.R.raw.res4;
-//                break;
-//            case 3:
-//                sound = com.example.esds2s.R.raw.res5;
-//                break;
-//            case 4:
-//                sound = com.example.esds2s.R.raw.res6;
-//                break;
-//            case 5:
-//                sound = com.example.esds2s.R.raw.res7;
-//                break;
+
             case 0:
                 sound = R.raw.mus1;
                 break;
@@ -148,14 +134,8 @@ public static  void  deleteFile(String filePath)
                 sound = R.raw.mus4;
                 break;
 
-
-//            case 5:
-//                sound = com.example.esds2s.R.raw.res7;
-//                break;
-
-
             default:
-                return  -1;
+                return   sound = R.raw.mus1;
         }
 
         return sound;

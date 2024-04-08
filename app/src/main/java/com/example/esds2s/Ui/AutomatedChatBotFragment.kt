@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import android.widget.*
+import androidx.activity.addCallback
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -21,7 +22,7 @@ import com.example.esds2s.Helpers.ExternalStorage
 import com.example.esds2s.Helpers.Helper
 import com.example.esds2s.Helpers.LanguageInfo
 import com.example.esds2s.R
-import com.example.esds2s.Services.RecordVoiceService3
+import com.example.esds2s.Services.RecordVoiceService
 import com.example.esds2s.Services.SessionManagement
 import com.example.esds2s.Services.SettingsResourceForRecordServices
 import com.example.esds2s.databinding.FragmentAutomatedChatBotBinding
@@ -81,17 +82,7 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
 
         progressBar=activity?.findViewById(R.id.progressPar1)!!
         initializationEvents();
-
-
-//        val adapter: ArrayAdapter<String> = ArrayAdapter<String>(
-//            this@AutomatedChatBotFragment?.getContext()!!,
-//            android.R.layout.simple_spinner_item,
-//            languageNames?.toList()!!
-//        )
-//        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-//        binding.spinnerLanguages.setAdapter(adapter)
-//        binding.spinnerLanguages.setOnItemSelectedListener(this@AutomatedChatBotFragment)
-//        loadPresetUserLanguage()
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {}
 
     }
     private fun internalHeader(){
@@ -109,31 +100,19 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
         alert_notify = activity?.findViewById(R.id.alert_notify)
         alert_btn_cancel = activity?.findViewById(R.id.alert_btn_cancel)
         languageCodes = resources.getStringArray(R.array.language_codes)
-        if(Helper.isRecordServiceRunningInForeground(this?.activity!!,RecordVoiceService3::class.java))
+        if(Helper.isRecordServiceRunningInForeground(this?.activity!!, RecordVoiceService::class.java))
             setStartRecordForGroundServiceMode();
         else
             setStopRecordForGroundServiceMode()
     }
     private fun loadPresetUserLanguage() {
-            val languageInfo = LanguageInfo.getStorageSelcetedLanguage(this?.context);
+            val languageInfo = LanguageInfo.getStorageSelcetedLanguage(requireContext());
             if(languageInfo!=null) {
                selectedLanguageCode=languageInfo.code!!
                selectedLanguageIndex=languageInfo.index!!
             }
     }
-//    private fun VibrateMode() {
-//
-//        val audioManager = activity?.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-//        val notificationManager: NotificationManager = activity?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-//        if (audioManager.isVolumeFixed) {
-//            val intent= Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
-//            startActivity(intent)
-//        } else  if( audioManager.ringerMode != AudioManager.RINGER_MODE_VIBRATE) {
-//            // قم بتحويل الهاتف إلى وضع الاهتزاز
-//            audioManager.ringerMode = AudioManager.RINGER_MODE_VIBRATE
-//        }
-//
-//    }
+
     private fun initializationEvents() {
 
         alert_btn_cancel?.setOnClickListener{v-> notify_layout_back?.setVisibility(View.GONE)}
@@ -143,7 +122,7 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
 
         alert_btn_ok?.setOnClickListener{v->
             if(selectedLanguageCode!=null) {
-                AlertDialog.Builder(this.context)
+                AlertDialog.Builder(requireContext())
                                 .setTitle("Switch to vibration sound mode ")
                                 .setIcon(R.drawable.baseline_vibration_24)
                                 .setMessage(getString(R.string.msg_mute_microphone_alarm_tone))
@@ -159,24 +138,14 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
     }
     private  fun initializationLanguagesList(){
 
-
-
-//        autocompleteTV = activity?.findViewById<AutoCompleteTextView>(R.id.autoCompleteTextViewLanguage)
-
-//        if(selectedLanguageIndex!! >-1)
-//            autocompleteTV?.setText(languageNames?.get(selectedLanguageIndex!!))
-//        arrayAdapterLanguage = ArrayAdapter<String>(this?.context!!, R.layout.dropdown_item, languageNames!!)
-//        autocompleteTV?.setAdapter(arrayAdapterLanguage)
-//        autocompleteTV?.setOnItemClickListener { parent, view, position, id -> onSelectedLanguage(position)}
-
     }
 
 
     fun onClickGenerateAutomatedChatService(v: View) {
 
-//        if(!Helper.isRecordServiceRunningInForeground(this?.activity!!, RecordVoiceService3::class.java)) {
+
             notify_layout_back?.visibility = View.VISIBLE;
-            val animation = AnimationUtils.loadAnimation(this.context, R.anim.entry_to_top_animation)
+            val animation = AnimationUtils.loadAnimation(requireContext(), R.anim.entry_to_top_animation)
             alert_msg?.text = getString(R.string.notify1_Automated_msg)
             alert_notify?.startAnimation(animation)
 
@@ -185,24 +154,22 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
     private  fun  setStartRecordForGroundServiceMode(){
         binding?.btnAutomatedChat?.visibility = View.GONE
         binding?.btnCloseService?.visibility = View.VISIBLE
-        binding?.robotSpeekerBtn?.visibility = View.VISIBLE
+//        binding?.robotSpeekerBtn?.visibility = View.VISIBLE
     }
     private  fun  setStopRecordForGroundServiceMode(){
         binding?.btnAutomatedChat?.visibility = View.VISIBLE
         binding?.btnCloseService?.visibility = View.GONE
-        binding?.robotSpeekerBtn?.visibility = View.GONE
+//        binding?.robotSpeekerBtn?.visibility = View.GONE
     }
 
     override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-        Toast.makeText(this?.context, selectedLanguageCode, Toast.LENGTH_SHORT).show();
+        Toast.makeText(requireContext(), selectedLanguageCode, Toast.LENGTH_SHORT).show();
     }
     override fun onNothingSelected(parent: AdapterView<*>?) {}
     fun startRecordServicesOnForground(){
-
         setStartRecordForGroundServiceMode()
-        if(!Helper.isRecordServiceRunningInForeground(this?.activity!!, RecordVoiceService3::class.java
-            )) {
-             serviceIntent = Intent(this?.context!!, RecordVoiceService3::class.java)
+        if(!Helper.isRecordServiceRunningInForeground(this?.activity!!, RecordVoiceService::class.java)) {
+             serviceIntent = Intent(requireContext(), RecordVoiceService::class.java)
              serviceIntent.putExtra(ContentApp.LANGUAGE,selectedLanguageCode)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                 this?.activity?.startForegroundService(serviceIntent)
@@ -235,7 +202,7 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
 
 
         // Check if the permission has been granted
-        if (ContextCompat.checkSelfPermission(this?.context!!, Manifest.permission.RECORD_AUDIO)
+        if (ContextCompat.checkSelfPermission(requireContext()!!, Manifest.permission.RECORD_AUDIO)
             != PackageManager.PERMISSION_GRANTED
         ) {
             // Permission is not granted, request it from the user
@@ -290,71 +257,5 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
 
     }
 
-    //    private fun onBack() {
-    //
-    //        if(Helper.isRecordServiceRunningInForeground(this?.context, RecordVoiceService3::class.java)) {
-    //            onClickStopService()
-    //        } else{
-    //            AlertDialog.Builder(this.context)
-    //                .setTitle("Warning")
-    //                .setIcon(R.drawable.baseline_info_24)
-    //                .setMessage(getString(R.string.msg_stop_session_chat))
-    //                .setPositiveButton(getString(R.string.btn_ok)) { dialog, which -> stopSession() }
-    //                .setNegativeButton(getString(R.string.btn_no)) { dialog, which ->}
-    //                .create()
-    //                .show()
-    //        }
-    //
-    //    }
-    //    fun stopSession() {
-    //        progressBar?.visibility= View.VISIBLE
-    //        activity?.runOnUiThread {
-    //            GlobalScope.launch {
-    //                try {
-    //                    if(TestConnection.isOnline(this@AutomatedChatBotFragment.context!!)) {
-    //                        SessionChatControl(this@AutomatedChatBotFragment?.context!!).removeSession()
-    //                        stopRecordForGroundService()
-    //                    }
-    //
-    //                }catch (e:Exception){
-    //
-    //                    stopRecordForGroundService()
-    //                    val intent = Intent(this@AutomatedChatBotFragment.activity, MainActivity::class.java)
-    //                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-    //                    startActivity(intent)
-    //                    activity?.finish()
-    //                }
-    //            }}
-    //
-    ////         Helper.LoadFragment(MainHomeFragment(), activity?.supportFragmentManager, R.id.main_frame_layout)
-    //    }
-    //    fun onClickStopService() {
-    //
-    //        AlertDialog.Builder(this.context)
-    //            .setTitle("Alert")
-    //            .setIcon(R.drawable.baseline_info_24)
-    //            .setMessage(getString(R.string.msg_stop_record_service))
-    //            .setPositiveButton(getString(R.string.btn_ok)) { dialog, which ->
-    //                stopSession()
-    //            }.setNegativeButton(getString(R.string.btn_no)) { dialog, which ->}
-    //            .create()
-    //            .show()
-    //    }
-    //    private  fun stopRecordForGroundService(){
-    //
-    //        try {
-    //            if (Helper.isRecordServiceRunningInForeground(
-    //                    this@AutomatedChatBotFragment?.context,
-    //                    RecordVoiceService3::class.java
-    //                )
-    //            ) {
-    //                 serviceIntent = Intent(this?.context!!, RecordVoiceService3::class.java)
-    //                activity?.stopService(serviceIntent)
-    //                setStopRecordForGroundServiceMode()
-    //            }
-    //        }catch (e:Exception){
-    //            Log.d("Erorr-Close Forground Service", e.message.toString())
-    //        }
-    //    }
 
 }

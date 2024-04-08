@@ -26,7 +26,7 @@ class ModelInfo(private  val context: Context) {
 
     fun getLanguage(): AvailableLanguages? {
 
-        val lang=LanguageInfo.getStorageSelcetedLanguage(context)
+        val lang=LanguageInfo.getStorageSelcetedLanguage(context)!!
         if(lang?.index!!>-1 && lang?.index!! < AvailableLanguages.values().size){
            return AvailableLanguages.values()?.get(lang?.index!!)
         }

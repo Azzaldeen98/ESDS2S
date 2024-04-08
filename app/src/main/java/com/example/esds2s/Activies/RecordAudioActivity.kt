@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.text.format.DateFormat
 import android.util.Log
 import android.widget.*
+import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -25,7 +26,7 @@ import com.example.esds2s.Helpers.LanguageInfo
 import com.example.esds2s.Models.ResponseModels.BaseChatResponse
 import com.example.esds2s.R
 import com.example.esds2s.Services.ModelLanguages
-import com.example.esds2s.Services.RecordVoiceService3
+import com.example.esds2s.Services.RecordVoiceService
 import com.example.esds2s.Services.SessionManagement
 import com.example.esds2s.Services.TestConnection
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -56,6 +57,14 @@ class RecordAudioActivity : AppCompatActivity() {
 
         bottomNav = findViewById(R.id.bottomNavigationView) as BottomNavigationView
         autocompleteTV = findViewById(R.id.autoCompleteTextViewLanguage)
+        onBackPressedDispatcher.addCallback() { }
+
+
+//                var sound_id = DefaultSoundResource.getAudioResource(this,
+//                        DefaultAudioStatus.After)
+//
+//                Log.e("sound_id_main",sound_id.toString())
+
         bottomNav.setOnItemSelectedListener {
             when (it.itemId) {
                 R.id.navBtnBasicChat -> {
@@ -86,7 +95,6 @@ class RecordAudioActivity : AppCompatActivity() {
             }
         }
         sessionManagement=SessionManagement(this)
-
       if(!TestConnection.isOnline(this)) {
           val intent = Intent(this, MainActivity::class.java)
           intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -166,14 +174,14 @@ class RecordAudioActivity : AppCompatActivity() {
     private  fun checkServiceAndLoudFragment(fragment: Fragment){
 
         try {
-            if (Helper.isRecordServiceRunningInForeground(this, RecordVoiceService3::class.java)) {
+            if (Helper.isRecordServiceRunningInForeground(this, RecordVoiceService::class.java)) {
 
                 AlertDialog.Builder(this)
                     .setTitle("warning")
                     .setIcon(R.drawable.baseline_warning_24)
                     .setMessage(getString(R.string.msg_stop_automated_chat))
                     .setPositiveButton(getString(R.string.btn_yes)) { dialog, which ->
-                        val  serviceIntent = Intent(this, RecordVoiceService3::class.java)
+                        val  serviceIntent = Intent(this, RecordVoiceService::class.java)
                         stopService(serviceIntent)
                         loadFragment(fragment)
                     }.setNegativeButton(getString(R.string.btn_no)) { dialog, which ->}

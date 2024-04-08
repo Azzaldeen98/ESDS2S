@@ -4,15 +4,54 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Resources
 import android.media.MediaPlayer
-import android.net.Uri
 import android.util.Log
+import com.example.esds2s.ApiClient.Interface.IMediaPlayerListener
 import com.example.esds2s.Helpers.Enums.AvailableLanguages
 import com.example.esds2s.Helpers.Enums.GenderType
 import com.google.gson.Gson
+import java.util.concurrent.Semaphore
 
 class AudioPlayer(private val context: Context?) {
      var mediaPlayer: MediaPlayer? =null
+    private val sim = Semaphore(1)
 
+    fun startAsync(filePath: String?,callback: IMediaPlayerListener): MediaPlayer? {
+        if(filePath?.isNullOrEmpty()==true)
+            return  null
+
+        mediaPlayer = MediaPlayer()
+        try {
+            mediaPlayer?.setDataSource(filePath)
+            mediaPlayer?.setOnPreparedListener {
+                it?.start()
+                it.setOnErrorListener { mp, what, extra ->
+                    try {
+                        mp?.stop()
+                        mp?.reset()
+                        mp?.release()
+                    }  finally {
+                        callback.onErrorListener(mp,what,extra)
+                    }
+                    true
+                }
+                it.setOnCompletionListener { mp ->
+                    try {
+                        mp?.stop()
+                        mp?.reset()
+                        mp?.release()
+                    }  finally {
+                        callback.onCompletionListener(mp)
+                    }
+                }
+            }
+            mediaPlayer?.prepareAsync()
+            return mediaPlayer
+        } catch (e: Exception) {
+            e.printStackTrace()
+            throw  Exception(e.message.toString())
+            return  null
+        }
+    }
     fun start(filePath: String?): MediaPlayer? {
 
         if(filePath?.isNullOrEmpty()==true)
@@ -34,7 +73,6 @@ class AudioPlayer(private val context: Context?) {
 
         //  mediaPlayer?.setOnCompletionListener({mp -> stop()});
     }
-
     fun isResourceExist(context: Context, resourceId: Int): Boolean {
         return try {
             context?.resources?.getResourceName(resourceId)
@@ -43,17 +81,65 @@ class AudioPlayer(private val context: Context?) {
             false
         }
     }
+    fun startFromRowResourceAsync(context:Context,row_id: Int,callback: IMediaPlayerListener): MediaPlayer? {
 
-    fun startFromRowResource(context:Context,row_id: Int): MediaPlayer? {
+        if(row_id!=null && row_id>-1 ){
+//        if(row_id>-1 && modelInfo!=null && modelInfo?.getLanguage() == AvailableLanguages.ARABIC && modelInfo?.getGender()==GenderType.MALE ) {
+            try {
+                if (isResourceExist(context, row_id)) {
+                    mediaPlayer = MediaPlayer.create(context, row_id)
+                    mediaPlayer?.setOnPreparedListener {
+                        it.start()
+//                        callback.onPreparedListener(it)
+                        it.setOnErrorListener { mp, what, extra ->
+                            try {
+                                mp?.stop()
+                                mp?.reset()
+                                mp?.release()
+                            } catch (e: Exception) {
+                                callback.onErrorListener(mediaPlayer,what,extra)
+                            } finally {
+                                callback.onErrorListener(mediaPlayer,what,extra)
+                            }
+                            true
+                        }
+                        it.setOnCompletionListener { mp ->
+                            try {
+                                mp?.stop()
+                                mp?.reset()
+                                mp?.release()
 
+                            } catch (e: Exception) {
+
+                            } finally {
+                                callback.onCompletionListener(mp)
+                            }
+                        }
+                    }
+                    mediaPlayer?.prepareAsync()
+                    return mediaPlayer
+                } else {
+                    throw IllegalStateException("not found resource!!")
+                }
+            } catch (e: IllegalStateException) {
+                e.printStackTrace()
+                return  null
+            } catch (e: Exception) {
+                e.printStackTrace()
+//                throw Exception(e.message.toString())
+                return  null
+            }
+            return  mediaPlayer
+        } else{ return  null }
+    }
+    fun startFromRowResource(context: Context, row_id: Int): MediaPlayer? {
 
 //       val lang=LanguageInfo.getStorageSelcetedLanguage(context)
-        val modelInfo=ModelInfo(context)
-        Log.d("startFromRowResourcemodelInfo",Gson().toJson(modelInfo?.getInfo()))
-        if(modelInfo!=null && modelInfo?.getLanguage() == AvailableLanguages.ARABIC && modelInfo?.getGender()==GenderType.MALE ) {
+//        val modelInfo=ModelInfo(context)
 
+        if(row_id!=null && row_id>-1 ){ //&& modelInfo!=null && modelInfo?.getLanguage() == AvailableLanguages.ARABIC && modelInfo?.getGender()==GenderType.MALE ) {
+//            Log.d("startFromRowResourcemodelInfo",Gson().toJson(modelInfo?.getInfo()))
             try {
-
                 if (isResourceExist(context, row_id)) {
                     mediaPlayer = MediaPlayer.create(context, row_id)
                     if (mediaPlayer != null) {
@@ -63,7 +149,8 @@ class AudioPlayer(private val context: Context?) {
                 } else {
                     throw IllegalStateException("ot found resource!!")
                 }
-            } catch (e: Exception) {
+            }  catch (e: Exception) {
+                e.printStackTrace()
                 throw Exception(e.message.toString())
             }
             return  mediaPlayer
@@ -76,13 +163,16 @@ class AudioPlayer(private val context: Context?) {
     fun stop() {
 
         try{
-            mediaPlayer?.takeIf { it.isPlaying }?.let { it.stop() }
-            mediaPlayer?.reset()
-            mediaPlayer?.release()
-            mediaPlayer = null
+            if(mediaPlayer!=null) {
+                mediaPlayer?.takeIf { it.isPlaying }?.let { it.stop() }
+                mediaPlayer?.reset()
+                mediaPlayer?.release()
+            }
 
         } catch (e: Exception) {
             e.printStackTrace()
+        }finally {
+            mediaPlayer = null
         }
 
     }
@@ -94,7 +184,9 @@ class AudioPlayer(private val context: Context?) {
     }
     fun isPlayer():Boolean {
         try {
-            return mediaPlayer?.isPlaying==true?:false
+            if(mediaPlayer!=null)
+                return mediaPlayer?.isPlaying?:false
+
         }catch (e: Exception) {
             e.printStackTrace()
         }

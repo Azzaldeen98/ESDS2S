@@ -16,30 +16,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="60dp"
         android:orientation="vertical">
-<!--        <include layout="@layout/internal_header"/>-->
 
-<!--        <LinearLayout-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:paddingHorizontal="10dp">-->
-<!--            <include layout="@layout/drop_down_list" />-->
-<!--        </LinearLayout>-->
-
-<!--        <Spinner-->
-<!--            android:id="@+id/spinnerLanguages"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="48dp"-->
-<!--            android:visibility="gone"-->
-<!--            android:layout_alignParentRight="true"-->
-<!--            android:layout_marginHorizontal="20dp"-->
-<!--            android:layout_marginTop="5dp"-->
-<!--            android:background="@android:drawable/btn_dropdown"-->
-<!--            android:foregroundTint="#191717"-->
-<!--            android:spinnerMode="dropdown"-->
-<!--            android:textColor="@color/black"-->
-<!--            android:tooltipText="Languages"-->
-<!--            tools:ignore="MissingConstraints,SpeakableTextPresentCheck"-->
-<!--            tools:visibility="visible" />-->
 
     </LinearLayout>
     <LinearLayout

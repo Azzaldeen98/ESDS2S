@@ -5,20 +5,27 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.text.format.DateFormat
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.example.esds2s.ContentApp.ContentApp
+import com.example.esds2s.Helpers.DefaultSoundResource
+import com.example.esds2s.Helpers.Enums.DefaultAudioStatus
 import com.example.esds2s.Helpers.ExternalStorage
 import com.example.esds2s.Helpers.Helper
 import com.example.esds2s.R
 import com.example.esds2s.Services.TestConnection
 import com.example.esds2s.Ui.MainHomeFragment
+import kotlinx.coroutines.launch
+import java.util.concurrent.Semaphore
 
 class MainActivity : AppCompatActivity() {
 
@@ -33,16 +40,57 @@ class MainActivity : AppCompatActivity() {
         val dateFormat = DateFormat.getDateFormat(applicationContext)
         setContentView(R.layout.activity_main)
         initialization()
+        onBackPressedDispatcher.addCallback() {}
 
-        val sentence = " توقف"
-        val wordSet = setOf("توقف", "قف", "اصمت", "تكفى", "كفى", "يكفي", "لا تتحدث")
+        println("tertertertertert")
+        val s = Semaphore(1)
 
-        val similarity = jaccardSimilarity(sentence.split(" ").toSet(), wordSet)
-        println("Jaccard Similarity: $similarity")
+        val t1 = Thread(Runnable
+        {
+            s.acquireUninterruptibly()
+            println("t1")
+            Thread.sleep(100)
+            print(".")
+            s.release()
+        })
 
-        val similarity2 = jaccardSimilarity(("لا تتحدث").split(" ").toSet(), wordSet)
-        println("Jaccard Similarity: $similarity2")
+        val t2 = Thread(Runnable
+        {
+            s.acquireUninterruptibly()
+            println("t2")
+            Thread.sleep(100)
+            print(".")
+            s.release()
+        })
+
+        val t3 = Thread(Runnable
+        {
+            s.acquireUninterruptibly()
+            println("t3")
+            Thread.sleep(100)
+            print(".")
+            s.release()
+        })
+
+        val t4 = Thread(Runnable
+        {
+            s.acquireUninterruptibly()
+            println("t4")
+            Thread.sleep(100)
+            print(".")
+            s.release()
+        })
+
+
+        t1.start()
+        t2.start()
+        t3.start()
+        t4.start()
+
+
     }
+
+
 
     fun jaccardSimilarity(set1: Set<String>, set2: Set<String>): Double {
         val intersectionSize = set1.intersect(set2).size
@@ -50,12 +98,7 @@ class MainActivity : AppCompatActivity() {
         return intersectionSize.toDouble() / unionSize.toDouble()
     }
 
-    fun jaccardSimilarity2(sentence: String, wordSet: Set<String>): Double {
-        val sentenceSet = sentence.split(" ").toSet()
-        val intersectionSize = sentenceSet.intersect(wordSet).size
-        val unionSize = sentenceSet.union(wordSet).size
-        return intersectionSize.toDouble() / unionSize.toDouble()
-    }
+
 
     fun initialization(){
 

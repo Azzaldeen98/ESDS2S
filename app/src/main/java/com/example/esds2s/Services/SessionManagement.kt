@@ -4,7 +4,10 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import android.widget.Toast
 import com.example.esds2s.Activies.MainActivity
 import com.example.esds2s.ApiClient.Controlls.SessionChatControl
 import com.example.esds2s.ContentApp.ContentApp
@@ -14,6 +17,7 @@ import com.example.esds2s.Helpers.JsonStorageManager
 import com.example.esds2s.Helpers.LanguageInfo
 import com.example.esds2s.Interface.IBaseCallbackListener
 import com.example.esds2s.R
+import com.example.esds2s.Services.RecordVoiceService
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
@@ -36,7 +40,7 @@ class SessionManagement<T>(private val activity:Activity,private val callBackLis
 
     fun logOutSession() {
         activity.applicationContext
-        if(Helper.isRecordServiceRunningInForeground(context, RecordVoiceService3::class.java)) {
+        if(Helper.isRecordServiceRunningInForeground(context, RecordVoiceService::class.java)) {
             onClickStopService()
         } else{
             AlertDialog.Builder(activity)
@@ -55,11 +59,14 @@ class SessionManagement<T>(private val activity:Activity,private val callBackLis
             GlobalScope.launch {
                 try {
                     if(TestConnection.isOnline(context)) {
+
                         val respons = SessionChatControl(context!!).removeSession()
                         stopRecordForGroundService()
                         backToMainPage()
                     }
                 }catch (e:Exception){
+                    Handler(Looper.getMainLooper()).post() {   Toast.makeText(activity,e.message.toString(),Toast.LENGTH_SHORT).show()}
+                    backToMainPage()
                  Log.e("StopSessionError!! ",e.message.toString())
                 }
             }}
@@ -84,8 +91,8 @@ class SessionManagement<T>(private val activity:Activity,private val callBackLis
 
         try {
             if (Helper.isRecordServiceRunningInForeground(activity,
-                    RecordVoiceService3::class.java)) {
-                val serviceIntent = Intent(activity!!, RecordVoiceService3::class.java)
+                    RecordVoiceService::class.java)) {
+                val serviceIntent = Intent(activity!!, RecordVoiceService::class.java)
                 activity.stopService(serviceIntent)
                 callBackListener?.onCallBackExecuted()
 //                setStopRecordForGroundServiceMode()

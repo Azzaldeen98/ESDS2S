@@ -67,8 +67,37 @@ class SessionChatControl(private val context: Context): BaseControl(context) {
         })
     }
 
+    suspend  fun  getTime() : GeminiResponse? = withContext(Dispatchers.IO){
+
+
+        val client: IChatServices by lazy {
+            ApiClient.getClient(context, RequestMethod.GET,
+                BuildConfig.BASE_URL)
+                ?.create(IChatServices::class.java)!! }
+
+
+        val call: Call<GeminiResponse?> by lazy { client?.getTime()!! }
+        val response = call.execute()
+        if (response.isSuccessful) {
+//            ExternalStorage.storage(context,ContentApp.CURRENT_SESSION_TOKEN,response?.body()?.token)
+            if(response!=null ){
+                val responseData: GeminiResponse? = response.body()
+                if(responseData!=null){
+                    ExternalStorage.storage(context,ContentApp.TIME,responseData.description)
+                    Log.d("CustomerChatResponse",Gson().toJson(response.body()))
+                }
+            }
+
+            return@withContext response.body()
+        } else {
+            Log.e("CustomerChatResponse",response.message())
+            return@withContext null
+        }
+    }
+
     suspend fun  createSessionChat(body: CustomerChatRequest) : CustomerChatResponse? = withContext(Dispatchers.IO){
 
+//        ChatAIProvider().load()
         val client: ISessionChatServices by lazy {
             ApiClient.getClient(context, RequestMethod.POST,
                 BuildConfig.BASE_URL)

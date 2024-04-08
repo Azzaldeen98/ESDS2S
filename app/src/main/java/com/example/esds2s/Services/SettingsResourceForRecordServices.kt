@@ -60,20 +60,13 @@ class SettingsResourceForRecordServices {
                 if (player == null || context == null)
                     return
 
-                val status = ExternalStorage.getValue(
-                    context!!,
-                    ContentApp.ROBOT_CHAT_SETTINGS,
-                    ContentApp.PLAYER_ROBOT_AUDIO
-                ) as String?
+                val status = ExternalStorage.getValue(context!!, ContentApp.ROBOT_CHAT_SETTINGS, ContentApp.PLAYER_ROBOT_AUDIO) as String?
 
 
                 if (status != null && (status.equals(AudioPlayerStatus.STOP.ordinal.toString())  && player.isPlayer())) {
                     Log.d("checkAudioPlayerSettings",status.toString())
-//                    ExternalStorage.storage(
-//                        context,
-//                        ContentApp.ROBOT_CHAT_SETTINGS,
-//                        ContentApp.PLAYER_ROBOT_AUDIO,
-//                        AudioPlayerStatus.START.ordinal.toString())
+//                    ExternalStorage.storage(context, ContentApp.ROBOT_CHAT_SETTINGS, ContentApp.PLAYER_ROBOT_AUDIO,AudioPlayerStatus.STOP.ordinal.toString())
+                    ExternalStorage.remove(context,ContentApp.ROBOT_CHAT_SETTINGS,ContentApp.PLAYER_ROBOT_AUDIO)
 
                     player?.mediaPlayer?.seekTo(player?.mediaPlayer!!.duration)
 
@@ -103,14 +96,19 @@ class SettingsResourceForRecordServices {
         }
         fun vibrateSoundMode(activity:Activity) {
 
-            val audioManager = activity?.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-            val notificationManager: NotificationManager = activity?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            if (audioManager.isVolumeFixed) {
-                val intent= Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
-                activity?.startActivity(intent)
-            } else  if( audioManager.ringerMode != AudioManager.RINGER_MODE_VIBRATE) {
-                // قم بتحويل الهاتف إلى وضع الاهتزاز
-                audioManager.ringerMode = AudioManager.RINGER_MODE_VIBRATE
+            try {
+                val audioManager = activity?.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                val notificationManager: NotificationManager =
+                    activity?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                if (audioManager.isVolumeFixed) {
+                    val intent = Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
+                    activity?.startActivity(intent)
+                } else if (audioManager.ringerMode != AudioManager.RINGER_MODE_VIBRATE) {
+                    // قم بتحويل الهاتف إلى وضع الاهتزاز
+                    audioManager.ringerMode = AudioManager.RINGER_MODE_VIBRATE
+                }
+            }catch (e:Exception){
+                Log.e("vibrateSoundMode",e.message.toString())
             }
 
         }

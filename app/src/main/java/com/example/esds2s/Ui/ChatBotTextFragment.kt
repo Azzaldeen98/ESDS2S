@@ -3,16 +3,14 @@ package com.example.esds2s.Ui
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.media.MediaPlayer
-import android.net.http.BidirectionalStream
 import android.os.Bundle
-import android.text.TextDirectionHeuristic
-import android.text.TextDirectionHeuristics
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.esds2s.ApiClient.Controlls.SpeechChatControl
@@ -77,6 +75,8 @@ class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener, IGeminiServic
             btnSend?.backgroundTintList= ColorStateList.valueOf(color);
             sendMessage();
         }
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {}
+
         changeLanguageMode()
         loadPresetUserLanguage()
     }
@@ -137,7 +137,7 @@ class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener, IGeminiServic
             if(!Helper.isAudioFile(response?.description)) {
                 val sound_id = Helper.getDefaultSoundResource()
                 Log.e("isAudioFile", sound_id.toString());
-                 player=media_player?.startFromRowResource(this.context!!,sound_id)!!
+                 player=media_player?.startFromRowResource(this.context!!, sound_id)!!
 
             }else {
                 player = media_player?.start(response?.description)!!

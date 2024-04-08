@@ -15,6 +15,9 @@ interface IChatServices {
     @GET("/todos/chats/")
     fun getAllChats(): Call<ArrayList<BaseChatResponse>?>?
 
+    @GET("/todos/changemodel/")
+    fun getTime(): Call<GeminiResponse?>?
+
     @POST("/todos/consumerchats-message/")
     fun messageToGenerator(@Body body: GeminiRequestMessage): Call<GeminiResponse?>?
 

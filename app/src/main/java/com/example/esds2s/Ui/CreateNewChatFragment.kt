@@ -11,6 +11,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.activity.addCallback
 import androidx.fragment.app.Fragment
 import com.example.esds2s.ApiClient.Controlls.SessionChatControl
 import com.example.esds2s.ContentApp.ContentApp
@@ -69,6 +70,7 @@ class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<Ba
             param1 = it.getString(ARG_PARAM1)
             param2 = it.getString(ARG_PARAM2)
         }
+
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -112,6 +114,8 @@ class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<Ba
             binding?.inputChatName?.visibility=View.GONE
             binding?.InputChatNameData?.setText(selectedChat?.scope)
         }
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {}
+
         binding?.btnSubmitChatInfo?.isEnabled=true
         binding?.btnSubmitChatInfo?.setOnClickListener{ submitCreateChat() }
         progressPar.visibility = View.VISIBLE
@@ -232,10 +236,14 @@ class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<Ba
     }
     private  fun submitCreateChat(){
 
+
+        if(!checkInputData()) return;
+
+
         progressPar.visibility = View.VISIBLE
         binding?.btnSubmitChatInfo?.isEnabled=false
         val mainHandler = Handler(Looper.getMainLooper())
-        if(!checkInputData()) return;
+
         val body=CustomerChatRequest(
             token_chat =selectedChat?.token!!,
             name = selectedChat?.scope.toString(),
@@ -252,14 +260,14 @@ class CreateNewChatFragment : Fragment(), IBaseServiceEventListener<ArrayList<Ba
                     if (response != null) {
                         mainHandler.post(java.lang.Runnable { binding?.btnSubmitChatInfo?.isEnabled=true
                         Log.d("CustomerChatResponse55", Gson().toJson(response))
-                        val intent = Intent(this@CreateNewChatFragment.context, RecordAudioActivity::class.java)
+                        val intent = Intent(requireContext(), RecordAudioActivity::class.java)
                         startActivity(intent)
                     })
                     } else {
 
                         mainHandler.post(java.lang.Runnable {
                             binding?.btnSubmitChatInfo?.isEnabled=true
-                            AlertDialog.Builder(this@CreateNewChatFragment.context)
+                            AlertDialog.Builder(requireContext())
                                 .setTitle("Alert")
                                 .setIcon(R.drawable.baseline_warning_24)
                                 .setMessage(getString(R.string.msg_failed_the_session_create))

@@ -11,10 +11,13 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.example.esds2s.ApiClient.Controlls.SpeechChatControl
 import com.example.esds2s.ContentApp.ContentApp
 import com.example.esds2s.Helpers.*
+import com.example.esds2s.Helpers.Enums.DefaultAudioStatus
 import com.example.esds2s.Helpers.Enums.TypesOfVoiceResponses
 import com.example.esds2s.Interface.IGeminiServiceEventListener
 import com.example.esds2s.Interface.ISpeechRecognizerServices
@@ -22,11 +25,8 @@ import com.example.esds2s.Models.ResponseModels.GeminiResponse
 import com.example.esds2s.R
 import com.example.esds2s.Services.ExternalServices.SpeechRecognizerService
 import com.example.esds2s.Services.TestConnection
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.*
+import java.util.concurrent.Semaphore
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -80,7 +80,7 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener, ISpeechRe
     private var audioPlayer: AudioPlayer? = null
     private var speechChatControl: SpeechChatControl? = null
     private var audioRecorder: AndroidAudioRecorder? = null
-
+    val simaphor = Semaphore(1)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
@@ -102,7 +102,13 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener, ISpeechRe
 
         try {
             if(TestConnection.isOnline(this.context!!, true)) {
-                speechChatControl?.messageToGeneratorAudio(data, this)
+                runBlocking {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        speechChatControl?.messageToGeneratorAudio(data, this@BasicChatBotFragment)
+                    }
+                }
+
+
             }
 
             startDefaultVoiceResponse()
@@ -188,19 +194,23 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener, ISpeechRe
             isRecord=(!isRecord!!)
 
         }
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {}
 
     }
     private   fun startDefaultVoiceResponse(sound_num:Int=-1){
 
-        val mtx = Mutex()
-        GlobalScope.launch(Dispatchers.Default) {
+        lifecycleScope.launch(Dispatchers.Main) {
             if(isResponse==false) {
-                mtx?.withLock {
+
                     try {
+                        simaphor.acquire()
                         if (audioPlayer == null)
                             audioPlayer = AudioPlayer(this@BasicChatBotFragment.context)
-                        val sound_id = Helper.getDefaultSoundResource(sound_num)
-                        val player = audioPlayer?.startFromRowResource(this@BasicChatBotFragment.context!!, sound_id) ?: null
+                        val sound_id = DefaultSoundResource.getAudioResource(this@BasicChatBotFragment.context!!,DefaultAudioStatus.Before)
+                        val player = audioPlayer?.startFromRowResource(
+                            this@BasicChatBotFragment.context!!,
+                            sound_id)
+
                         if (player == null) return@launch
                         player?.setOnErrorListener { mp, what, extra ->
                             audioPlayer?.stop()
@@ -215,26 +225,28 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener, ISpeechRe
                         }
                     } catch (e: Exception) {
                         Log.d("Error", e.message.toString())
+                    }finally {
+                        simaphor.release()
                     }
-                }
+
             }
         }
 
     }
-    private   fun playDefaultVoiceResponse(sound_num:Int){
-
-        val player = audioPlayer?.startFromRowResource(this.context!!, sound_num)
-            ?: null
-        if (player != null) {
-            player?.setOnErrorListener { mp, what, extra ->
-                audioPlayer?.stop()
-                true
-            }
-            player?.setOnCompletionListener { mp -> audioPlayer?.stop() }
-        }
-
-
-    }
+//    private   fun playDefaultVoiceResponse(sound_num:Int){
+//
+//        val player = audioPlayer?.startFromRowResource(this.context!!, sound_num)
+//            ?: null
+//        if (player != null) {
+//            player?.setOnErrorListener { mp, what, extra ->
+//                audioPlayer?.stop()
+//                true
+//            }
+//            player?.setOnCompletionListener { mp -> audioPlayer?.stop() }
+//        }
+//
+//
+//    }
     override fun onDestroy() {
         super.onDestroy()
         speechRecognizerService?.destroy()
@@ -271,7 +283,9 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener, ISpeechRe
                                 val sound_id = Helper.getDefaultSoundResource()
                                 Log.e("isAudioFile", sound_id.toString());
                                 media_player =
-                                    audioPlayer?.startFromRowResource(this@BasicChatBotFragment.context!!, sound_id!!)!!
+                                    audioPlayer?.startFromRowResource(
+                                        this@BasicChatBotFragment.context!!,
+                                        sound_id!!)!!
                             } else {
                                 media_player = audioPlayer?.start(response?.description)!!
                             }

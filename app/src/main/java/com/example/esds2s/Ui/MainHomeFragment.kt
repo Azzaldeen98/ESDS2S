@@ -1,6 +1,7 @@
 package com.example.esds2s.Ui
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -8,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.RelativeLayout
 import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -74,15 +76,23 @@ class MainHomeFragment : Fragment(), IBaseServiceEventListener<ArrayList<BaseCha
 
         progressPar=activity?.findViewById(com.example.esds2s.R.id.progressPar1)
         // getting the recyclerview by its id
-        recyclerview = activity?.findViewById<RecyclerView>(com.example.esds2s.R.id.RecyclerViewChatsList)
+        recyclerview = binding?.RecyclerViewChatsList
+
+//        recyclerview = activity?.findViewById<RecyclerView>(com.example.esds2s.R.id.RecyclerViewChatsList)
         val flexLayoutManager = FlexboxLayoutManager(context)
         flexLayoutManager.alignItems =   AlignItems.STRETCH  // يحدد flex-wrap: wrap
         flexLayoutManager.justifyContent =   JustifyContent.SPACE_AROUND  // يحدد flex-wrap: wrap
         flexLayoutManager.flexWrap =  FlexWrap.WRAP  // يحدد flex-wrap: wrap
         recyclerview?.layoutManager= flexLayoutManager
         binding?.btnMainCreateChat?.setOnClickListener({v-> onClickChatButton(TypeChat.NEWCHAT) })
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
+
+        }
 //        binding?.btnMainCreateChat?.visibility = View.INVISIBLE
         laoudAllChats()
+
+    }
+    fun onBackPressed() {
 
     }
     private  fun uplaodAllChatsFromLocalStorage():Boolean{
