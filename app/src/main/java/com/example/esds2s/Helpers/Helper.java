@@ -17,9 +17,13 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.example.esds2s.ContentApp.ContentApp;
 import com.example.esds2s.Helpers.Enums.AudioPlayerStatus;
+import com.example.esds2s.Helpers.Enums.DefaultAudioStatus;
 import com.example.esds2s.Helpers.Enums.TypesOfVoiceResponses;
 import com.example.esds2s.R;
 
+import org.checkerframework.framework.qual.Covariant;
+
+import java.sql.Array;
 import java.util.List;
 
 
@@ -111,7 +115,72 @@ public static  void  deleteFile(String filePath)
     public static int getDefaultSoundResource() {
        return getDefaultSoundResource(-1);
     }
+    public static int responseIsNull() {
+        return getDefaultSoundResource(-1);
+    }
+    public static int getDefaultSoundResource( Context context) {
+
+
+       return getDefaultSoundResource(-1);
+    }
     public static int getDefaultSoundResource(int soundNum) {
+
+        int randomValues = new Random().nextInt(TypesOfVoiceResponses.values().length);
+        int sound = R.raw.row11;
+
+        Log.d("getDefaultSoundResource",randomValues+"");
+        if(soundNum>-1 && soundNum < TypesOfVoiceResponses.values().length)
+            randomValues=soundNum;
+
+//        randomValues+=6;
+        switch (randomValues) {
+//            case 0:
+//                sound = com.example.esds2s.R.raw.res1;
+//                break;
+//            case 1:
+//                sound = com.example.esds2s.R.raw.res2;
+//                break;
+//            case 2:
+//                sound = com.example.esds2s.R.raw.res4;
+//                break;
+//            case 3:
+//                sound = com.example.esds2s.R.raw.res5;
+//                break;
+//            case 4:
+//                sound = com.example.esds2s.R.raw.res6;
+//                break;
+//            case 5:
+//                sound = com.example.esds2s.R.raw.res7;
+//                break;
+            case 0:
+                sound = R.raw.mus1;
+                break;
+            case 1:
+                sound = R.raw.mus2;
+                break;
+            case 2:
+                sound = R.raw.mus3;
+                break;
+            case 3:
+                sound = R.raw.mus4;
+                break;
+
+
+//            case 5:
+//                sound = com.example.esds2s.R.raw.res7;
+//                break;
+
+
+            default:
+                return  -1;
+        }
+
+        return sound;
+    }
+
+    public static int getDefaultSoundResource2(int soundNum) {
+
+
         int randomValues = new Random().nextInt(TypesOfVoiceResponses.values().length);
         int sound = R.raw.row11;
 
@@ -151,6 +220,7 @@ public static  void  deleteFile(String filePath)
         transaction.addToBackStack(addToBackStack);
         transaction.commit();
     }
+
     public static void setEditTextError(EditText editText, String message)
     {
         if(editText!=null)

@@ -10,6 +10,7 @@
         Do you agree to this? You must agree to this in order to start the service.</string>
     <string name="msg_choose_the_language">Choose the language</string>
     <string name="msg_failed_the_session_create">Failed to send the request</string>
+    <string name="msg_close_app">Do you want to close the application?</string>
     <string name="msg_no_internet"> !! No Internet Connection</string>
     <string name="retry_button">Retry Connection</string>
 </resources>
