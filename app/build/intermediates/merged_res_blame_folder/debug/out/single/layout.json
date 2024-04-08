@@ -1,0 +1,78 @@
+[
+    {
+        "merged": "com.example.esds2s.app-mergeDebugResources-54:/layout/activity_main.xml",
+        "source": "com.example.esds2s.app-main-57:/layout/activity_main.xml"
+    },
+    {
+        "merged": "com.example.esds2s.app-mergeDebugResources-54:/layout/fragment_automated_chat_bot.xml",
+        "source": "com.example.esds2s.app-main-57:/layout/fragment_automated_chat_bot.xml"
+    },
+    {
+        "merged": "com.example.esds2s.app-mergeDebugResources-54:/layout/internal_header.xml",
+        "source": "com.example.esds2s.app-main-57:/layout/internal_header.xml"
+    },
+    {
+        "merged": "com.example.esds2s.app-mergeDebugResources-54:/layout/activity_record_audio.xml",
+        "source": "com.example.esds2s.app-main-57:/layout/activity_record_audio.xml"
+    },
+    {
+        "merged": "com.example.esds2s.app-mergeDebugResources-54:/layout/progress_par.xml",
+        "source": "com.example.esds2s.app-main-57:/layout/progress_par.xml"
+    },
+    {
+        "merged": "com.example.esds2s.app-mergeDebugResources-54:/layout/fragment_main_home.xml",
+        "source": "com.example.esds2s.app-main-57:/layout/fragment_main_home.xml"
+    },
+    {
+        "merged": "com.example.esds2s.app-mergeDebugResources-54:/layout/dropdown_item.xml",
+        "source": "com.example.esds2s.app-main-57:/layout/dropdown_item.xml"
+    },
+    {
+        "merged": "com.example.esds2s.app-mergeDebugResources-54:/layout/first_logo_content.xml",
+        "source": "com.example.esds2s.app-main-57:/layout/first_logo_content.xml"
+    },
+    {
+        "merged": "com.example.esds2s.app-mergeDebugResources-54:/layout/custom_button.xml",
+        "source": "com.example.esds2s.app-main-57:/layout/custom_button.xml"
+    },
+    {
+        "merged": "com.example.esds2s.app-mergeDebugResources-54:/layout/drop_down_list.xml",
+        "source": "com.example.esds2s.app-main-57:/layout/drop_down_list.xml"
+    },
+    {
+        "merged": "com.example.esds2s.app-mergeDebugResources-54:/layout/fragment_create_new_chat.xml",
+        "source": "com.example.esds2s.app-main-57:/layout/fragment_create_new_chat.xml"
+    },
+    {
+        "merged": "com.example.esds2s.app-mergeDebugResources-54:/layout/drop_down_list_chat.xml",
+        "source": "com.example.esds2s.app-main-57:/layout/drop_down_list_chat.xml"
+    },
+    {
+        "merged": "com.example.esds2s.app-mergeDebugResources-54:/layout/fragment_chat_bot_text.xml",
+        "source": "com.example.esds2s.app-main-57:/layout/fragment_chat_bot_text.xml"
+    },
+    {
+        "merged": "com.example.esds2s.app-mergeDebugResources-54:/layout/dropdown_item_chat.xml",
+        "source": "com.example.esds2s.app-main-57:/layout/dropdown_item_chat.xml"
+    },
+    {
+        "merged": "com.example.esds2s.app-mergeDebugResources-54:/layout/activity_register.xml",
+        "source": "com.example.esds2s.app-main-57:/layout/activity_register.xml"
+    },
+    {
+        "merged": "com.example.esds2s.app-mergeDebugResources-54:/layout/alert_notify1.xml",
+        "source": "com.example.esds2s.app-main-57:/layout/alert_notify1.xml"
+    },
+    {
+        "merged": "com.example.esds2s.app-mergeDebugResources-54:/layout/activity_splash.xml",
+        "source": "com.example.esds2s.app-main-57:/layout/activity_splash.xml"
+    },
+    {
+        "merged": "com.example.esds2s.app-mergeDebugResources-54:/layout/fragment_basic_chat_bot.xml",
+        "source": "com.example.esds2s.app-main-57:/layout/fragment_basic_chat_bot.xml"
+    },
+    {
+        "merged": "com.example.esds2s.app-mergeDebugResources-54:/layout/card_view_design.xml",
+        "source": "com.example.esds2s.app-main-57:/layout/card_view_design.xml"
+    }
+]

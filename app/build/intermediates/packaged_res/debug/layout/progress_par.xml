@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:visibility="gone"
+    android:background="#24272525"
+    android:gravity="center"
+    android:layout_gravity="start"
+    android:id="@+id/progressPar1">
+
+        <ProgressBar
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            tools:ignore="MissingConstraints" />
+
+
+</RelativeLayout>

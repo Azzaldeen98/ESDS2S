@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".Ui.AutomatedChatBotFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="60dp"
+        android:orientation="vertical">
+
+
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="90dp"
+            android:gravity="center">
+
+        <ImageView
+            android:layout_width="140dp"
+            android:layout_height="140dp"
+            android:layout_marginTop="50dp"
+            android:src="@drawable/robot_splash"
+            android:backgroundTint="@color/white"
+            android:background="@color/white"/>
+        <ImageView
+            android:id="@+id/robot_speeker_btn"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginLeft="120dp"
+            android:visibility="gone"
+            android:padding="10dp"
+            android:background="@drawable/cirecle_border"
+            android:src="@drawable/baseline_record_voice_over_24"/>
+        </LinearLayout>
+
+
+        <Button
+            android:id="@+id/btn_automated_chat"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="100dp"
+            android:background="@color/purple_200"
+            android:gravity="center"
+            android:layout_marginHorizontal="30dp"
+            android:text="@string/atomated_chat_btn"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textSize="20dp" />
+
+
+
+        <Button
+            android:id="@+id/btn_close_service"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="100dp"
+            android:background="@color/purple_200"
+            android:gravity="center"
+            android:visibility="gone"
+            android:layout_marginHorizontal="30dp"
+            android:text="@string/btn_close_service"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textSize="20dp" />
+
+    </LinearLayout>
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/background_notify_dialog1"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="end"
+        android:visibility="gone"
+        android:background="@color/back_notify_color">
+        <include layout="@layout/alert_notify1" />
+    </LinearLayout>
+
+    <include layout="@layout/progress_par"/>
+
+
+</FrameLayout>
