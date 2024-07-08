@@ -41,51 +41,51 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         initialization()
         onBackPressedDispatcher.addCallback() {}
-
-        println("tertertertertert")
-        val s = Semaphore(1)
-
-        val t1 = Thread(Runnable
-        {
-            s.acquireUninterruptibly()
-            println("t1")
-            Thread.sleep(100)
-            print(".")
-            s.release()
-        })
-
-        val t2 = Thread(Runnable
-        {
-            s.acquireUninterruptibly()
-            println("t2")
-            Thread.sleep(100)
-            print(".")
-            s.release()
-        })
-
-        val t3 = Thread(Runnable
-        {
-            s.acquireUninterruptibly()
-            println("t3")
-            Thread.sleep(100)
-            print(".")
-            s.release()
-        })
-
-        val t4 = Thread(Runnable
-        {
-            s.acquireUninterruptibly()
-            println("t4")
-            Thread.sleep(100)
-            print(".")
-            s.release()
-        })
-
-
-        t1.start()
-        t2.start()
-        t3.start()
-        t4.start()
+//
+//        println("tertertertertert")
+//        val s = Semaphore(1)
+//
+//        val t1 = Thread(Runnable
+//        {
+//            s.acquireUninterruptibly()
+//            println("t1")
+//            Thread.sleep(100)
+//            print(".")
+//            s.release()
+//        })
+//
+//        val t2 = Thread(Runnable
+//        {
+//            s.acquireUninterruptibly()
+//            println("t2")
+//            Thread.sleep(100)
+//            print(".")
+//            s.release()
+//        })
+//
+//        val t3 = Thread(Runnable
+//        {
+//            s.acquireUninterruptibly()
+//            println("t3")
+//            Thread.sleep(100)
+//            print(".")
+//            s.release()
+//        })
+//
+//        val t4 = Thread(Runnable
+//        {
+//            s.acquireUninterruptibly()
+//            println("t4")
+//            Thread.sleep(100)
+//            print(".")
+//            s.release()
+//        })
+//
+//
+//        t1.start()
+//        t2.start()
+//        t3.start()
+//        t4.start()
 
 
     }
@@ -117,6 +117,8 @@ class MainActivity : AppCompatActivity() {
                 startActivity(intent)
 
             }else {
+//                val intent = Intent(applicationContext, RecordAudioActivity::class.java)
+//                startActivity(intent)
                 Helper.LoadFragment(MainHomeFragment(), supportFragmentManager, R.id.main_frame_layout)
             }
         }else{

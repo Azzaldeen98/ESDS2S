@@ -639,7 +639,6 @@ class RecordVoiceService5 : Service() , IGeminiServiceEventListener {
 
                     backgroundMonitorOrderStatusJob?.takeIf { it.isActive }?.cancel()
                     Log.d("onRequestIsFailure999", reorderCounter.toString());
-
                     if (reorderCounter!! < 3 && textSpeachResult?.isNullOrEmpty() == false) {
                          speechChatControl?.messageToGeneratorAudio(textSpeachResult!!, this@RecordVoiceService5);
 
@@ -648,21 +647,17 @@ class RecordVoiceService5 : Service() , IGeminiServiceEventListener {
 
                         if(reorderCounter==1)
                             playDefaultVoiceResponseEnd(R.raw.row10,false)
-                    }
-                    else {
+                    } else {
                         Log.d("onRequestIsFailure888", "4333333")
                         reorderCounter = 0
                         textSpeachResult=""
-                        playDefaultVoiceResponseEnd(DefaultSoundResource.getAgainQuestions(),true)
-
+                        DefaultSoundResource.getAgainQuestions(this)
+                            ?.let { playDefaultVoiceResponseEnd(it,true) }
                     }
-
-
                 } catch (e: Exception) {
                     Log.e("onRequestIsFailure", e.message.toString());
                     reorderCounter=0
                     speechRecognizerListenAgain();
-
                 } finally {
                     reorderCounter = if (reorderCounter < 3) reorderCounter + 1 else 0
                 }

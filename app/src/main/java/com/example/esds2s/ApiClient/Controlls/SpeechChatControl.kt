@@ -60,6 +60,8 @@ class SpeechChatControl(private val context: Context):BaseControl(context) {
               }
           }
         }
+
+
     suspend fun getUrlAudio(text: String = "", voiceCode: String = "ar-SA-1"): String {
             val url = "https://cloudlabs-text-to-speech.p.rapidapi.com/synthesize"
 

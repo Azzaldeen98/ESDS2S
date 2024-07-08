@@ -84,7 +84,9 @@ class MainHomeFragment : Fragment(), IBaseServiceEventListener<ArrayList<BaseCha
         flexLayoutManager.justifyContent =   JustifyContent.SPACE_AROUND  // يحدد flex-wrap: wrap
         flexLayoutManager.flexWrap =  FlexWrap.WRAP  // يحدد flex-wrap: wrap
         recyclerview?.layoutManager= flexLayoutManager
-        binding?.btnMainCreateChat?.setOnClickListener({v-> onClickChatButton(TypeChat.NEWCHAT) })
+        binding?.btnMainCreateChat?.setOnClickListener({v->
+            onClickChatButton(TypeChat.NEWCHAT)
+        })
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
 
         }
