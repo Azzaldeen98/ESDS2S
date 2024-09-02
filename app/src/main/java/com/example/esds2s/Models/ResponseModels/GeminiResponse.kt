@@ -12,3 +12,17 @@ data class GeminiResponse(
     @Expose
     val description:String
 )
+
+@Serializable
+data class WasmSplitorResponse(
+    @SerializedName("event_id")
+    @Expose
+    val event_id:String
+)
+
+@Serializable
+data class WasmAudioResponse(
+    @SerializedName("url")
+    @Expose
+    val url:String
+)

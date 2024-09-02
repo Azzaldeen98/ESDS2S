@@ -5,27 +5,19 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.text.format.DateFormat
-import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.Toast
-import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.lifecycleScope
 import com.example.esds2s.ContentApp.ContentApp
-import com.example.esds2s.Helpers.DefaultSoundResource
-import com.example.esds2s.Helpers.Enums.DefaultAudioStatus
 import com.example.esds2s.Helpers.ExternalStorage
-import com.example.esds2s.Helpers.Helper
 import com.example.esds2s.R
 import com.example.esds2s.Services.TestConnection
-import com.example.esds2s.Ui.MainHomeFragment
-import kotlinx.coroutines.launch
-import java.util.concurrent.Semaphore
+import kotlinx.coroutines.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -34,62 +26,20 @@ class MainActivity : AppCompatActivity() {
     private lateinit var noConnectionLayout: LinearLayout
     private lateinit var frameLayout: FrameLayout
     private lateinit var btnRefresh: Button
+
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val dateFormat = DateFormat.getDateFormat(applicationContext)
         setContentView(R.layout.activity_main)
-        initialization()
-        onBackPressedDispatcher.addCallback() {}
-//
-//        println("tertertertertert")
-//        val s = Semaphore(1)
-//
-//        val t1 = Thread(Runnable
-//        {
-//            s.acquireUninterruptibly()
-//            println("t1")
-//            Thread.sleep(100)
-//            print(".")
-//            s.release()
-//        })
-//
-//        val t2 = Thread(Runnable
-//        {
-//            s.acquireUninterruptibly()
-//            println("t2")
-//            Thread.sleep(100)
-//            print(".")
-//            s.release()
-//        })
-//
-//        val t3 = Thread(Runnable
-//        {
-//            s.acquireUninterruptibly()
-//            println("t3")
-//            Thread.sleep(100)
-//            print(".")
-//            s.release()
-//        })
-//
-//        val t4 = Thread(Runnable
-//        {
-//            s.acquireUninterruptibly()
-//            println("t4")
-//            Thread.sleep(100)
-//            print(".")
-//            s.release()
-//        })
-//
-//
-//        t1.start()
-//        t2.start()
-//        t3.start()
-//        t4.start()
 
+//        starTestChannel()
+//        val intent = Intent(applicationContext, MainActivity2::class.java)
+//        startActivity(intent)
+
+        initialization()
 
     }
-
 
 
     fun jaccardSimilarity(set1: Set<String>, set2: Set<String>): Double {
@@ -117,9 +67,9 @@ class MainActivity : AppCompatActivity() {
                 startActivity(intent)
 
             }else {
-//                val intent = Intent(applicationContext, RecordAudioActivity::class.java)
-//                startActivity(intent)
-                Helper.LoadFragment(MainHomeFragment(), supportFragmentManager, R.id.main_frame_layout)
+                val intent = Intent(applicationContext, RecordAudioActivity::class.java)
+                startActivity(intent)
+//                Helper.LoadFragment(MainHomeFragment(), supportFragmentManager, R.id.main_frame_layout)
             }
         }else{
             noConnectionLayout?.visibility=View.VISIBLE
@@ -130,7 +80,6 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         Toast.makeText(this, "Selected: ", Toast.LENGTH_SHORT).show()
-
     }
     fun checkMicrophonPermision(){
 

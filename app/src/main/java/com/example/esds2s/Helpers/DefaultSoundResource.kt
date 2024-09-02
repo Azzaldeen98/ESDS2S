@@ -1,11 +1,13 @@
 package com.example.esds2s.Helpers
 
 import android.content.Context
+import android.util.Log
 import com.example.esds2s.Helpers.Enums.AvailableLanguages
 import com.example.esds2s.Helpers.Enums.DefaultAudioStatus
 import com.example.esds2s.Helpers.Enums.GenderType
 import com.example.esds2s.Helpers.Enums.TypesOfVoiceResponses
 import com.example.esds2s.R
+import java.io.Serializable
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -80,7 +82,9 @@ class DefaultSoundResource{
         @JvmStatic
         fun getCurrentAudioResources(context: Context, status: DefaultAudioStatus): Array<Int> {
             val modelInfo = ModelInfo(context)
-            return getAudioResources(modelInfo?.getLanguage()!!, modelInfo?.getGender()!!, status)
+            val gender=modelInfo?.getGender()!! //GenderType.MALE;//
+            return getAudioResources(modelInfo?.getLanguage()!!,
+                gender , status)
         }
 
         @JvmStatic
@@ -101,13 +105,16 @@ class DefaultSoundResource{
         private fun getAudioResources(lang: AvailableLanguages?, gender: GenderType?, status: DefaultAudioStatus?): Array<Int> {
                if(lang==null || gender==null || status ==null)
                    return  emptyArray()
-
                 if(availableLanguages.containsKey(lang)){
                     val langs =availableLanguages?.get(lang);
                     if(langs!=null && langs.size>status.ordinal) {
                         val array_status=langs?.get(status.ordinal)
                         if(array_status!=null && array_status.size>gender.ordinal) {
-                            return  array_status?.get(gender.ordinal)?:emptyArray()
+                            var array = array_status?.get(gender.ordinal)?:emptyArray()
+                             if(array.isEmpty())
+                                 array  = array_status?.get(1-gender.ordinal)?:emptyArray()
+                            return array;
+
                         }
                     }
                 }

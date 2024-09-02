@@ -92,11 +92,11 @@ class ChatBotTextFragment : Fragment(), IUplaodAudioEventListener, IGeminiServic
             text_gchat_message_me?.text=message
             textInput?.text?.clear()
 
-            Thread{ activity?.runOnUiThread {
+                Thread{ activity?.runOnUiThread {
                 GlobalScope.launch {
                     if(TestConnection.isOnline(this@ChatBotTextFragment.context!!, true)) {
                         try {
-                            speechChatControl?.messageToGeneratorAudio(message, this@ChatBotTextFragment)
+//                            speechChatControl?.messageToGeneratorAudio(message, this@ChatBotTextFragment)
                         }catch (e:Exception){
                             Log.d("Error", e.message.toString())
                         }

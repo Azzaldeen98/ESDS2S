@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import com.example.esds2s.ApiClient.Controlls.SpeechChatControl
 import com.example.esds2s.ContentApp.ContentApp
 import com.example.esds2s.Helpers.Enums.GenderType
 import com.example.esds2s.Helpers.ExternalStorage
@@ -59,11 +60,8 @@ class RecordAudioActivity : AppCompatActivity() {
         autocompleteTV = findViewById(R.id.autoCompleteTextViewLanguage)
         onBackPressedDispatcher.addCallback() { }
 
+//            SpeechChatControl(this).readAudioFromAi();
 
-//                var sound_id = DefaultSoundResource.getAudioResource(this,
-//                        DefaultAudioStatus.After)
-//
-//                Log.e("sound_id_main",sound_id.toString())
 
         bottomNav.setOnItemSelectedListener {
             when (it.itemId) {

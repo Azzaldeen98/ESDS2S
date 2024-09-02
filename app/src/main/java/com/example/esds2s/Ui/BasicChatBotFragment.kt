@@ -1,6 +1,9 @@
 package com.example.esds2s.Ui
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.app.AlertDialog
+import android.content.pm.PackageManager
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.speech.SpeechRecognizer
@@ -12,21 +15,22 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.addCallback
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
 import com.example.esds2s.ApiClient.Controlls.SpeechChatControl
 import com.example.esds2s.ContentApp.ContentApp
 import com.example.esds2s.Helpers.*
-import com.example.esds2s.Helpers.Enums.DefaultAudioStatus
-import com.example.esds2s.Helpers.Enums.TypesOfVoiceResponses
 import com.example.esds2s.Interface.IGeminiServiceEventListener
 import com.example.esds2s.Interface.ISpeechRecognizerServices
 import com.example.esds2s.Models.ResponseModels.GeminiResponse
 import com.example.esds2s.R
 import com.example.esds2s.Services.ExternalServices.SpeechRecognizerService
-import com.example.esds2s.Services.TestConnection
+import com.example.esds2s.Services.SettingsResourceForRecordServices
 import kotlinx.coroutines.*
+import java.io.File
 import java.util.concurrent.Semaphore
+
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -72,7 +76,8 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener, ISpeechRe
     var file_record_Path: String?=null
     var  micButton: ImageView?=null
     var  editText: EditText?=null
-    var isRecord:Boolean=false
+    var isRecord:Boolean=false;
+    var robotIsSpeaking:Boolean=false;
     var reorderCounter:Int?=0;
     var speechTextResult:String?=null;
     var reply_music: MediaPlayer?=null
@@ -94,24 +99,23 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener, ISpeechRe
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-
         return inflater.inflate(R.layout.fragment_basic_chat_bot, container, false)
     }
 
-    fun sendRecordAudio(data:String) {
+    fun sendRecordAudio(inputText:String) {
 
         try {
-            if(TestConnection.isOnline(this.context!!, true)) {
-                runBlocking {
-                    CoroutineScope(Dispatchers.IO).launch {
-                        speechChatControl?.messageToGeneratorAudio(data, this@BasicChatBotFragment)
-                    }
-                }
 
+            if(audioPlayer!=null && robotIsSpeaking && SettingsResourceForRecordServices().isStopWord(
+                LanguageInfo.getStorageSelcetedLanguage(context).index, inputText)){
+                Toast.makeText(this.context,inputText, Toast.LENGTH_SHORT).show()
+                audioPlayer?.completionAudio()
 
+            } else if(robotIsSpeaking==false)
+                    startDefaultVoiceResponse(1)
+            else{
+                speechRecognizerService?.startSpeechRecognizerListening()
             }
-
-            startDefaultVoiceResponse()
 
 //            if(audioPlayer==null)
 //                audioPlayer= AudioPlayer(this.context!!)
@@ -149,23 +153,31 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener, ISpeechRe
 
     }
 
+
     private fun loadPresetUserLanguage() {
         val languageInfo = LanguageInfo.getStorageSelcetedLanguage(this?.context);
         if(languageInfo!=null) {
          Toast.makeText(this.context,  languageInfo.code!!,Toast.LENGTH_SHORT).show()
         }
     }
+//    val outputDir: File? =  // الحصول على مسار الدليل الداخلي للتطبيق
+//    val outputFile = File(this.activity?.getFilesDir(), "myRecording.mp3")
+    var recordFilePath:String="";// context?.getExternalFilesDir(null)?.absolutePath + "/myRecording.mp3"
+;//    File(this.activity?.getFilesDir(), "myRecording.mp3").getAbsolutePath()
+    var androidAudioRecorder:AndroidAudioRecorder?=null;
     @SuppressLint("SuspiciousIndentation")
     override fun onStart() {
         super.onStart()
 
         loadPresetUserLanguage()
         speechChatControl= this.context?.let { SpeechChatControl(it) }
-        file_record_Path="${this.context?.externalCacheDir?.absolutePath}/audiorecordtest.3gp"  //com.example.esds2s.ApiClient.BuildConfig.AudioFilePath
+        recordFilePath="${this.context?.externalCacheDir?.absolutePath}/myRecording.mp3"  //com.example.esds2s.ApiClient.BuildConfig.AudioFilePath
         audioRecorder = AndroidAudioRecorder(this.context!!)
         audioPlayer = AudioPlayer(this.context!!)
         micButton=activity?.findViewById(R.id.micButton)
         editText=activity?.findViewById(R.id.text)
+
+        androidAudioRecorder=AndroidAudioRecorder(context!!);
 
        speechRecognizerService = SpeechRecognizerService(this?.context!!, this, this)
     var lang:String?="ar"
@@ -174,12 +186,19 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener, ISpeechRe
          speechRecognizerService?.Initialization(true,true,false,lang)
 
 //        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this.activity)
-
+        audioPlayer = AudioPlayer(this@BasicChatBotFragment.context)
         micButton?.setOnClickListener{v->
             if(isRecord==false){
+                micButton?.isEnabled=true
                 micButton!!.setImageResource(R.drawable.ic_mic_black_24dp)
                 Log.d("startRecorder", "Recorder....");
-                speechRecognizerService?.startSpeechRecognizerListening()
+//                speechRecognizerService?.startSpeechRecognizerListening()
+                    robotIsSpeaking=false;
+                    editText?.hint="Speaker ...";
+                    checkMicrophonPermision();
+                    startDefaultVoiceResponse();
+
+//                isRecord=true;
 
             }
             else{
@@ -187,8 +206,14 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener, ISpeechRe
                 micButton?.isEnabled=false;
                 Log.d("stopRecorder", "Recorder....");
                 editText?.hint="Wait ...";
-                speechRecognizerService?.stopSpeechRecognizer()
-                isResponse=false
+                if(audioPlayer!!.isPlayer())
+                    audioPlayer?.completionAudio()
+
+
+
+
+//                startRecord();
+//                isResponse=false
             }
 
             isRecord=(!isRecord!!)
@@ -197,40 +222,117 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener, ISpeechRe
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {}
 
     }
+
+    fun playerRecordFile(){
+
+        var record= audioPlayer?.start(recordFilePath)
+        record?.setOnErrorListener {  mp, what, extra ->
+            audioPlayer?.stop()
+            true
+        }
+        record?.setOnCompletionListener { mp ->
+            audioPlayer?.stop()
+        }
+    }
+    fun checkMicrophonPermision(){
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Switch to vibration sound mode ")
+            .setIcon(R.drawable.baseline_vibration_24)
+            .setMessage(getString(R.string.msg_mute_microphone_alarm_tone))
+            .setPositiveButton(getString(R.string.btn_ok)) { dialog, which ->
+                SettingsResourceForRecordServices.vibrateSoundMode(this.activity!!)
+                if (ContextCompat.checkSelfPermission(requireContext()!!, Manifest.permission.RECORD_AUDIO)
+                    != PackageManager.PERMISSION_GRANTED
+                ) {
+                    // Permission is not granted, request it from the user
+                    ActivityCompat.requestPermissions(
+                        this?.activity!!,
+                        arrayOf(Manifest.permission.RECORD_AUDIO),
+                        ContentApp.REQUEST_MICROPHONE_PERMISSION_CODE
+                    )
+                } else {
+
+                    startRecord();
+                    
+//                    speechRecognizerService?.startSpeechRecognizerListening()
+                }
+            }
+            .setNegativeButton(getString(R.string.btn_cancel)) { dialog, which ->}
+            .create()
+            .show()
+        // Check if the permission has been granted
+
+    }
+
+    fun startRecord(){
+        // speechRecognizerService?.startSpeechRecognizerListening()
+        androidAudioRecorder?.start(recordFilePath);
+    }
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            ContentApp.REQUEST_MICROPHONE_PERMISSION_CODE -> {
+                // If request is cancelled, the result arrays are empty
+                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                    // Permission granted, proceed with your app logic
+                    startRecord();
+                } else {
+                    // Permission denied, handle accordingly (e.g., show explanation, disable functionality, etc.)
+                }
+                return
+            }
+            // Add more cases for other permissions if needed
+        }
+    }
     private   fun startDefaultVoiceResponse(sound_num:Int=-1){
 
-        lifecycleScope.launch(Dispatchers.Main) {
-            if(isResponse==false) {
+            robotIsSpeaking=true;
+//            speechRecognizerService?.startSpeechRecognizerListening()
+
+//        lifecycleScope.launch(Dispatchers.Main) {
+//            if(isResponse==false) {
 
                     try {
-                        simaphor.acquire()
-                        if (audioPlayer == null)
-                            audioPlayer = AudioPlayer(this@BasicChatBotFragment.context)
-                        val sound_id = DefaultSoundResource.getAudioResource(this@BasicChatBotFragment.context!!,DefaultAudioStatus.Before)
-                        val player = audioPlayer?.startFromRowResource(
-                            this@BasicChatBotFragment.context!!,
-                            sound_id)
+//                        simaphor.acquire()
+//                        if (audioPlayer == null)
+//                        micButton?.isEnabled=false;
+//                        editText?.hint="Wait ...";
+//                        isRecord=false;
 
-                        if (player == null) return@launch
+
+
+//                        val sound_id = DefaultSoundResource.getAudioResource(this@BasicChatBotFragment.context!!,DefaultAudioStatus.Before)
+                        val player = audioPlayer?.startFromRowResource(this@BasicChatBotFragment.context!!, R.raw.test)
                         player?.setOnErrorListener { mp, what, extra ->
                             audioPlayer?.stop()
+//                            speechRecognizerService?.stopSpeechRecognizer()
+                            robotIsSpeaking=false;
+                            playerRecordFile();
                             true // Return true if the error is considered handled, false otherwise
                         }
                         player?.setOnCompletionListener { mp ->
                             audioPlayer?.stop()
-                            if (isResponse == false && voiceResponseCount < 3) {
-                                voiceResponseCount++
-                                startDefaultVoiceResponse(TypesOfVoiceResponses.ASKYOU.ordinal)
-                            }
+                            micButton!!.setImageResource(R.drawable.ic_mic_black_off)
+                            micButton?.isEnabled = true;
+                            robotIsSpeaking=false;
+                            editText?.hint="Speaking ...";
+                            playerRecordFile();
+//                            speechRecognizerService?.stopSpeechRecognizer()
+
+//                            if (isResponse == false && voiceResponseCount < 3) {
+//                                voiceResponseCount++
+//                                startDefaultVoiceResponse(TypesOfVoiceResponses.ASKYOU.ordinal)
+//                            }
                         }
                     } catch (e: Exception) {
                         Log.d("Error", e.message.toString())
                     }finally {
-                        simaphor.release()
+//                        simaphor.release()
                     }
 
-            }
-        }
+//            }
+//        }
 
     }
 //    private   fun playDefaultVoiceResponse(sound_num:Int){
@@ -316,7 +418,7 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener, ISpeechRe
         
         try {
             if(reorderCounter!!<3 && speechTextResult!=null) {
-                speechChatControl?.messageToGeneratorAudio(speechTextResult,this);
+//                speechChatControl?.messageToGeneratorAudio(speechTextResult,this);
             }
         }catch (e:java.lang.Exception){}
         finally {

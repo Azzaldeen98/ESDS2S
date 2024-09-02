@@ -16,5 +16,6 @@ public class ContentApp {
     public static final  String  CURRENT_MODEL_INFO="CurrentModelInfo";
     public static final  String  DEFAULT_GENDER="Male";
     public static final  String  TIME="Time";
+    public static final  String   RESPONSE_AUDIO_PATH="${externalCacheDir?.absolutePath}/response_audio.3gp";
 
 }

@@ -4,20 +4,16 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
-import android.widget.Toast
 import com.example.esds2s.Activies.MainActivity
-import com.example.esds2s.ApiClient.Controlls.SessionChatControl
 import com.example.esds2s.ContentApp.ContentApp
 import com.example.esds2s.Helpers.ExternalStorage
 import com.example.esds2s.Helpers.Helper
 import com.example.esds2s.Helpers.JsonStorageManager
 import com.example.esds2s.Helpers.LanguageInfo
+import com.example.esds2s.Interface.IAcceptOrCancelListener
 import com.example.esds2s.Interface.IBaseCallbackListener
 import com.example.esds2s.R
-import com.example.esds2s.Services.RecordVoiceService
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
@@ -41,7 +37,7 @@ class SessionManagement<T>(private val activity:Activity,private val callBackLis
     fun logOutSession() {
         activity.applicationContext
         if(Helper.isRecordServiceRunningInForeground(context, RecordVoiceService::class.java)) {
-            onClickStopService()
+            onClickStopService(null)
         } else{
             AlertDialog.Builder(activity)
                 .setTitle("Warning")
@@ -58,36 +54,41 @@ class SessionManagement<T>(private val activity:Activity,private val callBackLis
         activity.runOnUiThread {
             GlobalScope.launch {
                 try {
-                    if(TestConnection.isOnline(context)) {
-
-                        val respons = SessionChatControl(context!!).removeSession()
-                        stopRecordForGroundService()
-                        backToMainPage()
-                    }
+                    stopRecordForGroundService()
+//                    backToMainPage()
+//                    if(TestConnection.isOnline(context)) {
+//
+////                        val respons = SessionChatControl(context!!).removeSession()
+//                        stopRecordForGroundService()
+//                        backToMainPage()
+//                    }
                 }catch (e:Exception){
-                    Handler(Looper.getMainLooper()).post() {   Toast.makeText(activity,e.message.toString(),Toast.LENGTH_SHORT).show()}
-                    backToMainPage()
+//                    Handler(Looper.getMainLooper()).post() {   Toast.makeText(activity,e.message.toString(),Toast.LENGTH_SHORT).show()}
+//                    backToMainPage()
                  Log.e("StopSessionError!! ",e.message.toString())
                 }
             }}
 
 //         Helper.LoadFragment(MainHomeFragment(), activity?.supportFragmentManager, R.id.main_frame_layout)
     }
-    fun onClickStopService() {
+    fun onClickStopService(callback: IAcceptOrCancelListener<String>?) {
 
         try {
+
             AlertDialog.Builder(activity)
                 .setTitle(context?.getString(R.string.nav_close_session))
                 .setIcon(R.drawable.baseline_warning_24)
                 .setMessage(context?.getString(R.string.msg_stop_session_chat))
                 .setPositiveButton(context?.getString(R.string.btn_yes)) { dialog, which ->
                     stopSession()
+                    if(callback!=null)
+                        callback?.onAccept()
                 }.setNegativeButton(context?.getString(R.string.btn_no)) { dialog, which -> }
                 .create()
                 .show()
         }catch (e:Exception){Log.e("Error",e.message.toString())}
     }
-    fun stopRecordForGroundService(){
+     fun stopRecordForGroundService(){
 
         try {
             if (Helper.isRecordServiceRunningInForeground(activity,
@@ -95,7 +96,7 @@ class SessionManagement<T>(private val activity:Activity,private val callBackLis
                 val serviceIntent = Intent(activity!!, RecordVoiceService::class.java)
                 activity.stopService(serviceIntent)
                 callBackListener?.onCallBackExecuted()
-//                setStopRecordForGroundServiceMode()
+
             }
         }catch (e:Exception){
             Log.d("Erorr-Close Forground Service", e.message.toString())

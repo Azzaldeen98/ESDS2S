@@ -4,12 +4,9 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Resources
 import android.media.MediaPlayer
-import android.util.Log
 import com.example.esds2s.ApiClient.Interface.IMediaPlayerListener
-import com.example.esds2s.Helpers.Enums.AvailableLanguages
-import com.example.esds2s.Helpers.Enums.GenderType
-import com.google.gson.Gson
 import java.util.concurrent.Semaphore
+
 
 class AudioPlayer(private val context: Context?) {
      var mediaPlayer: MediaPlayer? =null
@@ -52,6 +49,11 @@ class AudioPlayer(private val context: Context?) {
             return  null
         }
     }
+    fun completionAudio() {
+        if(mediaPlayer!=null && mediaPlayer!!.isPlaying())
+            mediaPlayer?.seekTo(mediaPlayer!!.duration)
+    }
+    @SuppressLint("UnsafeOptInUsageError")
     fun start(filePath: String?): MediaPlayer? {
 
         if(filePath?.isNullOrEmpty()==true)
@@ -59,7 +61,9 @@ class AudioPlayer(private val context: Context?) {
 
         mediaPlayer = MediaPlayer()
         try {
+
             mediaPlayer?.setDataSource(filePath)
+//            mediaPlayer?.setDataSource(context!!,Uri.parse(filePath))
             mediaPlayer?.prepare()
             mediaPlayer?.start()
 
@@ -168,7 +172,6 @@ class AudioPlayer(private val context: Context?) {
                 mediaPlayer?.reset()
                 mediaPlayer?.release()
             }
-
         } catch (e: Exception) {
             e.printStackTrace()
         }finally {

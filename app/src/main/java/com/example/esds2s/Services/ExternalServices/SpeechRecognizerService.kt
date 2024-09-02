@@ -43,8 +43,7 @@ class SpeechRecognizerService(private val context: Context,
             speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context);
             speechRecognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
             // Define the language model used for voice recognition
-            speechRecognizerIntent?.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            speechRecognizerIntent?.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             // Specify the preferred language for voice recognition
             speechRecognizerIntent?.putExtra(RecognizerIntent.EXTRA_LANGUAGE, lang);
             Toast.makeText(context, "Language : " + lang, Toast.LENGTH_SHORT)
@@ -177,18 +176,25 @@ class SpeechRecognizerService(private val context: Context,
             val lang= LanguageInfo.getStorageSelcetedLanguage(this?.context)
             if(lang!=null && speechRecognizerIntent?.getStringExtra(RecognizerIntent.EXTRA_LANGUAGE)?.equals(lang?.code,true) == false)
                 speechRecognizerIntent?.putExtra(RecognizerIntent.EXTRA_LANGUAGE, lang.code);
+                speechRecognizerIntent?.putExtra(RecognizerIntent.EXTRA_SEGMENTED_SESSION, true);
+//                speechRecognizerIntent?.putExtra(RecognizerIntent.FORMATTING_OPTIMIZE_QUALITY, lang.code);
+//                speechRecognizerIntent?.putExtra(RecognizerIntent.DETAILS_META_DATA, lang.code);
+//                speechRecognizerIntent?.putExtra(RecognizerIntent.LANGUAGE_SWITCH_BALANCED, lang.code);
+//                speechRecognizerIntent?.putExtra(RecognizerIntent.EXTRA_AUDIO_SOURCE_CHANNEL_COUNT, lang.code);
             Log.e("startSpeechRecognizerListening","Start")
+
             speechRecognizer?.startListening(speechRecognizerIntent)
+
         }
     }
-    fun sendRequestToApiGenerator(speechText:String) {
-        try {
-            if (speechChatControl != null)
-                speechChatControl?.messageToGeneratorAudio(speechText, this@SpeechRecognizerService);
-        } catch (e: Exception) {
-            Log.d("Error ! ", e.message.toString())
-        }
-    }
+//    fun sendRequestToApiGenerator(speechText:String) {
+//        try {
+//            if (speechChatControl != null)
+//                speechChatControl?.messageToGeneratorAudio(speechText, this@SpeechRecognizerService);
+//        } catch (e: Exception) {
+//            Log.d("Error ! ", e.message.toString())
+//        }
+//    }
 
     fun setOnErrorListener(listener:OnErrorListener ){
         mOnErrorListener=listener

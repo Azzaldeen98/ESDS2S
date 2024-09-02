@@ -4,6 +4,12 @@ enum class AvailableLanguages {
     ARABIC,
     ENGLISH,
     SPANISH,
-    FRENCH,
+    FRENCH;
+
+    companion object {
+        fun getByIndex(index: Int): AvailableLanguages {
+            return AvailableLanguages.values()[index];
+        }
+    }
 
 }

@@ -3,36 +3,25 @@ package com.example.esds2s.Helpers;
 import static java.sql.DriverManager.println;
 
 import android.app.ActivityManager;
-import android.app.AlertDialog;
 import android.content.Context;
+import android.media.AudioFocusRequest;
+import android.media.AudioManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
-import com.example.esds2s.ContentApp.ContentApp;
-import com.example.esds2s.Helpers.Enums.AudioPlayerStatus;
-import com.example.esds2s.Helpers.Enums.DefaultAudioStatus;
 import com.example.esds2s.Helpers.Enums.TypesOfVoiceResponses;
 import com.example.esds2s.R;
 
-import org.checkerframework.framework.qual.Covariant;
-
-import java.sql.Array;
-import java.util.List;
-
-
 import java.io.File;
+import java.util.List;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import kotlin.Unit;
 
 public class Helper {
 
@@ -44,19 +33,24 @@ public class Helper {
         return matcher.matches();
     }
 
-    public static boolean isAudioFile(String filePath) {
+    public static boolean isLocalAudioFile(String filePath) {
+        return isHasAudioExtensionFile(filePath);
+    }
+    public static boolean isHasAudioExtensionFile(String filePath) {
 
-        if(!isUrl(filePath))
-            return false;
-
-        String[] audioExtensions = {".mp3", ".wav", ".flac", ".aac", ".ogg"};
+        String[] audioExtensions = {".mp3", ".wav", ".flac", ".aac", ".ogg","mp3"};
         for (String extension : audioExtensions) {
             if (filePath.toLowerCase().endsWith(extension)) {
                 return true;
             }
         }
+        return  false;
+    }
+    public static boolean isAudioFile(String filePath) {
 
-        return false;
+        if(!isUrl(filePath))
+            return false;
+       return isHasAudioExtensionFile(filePath);
     }
 
 
@@ -72,8 +66,7 @@ public static  void  showAlertDialog(Context context)
 //                        .create()
 //        .show()
 }
-public static  void  deleteFile(String filePath)
-{
+    public static  void  deleteFile(String filePath) {
         try {
 
             File file =new File(filePath);
@@ -91,6 +84,20 @@ public static  void  deleteFile(String filePath)
         {
             Log.e("Error",e.getMessage().toString());
         }
+    }
+
+    public static void audioFocusRequest(Context context) {
+        AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        audioManager.setMode(AudioManager.MODE_IN_CALL);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            AudioFocusRequest  focusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+                    .setOnAudioFocusChangeListener(focusChange -> {
+                        // Handle focus change
+                    }).build();
+
+            audioManager.requestAudioFocus(focusRequest);
+        }
+
     }
 
     public static boolean isRecordServiceRunningInForeground(Context context, Class<?> serviceClass) {

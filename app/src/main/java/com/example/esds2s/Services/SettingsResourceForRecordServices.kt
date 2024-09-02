@@ -5,7 +5,6 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.media.AudioManager
-import android.media.MediaPlayer
 import android.provider.Settings
 import android.util.Log
 import com.example.esds2s.ContentApp.ContentApp
@@ -13,26 +12,30 @@ import com.example.esds2s.Helpers.AudioPlayer
 import com.example.esds2s.Helpers.Enums.AudioPlayerStatus
 import com.example.esds2s.Helpers.Enums.AvailableLanguages
 import com.example.esds2s.Helpers.ExternalStorage
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
+import com.example.esds2s.Helpers.LanguageInfo
 
 class SettingsResourceForRecordServices {
 
 
 
-//   private val stopWords: Array<List<String>> = emptyArray()
-//    init{
-//        stopWords[0] = listOf("توقف", "قف", "اصمت","تكفى","كفى","يكفي","لا تتحدث")
-//        stopWords[1] = listOf("stop")
-//        stopWords[2] = listOf("stop")
-//        stopWords[3] = listOf("stop")
-//    }
+   private val stopWords: Array<List<String>> = emptyArray()
+    init{
+        stopWords[0] = listOf("توقف", "قف", "اصمت","تكفى","كفى","يكفي","لا تتحدث")
+        stopWords[1] = listOf("stop")
+        stopWords[2] = listOf("stop")
+        stopWords[3] = listOf("stop")
+    }
 
-//    fun getStopWords(lang:AvailableLanguages):List<String>{
-//        return stopWords.get(lang.ordinal)
+//    fun getCurrentAvailableLanguage(context: Context):AvailableLanguages{
+//      var index= LanguageInfo.getStorageSelcetedLanguage(context).index;
+//        return  AvailableLanguages.getByIndex(index);
 //    }
+    fun getStopWords(lang: AvailableLanguages):List<String>{
+        return stopWords[lang.ordinal]
+    }
 
-    fun jaccardSimilarity(sentence: String, wordSet: Set<String>): Double {
+    private fun jacquardSimilarity(sentence: String, wordSet: Set<String>): Double {
+
         val sentenceSet = sentence.split(" ").toSet()
         val intersectionSize = sentenceSet.intersect(wordSet).size
         val unionSize = sentenceSet.union(wordSet).size
@@ -40,10 +43,12 @@ class SettingsResourceForRecordServices {
     }
 
     fun isStopWord(lang:Int=0,word:String):Boolean{
-        if(word.isNullOrEmpty())
-            return  false
+        if(word.isNullOrEmpty())  return  false
+        var stopWords= (getStopWords(AvailableLanguages.getByIndex(lang)));
 
-        val similarity=jaccardSimilarity(word,setOf("توقف", "قف", "اصمت","تكفى","كفى","يكفي","لا تتحدث"))
+        if(stopWords.isNullOrEmpty()) return  false
+
+        val similarity=jacquardSimilarity(word,stopWords.toSet())
         println("JaccardSimilarity: $similarity")
 //            getStopWords(lang).toSet())
 //            return  getStopWords(lang)?.contains(word.trim()) ?: false
@@ -98,14 +103,15 @@ class SettingsResourceForRecordServices {
 
             try {
                 val audioManager = activity?.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-                val notificationManager: NotificationManager =
-                    activity?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+//                audioManager.mode = AudioManager.MODE_IN_CALL
+                val notificationManager: NotificationManager = activity?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                 if (audioManager.isVolumeFixed) {
                     val intent = Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
                     activity?.startActivity(intent)
                 } else if (audioManager.ringerMode != AudioManager.RINGER_MODE_VIBRATE) {
                     // قم بتحويل الهاتف إلى وضع الاهتزاز
                     audioManager.ringerMode = AudioManager.RINGER_MODE_VIBRATE
+
                 }
             }catch (e:Exception){
                 Log.e("vibrateSoundMode",e.message.toString())

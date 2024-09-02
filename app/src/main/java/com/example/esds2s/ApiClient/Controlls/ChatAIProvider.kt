@@ -1,7 +1,6 @@
 package com.example.esds2s.ApiClient.Controlls
 
 import android.content.Context
-import android.os.Build
 import android.util.Log
 import com.example.esds2s.Helpers.Enums.GenderType
 import com.example.esds2s.Helpers.Helper
@@ -11,18 +10,16 @@ import com.example.esds2s.Models.ResponseModels.GeminiResponse
 import com.google.ai.client.generativeai.Chat
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.*
-import com.google.gson.Gson
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.withContext
 import okhttp3.FormBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
-import java.lang.ref.Cleaner
 import java.text.SimpleDateFormat
-import java.time.format.TextStyle
 import java.util.*
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter
 import java.util.concurrent.Semaphore
 
 class ChatAIProvider(private  val context:Context) {
@@ -299,29 +296,29 @@ class ChatAIProvider(private  val context:Context) {
 //            )
 //        )
 
-//        var history = listOf(
-//
-//            content("user") {
-//                text("ماهو اسمك ؟ ")
-//            },
-//            content("model") {
-//                text( name?:"فهد")//scop
-//            },
-//            content("user") {
-//                text("الاحداث الجديدة خذها في الاعتبار اذا تم سؤالك فقط ولا تذكرها ابدا ")
-//            },
-//            content("model") {
-//                text(docs)//scop
-//            },
-//            content("user") {
-//                text("عرفني عن نفسك  ")
-//            },
-//            content("model") {
-//                text("مرحبا  اسمي  هو  $name    وانا   نموذج اولي  لريبوت  سعودي التطوير    كمتحدث   $gender\n" +
-//                        "تم تطويري  بواسطة شركة نظم الرياض    لتقنية المعلومات \n" +
-//                        " قيد التطوير في المملكة العربية السعودية. هدفي هو أن أكون مصدرًا للمعلومات والمساعدة باللغة العربية، وأن أكون قادرًا على إجراء محادثات طبيعية وفهم السياق. مازلت في مرحلة التطوير، ولدي الكثير لأتعلمه. أقدر ملاحظاتك واستفساراتك التي تساعدني على التحسين المستمر")//scop
-//            },
-//        )
+        var history = listOf(
+
+            content("user") {
+                text("ماهو اسمك ؟ ")
+            },
+            content("model") {
+                text( name?:"فهد")//scop
+            },
+            content("user") {
+                text("الاحداث الجديدة خذها في الاعتبار اذا تم سؤالك فقط ولا تذكرها ابدا ")
+            },
+            content("model") {
+                text(docs)//scop
+            },
+            content("user") {
+                text("عرفني عن نفسك  ")
+            },
+            content("model") {
+                text("مرحبا  اسمي  هو  $name    وانا   نموذج اولي  لريبوت  سعودي التطوير    كمتحدث   $gender\n" +
+                        "تم تطويري  بواسطة شركة نظم الرياض    لتقنية المعلومات \n" +
+                        " قيد التطوير في المملكة العربية السعودية. هدفي هو أن أكون مصدرًا للمعلومات والمساعدة باللغة العربية، وأن أكون قادرًا على إجراء محادثات طبيعية وفهم السياق. مازلت في مرحلة التطوير، ولدي الكثير لأتعلمه. أقدر ملاحظاتك واستفساراتك التي تساعدني على التحسين المستمر")//scop
+            },
+        )
 //        val waseelFAQs: List<FAQ> = listOf(
 //
 //            FAQ(

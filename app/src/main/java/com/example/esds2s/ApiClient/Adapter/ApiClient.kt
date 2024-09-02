@@ -3,6 +3,7 @@ package com.example.esds2s.ApiClient.Adapter
 import android.content.Context
 import android.util.Log
 import com.example.esds2s.ApiClient.BuildConfig
+import com.example.esds2s.ApiClient.Interface.IChatServices
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody
@@ -15,6 +16,16 @@ import java.security.NoSuchAlgorithmException
 import java.security.UnrecoverableKeyException
 import java.util.concurrent.TimeUnit
 
+object RetrofitInstance {
+
+    val api: IChatServices by lazy {
+        Retrofit.Builder()
+            .baseUrl(BuildConfig.BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(IChatServices::class.java)
+    }
+}
 
 class  ApiClient {
 

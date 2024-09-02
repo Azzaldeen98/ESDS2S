@@ -1,7 +1,6 @@
 package com.example.esds2s.Ui
 
 import android.Manifest
-import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -21,6 +20,7 @@ import com.example.esds2s.Helpers.Enums.AudioPlayerStatus
 import com.example.esds2s.Helpers.ExternalStorage
 import com.example.esds2s.Helpers.Helper
 import com.example.esds2s.Helpers.LanguageInfo
+import com.example.esds2s.Interface.IAcceptOrCancelListener
 import com.example.esds2s.R
 import com.example.esds2s.Services.RecordVoiceService
 import com.example.esds2s.Services.SessionManagement
@@ -36,7 +36,7 @@ private const val ARG_PARAM2 = "param2"
  * Use the [AutomatedChatBotFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener {
+class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener{
 
 
     private var dropDownListLanguage: com.google.android.material.textfield.TextInputLayout? = null
@@ -84,6 +84,8 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
         initializationEvents();
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {}
 
+
+
     }
     private fun internalHeader(){
 
@@ -117,22 +119,37 @@ class AutomatedChatBotFragment : Fragment() , AdapterView.OnItemSelectedListener
 
         alert_btn_cancel?.setOnClickListener{v-> notify_layout_back?.setVisibility(View.GONE)}
         binding?.btnAutomatedChat?.setOnClickListener{v-> onClickGenerateAutomatedChatService(v) }
-        binding?.btnCloseService?.setOnClickListener{v->  sessionManagement?.onClickStopService() }
+        binding?.btnCloseService?.setOnClickListener{v->
+            sessionManagement?.onClickStopService(object : IAcceptOrCancelListener<String> {
+                override fun onAccept(item: String?) {
+                   this@AutomatedChatBotFragment.activity?.runOnUiThread {
+                        setStopRecordForGroundServiceMode()
+                    }
+                }
+                override fun onCancel(item: String?) {
+
+                }
+            }) }
         binding?.robotSpeekerBtn?.setOnClickListener{v-> ControllChatRobotVoice() }
 
         alert_btn_ok?.setOnClickListener{v->
-            if(selectedLanguageCode!=null) {
-                AlertDialog.Builder(requireContext())
-                                .setTitle("Switch to vibration sound mode ")
-                                .setIcon(R.drawable.baseline_vibration_24)
-                                .setMessage(getString(R.string.msg_mute_microphone_alarm_tone))
-                                .setPositiveButton(getString(R.string.btn_ok)) { dialog, which ->
-                                    SettingsResourceForRecordServices.vibrateSoundMode(this@AutomatedChatBotFragment.activity!!)
-                                    checkMicrophonPermision() }
-                                .setNegativeButton(getString(R.string.btn_cancel)) { dialog, which ->}
-                                .create()
-                                .show()
-                }
+            checkMicrophonPermision()
+            SettingsResourceForRecordServices.vibrateSoundMode(this@AutomatedChatBotFragment.activity!!)
+
+
+//            if(selectedLanguageCode!=null) {
+//                AlertDialog.Builder(requireContext())
+//                                .setTitle("Switch to vibration sound mode ")
+//                                .setIcon(R.drawable.baseline_vibration_24)
+//                                .setMessage(getString(R.string.msg_mute_microphone_alarm_tone))
+//                                .setPositiveButton(getString(R.string.btn_ok)) { dialog, which ->
+//                                    SettingsResourceForRecordServices.vibrateSoundMode(this@AutomatedChatBotFragment.activity!!)
+//                                    checkMicrophonPermision()
+//                                }
+//                                .setNegativeButton(getString(R.string.btn_cancel)) { dialog, which ->}
+//                                .create()
+//                                .show()
+//                }
             notify_layout_back?.setVisibility(View.GONE)
         }
     }

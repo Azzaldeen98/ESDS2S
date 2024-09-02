@@ -4,12 +4,9 @@ import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.media.MediaPlayer
 import android.os.Bundle
-import android.os.IBinder
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
@@ -17,22 +14,24 @@ import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import com.example.esds2s.ApiClient.Controlls.SpeechChatControl
-import com.example.esds2s.Helpers.AudioPlayer
-import com.example.esds2s.Helpers.Helper
-import com.example.esds2s.Helpers.LanguageInfo
-import com.example.esds2s.Interface.IGeminiServiceEventListener
+import androidx.lifecycle.LifecycleService
+import androidx.media3.exoplayer.ExoPlayer
 import com.example.esds2s.Activies.MainActivity
-import com.example.esds2s.Helpers.DefaultSoundResource
+import com.example.esds2s.ApiClient.Controlls.SpeechChatControl
+import com.example.esds2s.ApiClient.Interface.ICustomPlayerListener
+import com.example.esds2s.Helpers.*
 import com.example.esds2s.Helpers.Enums.DefaultAudioStatus
-import com.example.esds2s.Models.ResponseModels.GeminiResponse
+import com.example.esds2s.Interface.IBaseCallbackListener
+import com.example.esds2s.Interface.IWasmServiceEventListener
 import com.example.esds2s.R
 import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import java.util.*
-import java.util.concurrent.Semaphore
 import java.util.concurrent.atomic.AtomicReference
-
-class RecordVoiceService : Service() , IGeminiServiceEventListener {
+import kotlin.coroutines.CoroutineContext
+//, ViewModelStoreOwner
+class RecordVoiceService : LifecycleService() , IWasmServiceEventListener {
 
 
     companion object {
@@ -54,15 +53,18 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
     private var reorderCounter:Int=0;
     private var voiceResponseCount:Int=0
     private var textSpeachResult:String?=null;
-
+    private var exoPlayer : ExoPlayerMedia?=null;
     private var atomAudioPlayer=AtomicReference<AudioPlayer>()
+    var job:Job?=null;
     var isSpeaking: Boolean = false
     get() { return audioPlayer?.isPlayer() ?: false }
     val simaphor = Semaphore(1)
-
+//    private val handler = Handler(Looper.getMainLooper())
+    @SuppressLint("SuspiciousIndentation")
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+    super.onStartCommand(intent, flags, startId)
         try {
-
+            exoPlayer = ExoPlayerMedia(this)
             speechChatControl = SpeechChatControl(this);
             audioPlayer = AudioPlayer(this);
             atomAudioPlayer.compareAndSet(null, AudioPlayer(this))
@@ -184,17 +186,13 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
     }
     @SuppressLint("SuspiciousIndentation")
     fun speechRecognizerListenAgain() {
+
         textSpeachResult=""
         try{
-            if (audioPlayer!=null && audioPlayer?.isPlayer()==true)
-                audioPlayer?.stop();
-        } finally {
-
-            if(simaphor!=null && !simaphor.isFair)
-                simaphor.release()
             if(speechRecognizer!=null )
                 speechRecognizer?.cancel();
-            startSpeechRecognizerListening();
+        } finally {
+                startSpeechRecognizerListening();
         }
 
      }
@@ -243,53 +241,7 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
         startForeground(NOTIFICATION_ID, notification)
     }
     //===========================================================================================
-    private  fun sendRequestToGenerator(speechText:String) {
 
-        voiceResponseCount = 0
-        isResponse=false
-
-        try {
-
-            if (speechChatControl == null)
-                speechChatControl = SpeechChatControl(this);
-
-            if(TestConnection.isOnline(this@RecordVoiceService,false)) {
-
-                if(speakerJob!=null && speakerJob?.isActive==true)
-                         speakerJob?.cancel()
-                
-                speakerJob=CoroutineScope(Dispatchers.IO).async {
-                    isSpeaking=true
-                    while (voiceResponseCount<3 && !isResponse) {
-                        var _audio:AudioPlayer?=null
-                        try {
-                            delay(3000)
-                            _audio=startDefaultVoiceResponse()
-                            if(_audio!=null) {
-                                Log.d("_audio","_audio")
-                                val duration = _audio.getRemainingDuration()?.toLong() ?: 0
-                                delay(duration)
-                            }
-                        } finally {
-                            voiceResponseCount++
-                            if(_audio!=null && _audio?.isPlayer()==true)
-                                _audio?.stop()
-                        }
-                    }
-                }
-                Log.d("beforeSpeechChatControl","_audio")
-                speechChatControl?.messageToGeminiAndGeneratorAudio(speechText, this@RecordVoiceService);
-
-            } else {
-                Log.e("Internet", "Not Connection Internet !!!!")
-            }
-
-        } catch (e: Exception) {
-            //TODO : Error in Request
-            playDefaultVoiceResponse(DefaultSoundResource.getAgainQuestions(this@RecordVoiceService)!!,DefaultAudioStatus.After,true)
-            Log.d("Error ! ", e.message.toString())
-        }
-    }
     private  fun playDefaultVoiceResponse(sound_num:Int?,status: DefaultAudioStatus=DefaultAudioStatus.Before,listenSpeechRecognizer:Boolean=false){
         isSpeaking=false
         if(sound_num==null) {
@@ -391,48 +343,246 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
 
     }
     //===========================================================================================
+    private  fun sendRequestToGenerator(speechText:String) {
+
+        voiceResponseCount = 0
+        isResponse=false
+
+        try {
+            if (speechChatControl == null)
+                speechChatControl = SpeechChatControl(this);
+
+            if(TestConnection.isOnline(this@RecordVoiceService,false)) {
+
+//                if(speakerJob!=null && speakerJob?.isActive==true)
+//                         speakerJob?.cancel()
+
+//                speakerJob=CoroutineScope(Dispatchers.IO).async {
+//                    isSpeaking=true
+//                    while (voiceResponseCount<3 && !isResponse) {
+//                        var _audio:AudioPlayer?=null
+//                        try {
+//                            delay(3000)
+//                            _audio=startDefaultVoiceResponse()
+//                            if(_audio!=null) {
+//                                Log.d("_audio","_audio")
+//                                val duration = _audio.getRemainingDuration()?.toLong() ?: 0
+//                                delay(duration)
+//                            }
+//                        } finally {
+//                            voiceResponseCount++
+//                            if(_audio!=null && _audio?.isPlayer()==true)
+//                                _audio?.stop()
+//                        }
+//                    }
+//                    if(voiceResponseCount>=3) {
+//                        voiceResponseCount = 0;
+//                        withContext(Dispatchers.Main) {
+//                            playDefaultVoiceResponse(
+//                                DefaultSoundResource.getAgainQuestions(this@RecordVoiceService)!!,
+//                                DefaultAudioStatus.After,
+//                                true
+//                            );
+//                        }
+//                    }
+//                }
+
+//                Log.d("speechText=>",speechText)
+//               speechChatControl?.generateBasicTextAudio(speechText,this@RecordVoiceService);
+
+                      try{
+                          println("End-runBlocking...");
+
+        //
+                          runBlocking {
+                              if(job?.isActive==true)
+                                job?.cancelAndJoin()
+                          }
+
+                      }
+                      finally {
+//                          runBlocking {
+                          var dispatcher: CoroutineContext = Dispatchers.IO+ SupervisorJob()
+                              job=CoroutineScope(dispatcher).launch {
+                                  speechChatControl?.generateStreamTextAudio7Last2(
+                                      speechText,
+                                      dispatcher)
+                              }
+                              job?.invokeOnCompletion {
+                                  println("End-CoroutineScope...");
+                                  CoroutineScope(Dispatchers.Main).launch {
+                                      speechRecognizerListenAgain()
+                                  }
+                              }
+                              println("End-RunBlocking...");
+//                          }
+                      println("End-RunBlocking...");
+//                  runBlocking{
+////                      coroutineScope {
+//                        CoroutineScope(dispatcher).launch {
+//                          var jop=launch {
+//                              speechChatControl?.generateStreamTextAudio8Last(
+//                                  speechText,
+//                                  dispatcher
+//                              )
+//                          }
+//                          jop?.join()
+//                      }
+////                      }
+//                      println("azd-runBlocking")
+//                  }
+//                  println("End-RunBlocking")
+//
+//                  speechRecognizerListenAgain()
+//                  runBlocking {
+//
+//                      //.}
+//                      CoroutineScope(Job() + Dispatchers.IO).launch {
+//                          val job = launch {
+//                              speechChatControl?.generateStreamTextAudio4Last(
+//                                  speechText,
+//                                  this@RecordVoiceService
+//                              );
+//                          }
+////                      delay(1000)
+////                      Log.d("Completed", "generateStreamText")
+////                            withContext(Dispatchers.Main){
+////                      speechRecognizerListenAgain()
+////                            }
+//                          //generateStreamTextAudioLast
+//
+//
+//                          job?.join()
+//                          Log.d("Completed", "Main Job")
+//                          withContext(Dispatchers.Main){
+//                              speechRecognizerListenAgain()
+//                          }
+//
+//                      }
+////                      job?.invokeOnCompletion { exception ->
+////
+////                          if (exception != null) {
+////                              Log.d("CompletedError", exception.message ?: "Unknown error")
+////                          }
+////                          CoroutineScope(Dispatchers.Main).launch {
+////                              speechRecognizerListenAgain()
+////                          }
+////                    }
+//                  }
+              }
+
+
+
+//              }
+
+
+//
+//               speechChatControl?.getAudioFromApiServer(speechText,this@RecordVoiceService);
+//              speechChatControl?.messageToGeminiAndGeneratorAudio(speechText, this@RecordVoiceService);
+//              }
+            } else {
+                Log.e("Internet", "Not Connection Internet !!!!")
+            }
+
+        } catch (e: Exception) {
+            Log.e("Error !", e.message.toString())
+            try {
+                if(job!=null && job?.isActive!! ){
+                    job?.cancel()
+                }
+            }finally {
+                speechRecognizerListenAgain();
+            }
+//            playDefaultVoiceResponse(DefaultSoundResource.getAgainQuestions(this@RecordVoiceService)!!,DefaultAudioStatus.After,true)
+
+        }
+    }
     @SuppressLint("SuspiciousIndentation")
-    override fun onRequestIsSuccess(response:GeminiResponse) {
+    override fun onRequestIsSuccess2(callBack: IBaseCallbackListener<Any?>?) {
 
-        Log.e("onRequestIsSuccessr", "onRequestIsSuccess");
+        Log.d("onRequestIsSuccess2", "true")
+       try {
+           callBack?.onCallBackExecuted(null)
+       }finally {
+           CoroutineScope(Dispatchers.Main).launch {
+               isResponse = true
+               speechRecognizerListenAgain();
+//                  try {
+//                      if(job?.isActive==true)
+//                          job?.cancelAndJoin()
+//                  }finally {
+//                      isResponse = true
+//                      speechRecognizerListenAgain();
+//                  }
 
+           }
+       }
+    }
+    @SuppressLint("SuspiciousIndentation")
+    override fun onRequestIsSuccess(responseURL:String) {
 
-//                simaphor.acquire()
+        if(job?.isActive==true)
+                job?.cancel()
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
 
-                runBlocking {
+                isResponse = true
+//                    if(responseURL==null || responseURL.isEmpty())
+//                        throw Exception("Responce is null");
 
-                try {
+//                 if(exoPlayer!=null)
+//                     exoPlayer= ExoPlayerMedia(this);
 
-                    isResponse = true
-                    if(response==null || response.description.isEmpty())
-                        throw Exception("Responce is null");
-                    if (speakerJob != null && speakerJob?.isActive == true) {
-                        speakerJob?.join()
-                        delay(2000)
+//                    (this as LifecycleOwner).lifecycle.addObserver(object : LifecycleObserver {
+//                        @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+//                        fun onPause() {
+//                            exoPlayer?.player?.pause()
+//                        }
+//
+//                        @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+//                        fun onDestroy() {
+//                            exoPlayer?.player?.release()
+//                        }
+//                    })
+
+                exoPlayer?.start(responseURL, object : ICustomPlayerListener<ExoPlayer> {
+                    override fun onErrorListener(mp: ExoPlayer?) {
+                        try {
+                            exoPlayer?.stop()
+                        } finally {
+                            speechRecognizerListenAgain(); }
                     }
-                    Log.e("description", response?.description!!);
-                    speechResponseResult(response?.description!!)
 
-                }catch (e:Exception){
-                    Log.e("responseError", e.message.toString());
-                    playDefaultVoiceResponse(DefaultSoundResource.getAgainQuestions(this@RecordVoiceService),DefaultAudioStatus.After,true)
-                }
-                }
+                    override fun onCompletionListener(mp: ExoPlayer?) {
+                        try {
+                            exoPlayer?.stop()
+                        } finally {
+                            speechRecognizerListenAgain(); }
+                    }
+                });
+                speechRecognizerListenAgain()
+
+
+//                    speechResponseResult(responseURL)
+//
+            } catch (e: Exception) {
+                Log.e("responseError", e.message.toString());
+                speechRecognizerListenAgain()
+//                    playDefaultVoiceResponse(DefaultSoundResource.getAgainQuestions(this@RecordVoiceService),DefaultAudioStatus.After,true)
+            }
+        }
+
 
     }
     @SuppressLint("SuspiciousIndentation")
     fun speechResponseResult(result: String) {
 
         try {
-
-            if( result?.isNullOrEmpty()==false  && Helper.isAudioFile(result)){
-
+            isResponse=true
+            if( result?.isNullOrEmpty()==false  && Helper.isLocalAudioFile(result)){
+                Log.e("speechResponseResult: ", result);
                  var player = audioPlayer?.start(result)
-                     if(player==null)
-                         throw  Exception("audioPlayer is null !!");
-
-                     Log.e("audioPlayer","audioPlayer");
-                     player?.setOnErrorListener { mp, what, extra ->
+                 player?.setOnErrorListener { mp, what, extra ->
                          try {
                              isSpeaking = false
                              Log.e("errorPlyer", "OnErrorListener");
@@ -442,7 +592,7 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
                          finally { speechRecognizerListenAgain(); }
                          true // Return true if the error is considered handled, false otherwise
                      }
-                     player?.setOnCompletionListener { mp ->
+                 player?.setOnCompletionListener { mp ->
                          try {
                              isSpeaking = false
                              audioPlayer?.takeIf { it.isPlayer() }?.stop()
@@ -450,34 +600,45 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
                          } catch (e: Exception) { Log.e("Complate Plyer", e.message.toString()); }
                          finally { speechRecognizerListenAgain(); }
                     }
+
              }else{
                 throw  Exception("audioPlayer is null !!");
             }
 
         }catch (e:Exception){
-
-            playDefaultVoiceResponse(DefaultSoundResource.getAgainQuestions(this@RecordVoiceService),DefaultAudioStatus.After,true)
+            speechRecognizerListenAgain();
+//            playDefaultVoiceResponse(DefaultSoundResource.getAgainQuestions(this@RecordVoiceService),DefaultAudioStatus.After,true)
          }
     }
     override fun onRequestIsFailure(error: String) {
-                runBlocking {
+        CoroutineScope(Dispatchers.Main).launch {
+            Log.e("onRequestIsFailure", error)
+//            simaphor.withPermit {
+                isResponse = true
+                speechRecognizerListenAgain();
+//            }
+        }
 
-                    isResponse=true
-                    if (audioPlayer==null)
-                        audioPlayer=AudioPlayer(this@RecordVoiceService)
-                    try {
-                        Log.d("onRequestIsFailure", error)
-                        if (speakerJob != null && speakerJob?.isActive == true) {
-                            speakerJob?.join()
-                            delay(2000)
-                        }
-                        Log.d("speakerJob.join", error)
-                    }finally{
-                        playDefaultVoiceResponse(DefaultSoundResource.getAgainQuestions(this@RecordVoiceService), DefaultAudioStatus.After, true)
-                    }
-                }
 
-            Log.d("onRequestIsFailure", error)
+
+
+//                runBlocking {
+
+//                    isResponse=true
+//                    if (audioPlayer==null)
+//                        audioPlayer=AudioPlayer(this@RecordVoiceService)
+//                    try {
+//                        Log.d("onRequestIsFailure", error)
+//                        if (speakerJob != null && speakerJob?.isActive == true) {
+//                            speakerJob?.join()
+//                            delay(1000)
+//                        }
+
+//                    }finally{
+//                        playDefaultVoiceResponse(DefaultSoundResource.getAgainQuestions(this@RecordVoiceService), DefaultAudioStatus.After, true)
+//                    }
+//                }
+
 
 
 
@@ -507,6 +668,29 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
 //
 //        }
     }
+    override fun startListener() {
+
+        try {
+            stopAudioPlayer()
+            this.startSpeechRecognizerListening()
+
+        }catch (e:java.lang.Exception){}
+    }
+    override fun stopListener() {
+        try {
+           runBlocking {
+                   simaphor.withPermit {
+                   if (speechRecognizer != null)
+                       speechRecognizer?.stopListening();
+               }
+           }
+
+
+
+        }catch (e:java.lang.Exception){
+
+        }
+    }
     //===========================================================================================
     private  fun stopSpeechRecognizer(){
         try {
@@ -519,8 +703,7 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
         }
         catch (e: Exception) { Log.d("Error ! ", e.message.toString()) }
         finally {
-            if(audioPlayer!=null)
-                audioPlayer?.takeIf { it.isPlayer() }?.stop()
+
             speechRecognizerIntent=null;
         }
     }
@@ -529,13 +712,14 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
             stopSpeechRecognizer();
         return super.stopService(name)
     }
-    override fun onBind(intent: Intent): IBinder {
-        TODO("Return the communication channel to the service.")
-    }
+
     override fun onDestroy() {
         super.onDestroy()
-        stopSpeechRecognizer();
+
         try {
+
+            speechChatControl?.onDestroy()
+            stopAudioPlayer()
 
             if(backgrounSendRequestJob!=null)
                 backgrounSendRequestJob?.takeIf { it.isActive }?.cancel()
@@ -544,9 +728,16 @@ class RecordVoiceService : Service() , IGeminiServiceEventListener {
 
         }catch (e:Exception){ }
         finally {
-
+            stopSpeechRecognizer();
         }
 
+    }
+
+    private fun stopAudioPlayer(){
+     try {
+             audioPlayer?.takeIf { it.isPlayer() }?.stop()
+             exoPlayer?.onDestroy()
+     }catch (e:java.lang.Exception){ }
     }
 
 
