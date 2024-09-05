@@ -1,9 +1,12 @@
 package com.example.esds2s.ContentApp;
 
+
+
 public class ContentApp {
 
     public static final  int  REQUEST_MICROPHONE_PERMISSION_CODE=112;
     public static final  String  CURRENT_CHAT_TOKEN="CurrentSessionChatToken";
+    public static final  String  APP_NAME="CurrentSessionChatToken";
     public static final  String  CURRENT_SESSION_TOKEN="CurrentSessionToken";
     public static final  String  LANGUAGE="Lang";
     public static final  String  LANGUAGE_INDEX="LangIndex";
@@ -16,6 +19,8 @@ public class ContentApp {
     public static final  String  CURRENT_MODEL_INFO="CurrentModelInfo";
     public static final  String  DEFAULT_GENDER="Male";
     public static final  String  TIME="Time";
+    public static final  String   LAST_ITEM="Last";
+    public static final  String   END_SYMBOL="###";
     public static final  String   RESPONSE_AUDIO_PATH="${externalCacheDir?.absolutePath}/response_audio.3gp";
 
 }

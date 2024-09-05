@@ -18,8 +18,103 @@ import kotlin.coroutines.resumeWithException
 
 class ExoPlayerMedia(private val context: Context?) {
 
+    var isRelease: Boolean? = true
     var player: ExoPlayer? =null
     var listener : Listener?=null;
+    var callback: ICustomPlayerListener<ExoPlayer>?=null
+
+    fun initial() {
+        isRelease=false
+        player = ExoPlayer.Builder(context!!).build()
+        setAttributes(null)
+    }
+    fun setPlayerListener(callback: ICustomPlayerListener<ExoPlayer>?=null,isComplete:Boolean=false){
+       if(callback!=null)
+        this.callback=callback
+
+        if(listener!=null){
+            player?.let { it->
+                it.removeListener(listener!!)
+            }
+        }
+
+         listener=object : Listener {
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                when (playbackState) {
+                    ExoPlayer.STATE_READY -> {
+                        println("ExoPlayer.STATE_READY     -")
+                    }Player.STATE_ENDED-> {
+                    Log.d("onCompletionListener", "Playback completed")
+                    this@ExoPlayerMedia.callback?.onCompletionListener(player!!,isComplete)
+                }
+
+                }
+//                try {
+////                    when (playbackState) {
+////                        ExoPlayer.STATE_IDLE -> {
+////                            println("ExoPlayer.STATE_IDLE     -")
+////                        }
+////                        ExoPlayer.STATE_BUFFERING -> {
+////                            println("ExoPlayer.STATE_BUFFERING     -")
+////                        }
+////                        ExoPlayer.STATE_READY -> {
+////                            println("ExoPlayer.STATE_READY     -")
+////                        }
+////                        ExoPlayer.STATE_ENDED -> {
+////                            println("ExoPlayer.STATE_ENDED     90-")
+////                            callback?.onCompletionListener(exoPlayer!!,isComplete)
+////                        }
+////                        else -> {
+////                            println("ExoPlayer.UNKNOWN_STATE     -")
+////                        }
+////
+////                    }
+//                }catch (e:Exception){
+//                    e.printStackTrace()
+//                }
+
+            }
+            override fun onPlayerError(error: PlaybackException) {
+                Log.e("ExoPlayer", "Error occurred: ${error.message}")
+                this@ExoPlayerMedia.callback?.onErrorListener(player!!,error)
+            }
+        }
+         player?.addListener(listener!!)
+    }
+    fun setAttributes(audioAttributes:AudioAttributes?=null){
+      var _audioAttributes:AudioAttributes?=null
+        if(audioAttributes==null){
+            _audioAttributes = AudioAttributes.Builder()
+                .setContentType(C.AUDIO_CONTENT_TYPE_SPEECH)
+                .setUsage(C.USAGE_MEDIA)
+                .build()
+        }else{
+            _audioAttributes=audioAttributes
+        }
+
+        player?.setAudioAttributes(_audioAttributes, true)
+    }
+    fun playMedia(url: String) {
+        if(isRelease==true)
+            initial()
+
+        val mediaItem = MediaItem.Builder().setUri(url).setMimeType(MimeTypes.AUDIO_WAV).build()
+        player?.setMediaItem(mediaItem)
+        player?.prepare()
+        player?.playWhenReady = true
+
+    }
+    fun playMedia(url: String,isComplete:Boolean=false,callback: ICustomPlayerListener<ExoPlayer>?=null) {
+
+        try{
+            playMedia(url)
+            setPlayerListener( callback?:this.callback,isComplete)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Log.e("ExoPlayer", "IllegalStateException: ${e.message}")
+            callback?.onErrorListener(player!!)
+        }
+    }
     @androidx.annotation.OptIn(UnstableApi::class)
     fun startPlayer(streamUrl: String, callback: ICustomPlayerListener<ExoPlayer>) {
         val dataSourceFactory = DefaultHttpDataSource.Factory()
@@ -127,7 +222,6 @@ class ExoPlayerMedia(private val context: Context?) {
         }
         return  player
     }
-
     fun playbackStateListener(mediaItem : MediaItem?=null,callback: ICustomPlayerListener<ExoPlayer>) = object : Listener {
             override fun onPlaybackStateChanged(playbackState: Int) {
 
@@ -198,7 +292,6 @@ class ExoPlayerMedia(private val context: Context?) {
         }
     }
 
-
     fun seekToCompletion() {
     player?.seekBackIncrement
         if(player!=null && player!!.isPlaying)
@@ -216,16 +309,17 @@ class ExoPlayerMedia(private val context: Context?) {
     }
 
     fun onDestroy() {
+        isRelease=true
         if(player!=null)
             player!!.release()
     }
     fun isPlayer():Boolean {
-        if(player!=null)
-            return  player?.isPlaying!!
-        return  false;
+       return player?.isPlaying?:false
     }
+
     fun stop() {
         try{
+            isRelease=true
             if( player?.isPlaying==true){
                 player?.stop()
                 player?.release()

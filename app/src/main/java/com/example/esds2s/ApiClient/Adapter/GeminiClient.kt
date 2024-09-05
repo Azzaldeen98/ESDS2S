@@ -2,6 +2,7 @@ package com.example.esds2s.ApiClient.Adapter
 
 
 import android.annotation.SuppressLint
+import com.example.esds2s.ContentApp.ContentApp
 import com.example.esds2s.Interface.IListenerStream
 import com.google.ai.client.generativeai.Chat
 import com.google.ai.client.generativeai.GenerativeModel
@@ -98,49 +99,113 @@ class GeminiApiClient() {
         return chunks
     }
 
-    suspend fun sendMessageStream(text:String, callBack: IListenerStream<String>)  {
-            var isCallBackReader = false;
-            val responseBuilder = StringBuilder()
-             var index=0;
-            chat?.let { it ->
+    suspend fun sendMessageStream(text:String, callBack: IListenerStream<String>) {
+        var isCallBackReader = false;
+        val responseBuilder = StringBuilder()
+        var index = 0;
+        chat?.let { it ->
 
-                val responseFlow: Flow<GenerateContentResponse> = it.sendMessageStream(text)
-                responseFlow.flowOn(Dispatchers.IO) // Ensure flow is collected on IO dispatcher
-                    .onCompletion { cause ->
-                        if (cause == null) {
-                            if (!isCallBackReader && responseBuilder?.toString()?.trim()?.isNotEmpty()==true) {
-//                             println("responseFlow Completed[${count++}]: ${responseBuilder.append(it).toString().trim()}")
-                                callBack.onStreamReader(responseBuilder.toString().trim(),index++,0)
-                                responseBuilder.clear()
-                            }
-                                callBack.onStreamReader("###",index,index)
-                            println("responseFlow: Completed successfully")
+            val responseFlow: Flow<GenerateContentResponse> = it.sendMessageStream(text)
+            responseFlow.flowOn(Dispatchers.IO)
+                .onCompletion { cause ->
+                    if (cause == null) {
+                        if (!isCallBackReader && responseBuilder?.toString()?.trim()
+                                ?.isNotEmpty() == true
+                        ) {
+                            callBack.onStreamReader(responseBuilder.toString().trim(), index++, 0)
+                            responseBuilder.clear()
+                        }
+                        callBack.onStreamReader(ContentApp.END_SYMBOL, index, index)
+                        println("responseFlow: Completed successfully")
 //                            callBack.onStreamComplete(index++)
-                        } else {
-//                        println("responseFlow: Completed with error: ${cause.message}") // التعامل مع الأخطاء إن وجدت
-                            callBack.onStreamError(cause) // استدعاء دالة للتعامل مع الخطأ
+                    } else {
+                        println("responseFlow: Completed with error: ${cause.message}")
+                        callBack.onStreamError(cause) // استدعاء دالة للتعامل مع الخطأ
+                    }
+                }.collect { response ->
+                    val content = response.candidates.firstOrNull()?.content?.parts?.firstOrNull()
+                        ?.asTextOrNull()
+                    content?.trim().let { it ->
+                        if (!it.isNullOrEmpty()) {
+                            isCallBackReader = false
+                            var text = it.replace("*", "")
+                            text = text.replace(Regex("\\s+"), " ")
+                            responseBuilder.append(text).append(" ")
+                            if (isEndOfSentence(responseBuilder.toString()) || responseBuilder.length >= 50) {
+                                var lines = spiltSentence(responseBuilder.toString())
+                                lines?.filter { it.isNotEmpty() }
+                                    .let {
+                                        var line = ""
+                                        it?.forEach { sentence ->
+                                            line += "$sentence ";
+                                            if (line?.length!! >= 10) {
+                                                isCallBackReader = true
+                                                callBack.onStreamReader(line, index++, 0)
+                                                responseBuilder.clear()
+                                                line = ""
+                                            } else {
+                                                isCallBackReader = false
+                                            }
+                                        }
+
+                                    }
+                            }
                         }
                     }
-                    .collect { response ->
+                    delay(200)
+                }
+        }
+    }
+    suspend fun sendMessageStream3(text:String, callBack: IListenerStream<String>)  {
+        var isCallBackReader = false;
+        val responseBuilder = StringBuilder()
+        var index=0;
+        chat?.let { it ->
 
+            val responseFlow: Flow<GenerateContentResponse> = it.sendMessageStream(text)
+            responseFlow.flowOn(Dispatchers.IO)
+                .onCompletion { cause ->
+                    if (cause == null) {
+                        if (!isCallBackReader && responseBuilder?.toString()?.trim()?.isNotEmpty()==true) {
+//                                isCallBackReader=true
+//                             println("responseFlow Completed[${count++}]: ${responseBuilder.append(it).toString().trim()}")
+                            callBack.onStreamReader(responseBuilder.toString().trim(),index++,0)
+                            responseBuilder.clear()
+                        }
+                        callBack.onStreamReader(ContentApp.END_SYMBOL,index,index)
+                        println("responseFlow: Completed successfully")
+//                            callBack.onStreamComplete(index++)
+                    } else {
+//                        println("responseFlow: Completed with error: ${cause.message}") // التعامل مع الأخطاء إن وجدت
+                        callBack.onStreamError(cause) // استدعاء دالة للتعامل مع الخطأ
+                    }
+                }
+                .collect { response ->
+                    val content = response.candidates.firstOrNull()?.content?.parts?.firstOrNull()?.asTextOrNull()
+                    content?.trim().let { it ->
+                        if (!it.isNullOrEmpty()) {
+                            isCallBackReader = false
+                            var text=it.replace("*","")
+                            text=text.replace(Regex("\\s+"), " ")
+                            responseBuilder.append(text).append(" ")
+                            if (isEndOfSentence(responseBuilder.toString()) || responseBuilder.length >= 50) {
+                                var lines = spiltSentence(responseBuilder.toString())
+                                lines?.filter { it.isNotEmpty() }
+                                    .let {
+                                        var line=""
+                                        it?.forEach { sentence ->
+                                            line+= "$sentence ";
+                                            if(line?.length!!>=10){
+                                                isCallBackReader = true
+                                                callBack.onStreamReader(line,index++,0)
+                                                responseBuilder.clear()
+                                                line=""
+                                            }else{
+                                                isCallBackReader = false
+                                            }
+                                        }
 
-                        val content = response.candidates.firstOrNull()?.content?.parts?.firstOrNull()?.asTextOrNull()
-                        content?.trim().let { it ->
-                            if (!it.isNullOrEmpty()) {
-                                isCallBackReader = false
-                                var text=it.replace("*","")
-                                text=text.replace(Regex("\\s+"), " ")
-                                responseBuilder.append(text)
-
-//                                if (!text.lastOrNull()!!.isLetter() || text.length > 10)
-//                                    responseBuilder.append(" ")
-
-//                                if (!text.lastOrNull()!!.isLetter() || text.length > 50) {
-//                                    isCallBackReader = true
-//                                    callBack.onStreamReader(text, index++, 0)
-//                                }
-//
-                                if (isEndOfSentence(responseBuilder.toString()) || responseBuilder.length >= 50) {
+                                    }
 
 //                                    println("responseFlow: ${responseBuilder.toString().trim()}")
 
@@ -159,34 +224,19 @@ class GeminiApiClient() {
 //                                    }
 
 
-                                    var lines = spiltSentence(responseBuilder.toString())
-                                    lines?.filter { it.isNotEmpty() }
-                                        .let {
-                                            var text=""
-                                            it?.forEach { sentence ->
-//                                                text+=sentence?.trim();
-//                                                println("Sentence:${sentence}");
-                                             if(sentence?.trim()?.isNotEmpty()==true){
-//                                                 if(text?.length!!>=10){
-                                                     isCallBackReader = true
-                                                     callBack.onStreamReader(sentence?.trim(),index++,0)
 
-//                                                 }else{
-//                                                     isCallBackReader = false
-//                                                 }
-
-//                                                delay(100)
-                                                }
-//                                                delay(100)
-                                            }
-                                            responseBuilder.clear()
-////                                        delay(100)
-//                                        }
-
-                                }
 
 
                             }
+//                                if (!text.lastOrNull()!!.isLetter() || text.length > 10)
+//                                    responseBuilder.append(" ")
+
+//                                if (!text.lastOrNull()!!.isLetter() || text.length > 50) {
+//                                    isCallBackReader = true
+//                                    callBack.onStreamReader(text, index++, 0)
+//                                }
+//
+
 
                         }
 //
@@ -222,10 +272,10 @@ class GeminiApiClient() {
 ////                        }
 ////                    }
 ////                    .filter { it.isNotEmpty() }
-                        }
                     }
-            }
+                }
         }
+    }
     suspend fun sendMessageStream2(text:String, callBack: IListenerStream<String>)  {
         var isCallBackReader = false;
         val responseBuilder = StringBuilder()
@@ -327,7 +377,7 @@ class GeminiApiClient() {
             responseFlow.flowOn(Dispatchers.IO) // Ensure flow is collected on IO dispatcher
                 .onCompletion { cause ->
                     if (cause == null) {
-                        callBack.onStreamReader("###",index,index++)
+                        callBack.onStreamReader(ContentApp.END_SYMBOL,index,index++)
                         println("responseFlow: Completed successfully")
                         callBack.onStreamComplete()
                     } else {

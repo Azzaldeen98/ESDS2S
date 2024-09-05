@@ -28,7 +28,6 @@ import com.example.esds2s.R
 import com.example.esds2s.Services.ExternalServices.SpeechRecognizerService
 import com.example.esds2s.Services.SettingsResourceForRecordServices
 import kotlinx.coroutines.*
-import java.io.File
 import java.util.concurrent.Semaphore
 
 
@@ -179,11 +178,11 @@ class BasicChatBotFragment : Fragment() , IGeminiServiceEventListener, ISpeechRe
 
         androidAudioRecorder=AndroidAudioRecorder(context!!);
 
-       speechRecognizerService = SpeechRecognizerService(this?.context!!, this, this)
+       speechRecognizerService = SpeechRecognizerService(this?.context!!, this)
     var lang:String?="ar"
       if(ExternalStorage.existing(this?.context, ContentApp.LANGUAGE))
           lang= ExternalStorage.getValue(this.activity, ContentApp.LANGUAGE) as String?
-         speechRecognizerService?.Initialization(true,true,false,lang)
+         speechRecognizerService?.initialization(true,true,lang)
 
 //        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this.activity)
         audioPlayer = AudioPlayer(this@BasicChatBotFragment.context)
