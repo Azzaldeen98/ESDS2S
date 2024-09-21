@@ -38,4 +38,10 @@
         <!--        <item>zh</item>-->
         <!--        <item>ja-JP-3</item>-->
     </string-array>
+
+    <string-array name="Speech_Models">
+        <item>vits-ar-sa-huba</item>
+        <item>vits-ar-sa-huba-v2</item>
+        <item>vits-ar-sa-A</item>
+    </string-array>
 </resources>

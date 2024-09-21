@@ -15,21 +15,21 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import com.example.esds2s.ApiClient.Controlls.SpeechChatControl
 import com.example.esds2s.ContentApp.ContentApp
 import com.example.esds2s.Helpers.Enums.GenderType
 import com.example.esds2s.Helpers.ExternalStorage
-import com.example.esds2s.Ui.AutomatedChatBotFragment
-import com.example.esds2s.Ui.BasicChatBotFragment
-import com.example.esds2s.Ui.ChatBotTextFragment
 import com.example.esds2s.Helpers.Helper
 import com.example.esds2s.Helpers.LanguageInfo
+import com.example.esds2s.Helpers.StorageSpeechModels
 import com.example.esds2s.Models.ResponseModels.BaseChatResponse
 import com.example.esds2s.R
 import com.example.esds2s.Services.ModelLanguages
 import com.example.esds2s.Services.RecordVoiceService
 import com.example.esds2s.Services.SessionManagement
 import com.example.esds2s.Services.TestConnection
+import com.example.esds2s.Ui.AutomatedChatBotFragment
+import com.example.esds2s.Ui.BasicChatBotFragment
+import com.example.esds2s.Ui.ChatBotTextFragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.gson.Gson
 
@@ -39,13 +39,16 @@ class RecordAudioActivity : AppCompatActivity() {
     private lateinit var modelLanguages: ModelLanguages
     private  var genderType: GenderType= GenderType.MALE
     private var arrayAdapterLanguage: ArrayAdapter<String>? =null
+    private var arrayAdapterModels: ArrayAdapter<String>? =null
     private var selectedLanguageIndex: Int=-1
     private var autocompleteTV: AutoCompleteTextView? = null
     private lateinit var selectedLanguageCode: String
+
     private lateinit var sessionManagement: SessionManagement<RecordAudioActivity>
     lateinit var bottomNav : BottomNavigationView
     private  var languageCodes : Array<String>?=null
     private  var languageNames : Array<String>?=null
+    private  var speechModels : Array<String>?=null
     private var activeFragment :Fragment?=null
     private var currentModelinfo :BaseChatResponse?=null
 
@@ -59,7 +62,7 @@ class RecordAudioActivity : AppCompatActivity() {
         bottomNav = findViewById(R.id.bottomNavigationView) as BottomNavigationView
         autocompleteTV = findViewById(R.id.autoCompleteTextViewLanguage)
         onBackPressedDispatcher.addCallback() { }
-
+        speechModels= resources.getStringArray(R.array.Speech_Models)?:null;
 //            SpeechChatControl(this).readAudioFromAi();
 
 
@@ -114,8 +117,9 @@ class RecordAudioActivity : AppCompatActivity() {
           }
 
               modelLanguages = ModelLanguages(this)?.getGenderLanguages(genderType)!!
-              loadPresetUserLanguage()
-              initializationLanguagesList()
+//              loadPresetUserLanguage()
+//              initializationLanguagesList()
+             initializationSpeechModelsList()
               activeFragment=AutomatedChatBotFragment()
               loadFragment(AutomatedChatBotFragment())
 
@@ -132,6 +136,18 @@ class RecordAudioActivity : AppCompatActivity() {
         }
 
     }
+    private  fun initializationSpeechModelsList(){
+        if(speechModels==null)
+            return
+        val currentModel = StorageSpeechModels.getModel(this);
+        if(currentModel !=null)
+            autocompleteTV?.setText(currentModel.model)
+
+        arrayAdapterModels = ArrayAdapter<String>(this, R.layout.dropdown_item, speechModels!!)
+        autocompleteTV?.setAdapter(arrayAdapterModels)
+        autocompleteTV?.setOnItemClickListener { parent, view, position, id -> onSelectedSpeechModel(position)}
+    }
+
     private  fun initializationLanguagesList(){
 
 
@@ -151,6 +167,13 @@ class RecordAudioActivity : AppCompatActivity() {
             autocompleteTV?.setOnItemClickListener { parent, view, position, id -> onSelectedLanguage(position)}
         }catch (e:Exception){
 
+        }
+    }
+    private fun onSelectedSpeechModel(position:Int){
+      val  selectedValue:String? = speechModels?.get(position) ?:null
+        if(selectedValue!=null){
+            StorageSpeechModels.setModel(this,selectedValue,position);
+            Toast.makeText(this, "Selected: $selectedValue", Toast.LENGTH_SHORT).show()
         }
     }
     fun onSelectedLanguage(position:Int){

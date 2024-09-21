@@ -67,7 +67,7 @@ class MainActivity : AppCompatActivity() {
                 startActivity(intent)
 
             }else {
-                val intent = Intent(applicationContext, RecordAudioActivity::class.java)
+                val intent = Intent(applicationContext, SpeachActivity::class.java)
                 startActivity(intent)
 //                Helper.LoadFragment(MainHomeFragment(), supportFragmentManager, R.id.main_frame_layout)
             }

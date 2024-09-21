@@ -2,7 +2,13 @@ package com.example.esds2s.Helpers
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.media.AudioFocusRequest
+import android.media.AudioManager
+import android.media.audiofx.*
+import android.os.Build
 import android.util.Log
+import androidx.annotation.OptIn
+import androidx.annotation.RequiresApi
 import androidx.media3.common.*
 import androidx.media3.common.Player.Listener
 import androidx.media3.common.util.UnstableApi
@@ -23,12 +29,44 @@ class ExoPlayerMedia(private val context: Context?) {
     var listener : Listener?=null;
     var callback: ICustomPlayerListener<ExoPlayer>?=null
 
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun audioManager() {
+        val audioManager = context?.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+
+        // إنشاء طلب للحصول على Audio Focus
+        val focusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+            .setOnAudioFocusChangeListener { focusChange ->
+                when (focusChange) {
+                    AudioManager.AUDIOFOCUS_GAIN -> {
+                        // استعادة التحكم في الصوت
+                    }
+                    AudioManager.AUDIOFOCUS_LOSS -> {
+                        // فقدان التركيز بشكل دائم - قطع الصوت
+                    }
+                    AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
+                        // فقدان التركيز مؤقتًا - قد يتم كتم الصوت مؤقتًا
+                    }
+                    AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
+                        // التطبيقات الأخرى ستقوم بخفض مستوى الصوت (Duck)
+                    }
+                }
+            }
+            .build()
+
+// طلب الحصول على Audio Focus
+        val result = audioManager.requestAudioFocus(focusRequest)
+
+        if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+            // لديك التحكم الكامل في الصوت، يمكنك الآن تشغيل الميديا الخاصة بك
+        }
+
+    }
     fun initial() {
         isRelease=false
         player = ExoPlayer.Builder(context!!).build()
         setAttributes(null)
     }
-    fun setPlayerListener(callback: ICustomPlayerListener<ExoPlayer>?=null,isComplete:Boolean=false){
+    private fun setPlayerListener(callback: ICustomPlayerListener<ExoPlayer>?=null, isComplete:Boolean=false){
        if(callback!=null)
         this.callback=callback
 
@@ -78,9 +116,92 @@ class ExoPlayerMedia(private val context: Context?) {
                 Log.e("ExoPlayer", "Error occurred: ${error.message}")
                 this@ExoPlayerMedia.callback?.onErrorListener(player!!,error)
             }
+             @OptIn(UnstableApi::class)
+             override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
+                 if (playbackState == Player.STATE_READY && player?.audioSessionId != null) {
+                     val audioSessionId = player?.audioSessionId!!
+                    // إزالة الضوضاء
+                     if (NoiseSuppressor.isAvailable()) {
+                         val noiseSuppressor = NoiseSuppressor.create(audioSessionId)
+                         if (noiseSuppressor != null) {
+                             noiseSuppressor.enabled = true
+                             Log.d("AudioEffects", "NoiseSuppressor enabled")
+                         } else {
+                             Log.e("AudioEffects", "Failed to create NoiseSuppressor")
+                         }
+                     } else {
+                         Log.e("AudioEffects", "NoiseSuppressor is not available on this device")
+                     }
+
+                        // إلغاء الصدى
+                     if (AcousticEchoCanceler.isAvailable()) {
+                         val echoCanceler = AcousticEchoCanceler.create(audioSessionId)
+                         if (echoCanceler != null) {
+                             echoCanceler.enabled = true
+                             Log.d("AudioEffects", "AcousticEchoCanceler enabled")
+                         } else {
+                             Log.e("AudioEffects", "Failed to create AcousticEchoCanceler")
+                         }
+                     } else {
+                         Log.e("AudioEffects", "AcousticEchoCanceler is not available on this device")
+                     }
+
+                    // تحسين الصوت باستخدام Bass Boost
+                     val bassBoost = BassBoost(0, audioSessionId)
+                     if (bassBoost != null) {
+                         bassBoost.setStrength(1000.toShort())  // تعيين مستوى تعزيز الجهير
+                         bassBoost.enabled = true
+                         Log.d("AudioEffects", "BassBoost enabled")
+                     } else {
+                         Log.e("AudioEffects", "Failed to create BassBoost")
+                     }
+
+                    // تحسين الترددات باستخدام Equalizer
+                     val equalizer = Equalizer(0, audioSessionId)
+                     if (equalizer != null) {
+                         equalizer.enabled = true
+                         equalizer.setBandLevel(0, 1000)  // تحسين الجهير
+                         Log.d("AudioEffects", "Equalizer enabled")
+                     } else {
+                         Log.e("AudioEffects", "Failed to create Equalizer")
+                     }
+
+                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                         val loudnessEnhancer = LoudnessEnhancer(audioSessionId)
+                         loudnessEnhancer.setTargetGain(2000)  // يمكنك ضبط القيمة هنا لزيادة مستوى الصوت (الحد الأقصى 10000)
+                         loudnessEnhancer.enabled = true
+                     } else {
+                         Log.e("LoudnessEnhancer", "LoudnessEnhancer is not supported on this version")
+                     }
+
+//                     // إزالة الضوضاء
+//                     val noiseSuppressor = NoiseSuppressor.create(audioSessionId)
+//                     if (noiseSuppressor != null && NoiseSuppressor.isAvailable()) {
+//                         noiseSuppressor.enabled = true
+//                     }
+//                     // إلغاء الصدى
+//                     val echoCanceler = AcousticEchoCanceler.create(audioSessionId)
+//                     if (echoCanceler != null && AcousticEchoCanceler.isAvailable()) {
+//                         echoCanceler.enabled = true
+//                     }
+//
+//
+//
+//                     // تحسين الصوت باستخدام Bass Boost
+//                     val bassBoost = BassBoost(0, audioSessionId)
+//                     bassBoost.setStrength(1000.toShort())  // تعيين مستوى تعزيز الجهير
+//                     bassBoost.enabled = true
+//
+//                     // تحسين الترددات باستخدام Equalizer
+//                     val equalizer = Equalizer(0, audioSessionId)
+//                     equalizer.enabled = true
+//                     equalizer.setBandLevel(0, 1000)  // تعزيز الجهير
+                 }
+             }
         }
          player?.addListener(listener!!)
     }
+    @SuppressLint("SuspiciousIndentation")
     fun setAttributes(audioAttributes:AudioAttributes?=null){
       var _audioAttributes:AudioAttributes?=null
         if(audioAttributes==null){
@@ -94,12 +215,29 @@ class ExoPlayerMedia(private val context: Context?) {
 
         player?.setAudioAttributes(_audioAttributes, true)
     }
+    @SuppressLint("UnsafeOptInUsageError", "Range")
     fun playMedia(url: String) {
         if(isRelease==true)
             initial()
 
-        val mediaItem = MediaItem.Builder().setUri(url).setMimeType(MimeTypes.AUDIO_WAV).build()
+       val audioAttributes = AudioAttributes.Builder()
+            .setContentType(C.AUDIO_CONTENT_TYPE_SPEECH)
+            .setUsage(C.USAGE_MEDIA)
+            .build()
+
+        val mediaItem = MediaItem.Builder()
+            .setUri(url)
+            .setMimeType(MimeTypes.AUDIO_WAV)
+            .build()
+//    // تحميل الملف الصوتي
+//        val dataSourceFactory = DefaultDataSourceFactory(context!!, "your_app_name")
+//        val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
+//            .createMediaSource(mediaItem)
+
+
+        player?.volume = 1.0f  // 1.0 هو الحد الأقصى لمستوى الصوت
         player?.setMediaItem(mediaItem)
+        player?.setAudioAttributes(audioAttributes,true)
         player?.prepare()
         player?.playWhenReady = true
 
@@ -107,6 +245,7 @@ class ExoPlayerMedia(private val context: Context?) {
     fun playMedia(url: String,isComplete:Boolean=false,callback: ICustomPlayerListener<ExoPlayer>?=null) {
 
         try{
+
             playMedia(url)
             setPlayerListener( callback?:this.callback,isComplete)
         } catch (e: Exception) {
@@ -322,11 +461,12 @@ class ExoPlayerMedia(private val context: Context?) {
             isRelease=true
             if( player?.isPlaying==true){
                 player?.stop()
-                player?.release()
             }
+            player?.release()
         } catch (e: Exception) {
             e.printStackTrace()
         }
+
     }
     //    @SuppressLint("UnsafeOptInUsageError")
 //    fun sampleStart(url: String?, callback: ICustomPlayerListener<SimpleExoPlayer>): SimpleExoPlayer? {

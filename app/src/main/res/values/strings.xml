@@ -64,5 +64,6 @@
     <string name="nav_automated_chat">Automated Chat</string>
     <string name="nav_text_chat">Text Chat</string>
     <string name="nav_close_session">Close Session</string>
+    <string name="title_activity_speach">SpeachActivity</string>
 
 </resources>

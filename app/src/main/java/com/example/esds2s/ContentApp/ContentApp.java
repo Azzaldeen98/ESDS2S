@@ -9,6 +9,9 @@ public class ContentApp {
     public static final  String  APP_NAME="CurrentSessionChatToken";
     public static final  String  CURRENT_SESSION_TOKEN="CurrentSessionToken";
     public static final  String  LANGUAGE="Lang";
+    public static final  String  SPEECHMODELS="SpeechModels";
+    public static final  String  SPEECHMODELSELECTED="SpeechModelSelected";
+    public static final  String  SPEECHMODELSELECTEDINDEX="SpeechModelSelectedIndex";
     public static final  String  LANGUAGE_INDEX="LangIndex";
     public static final  String  LANGUAGE_VOICE_GENDER="langVoiceGender";
     public static final  String  CHATS_LIST_STORAGE="ListChats";

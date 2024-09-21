@@ -1,5 +1,5 @@
 package com.example.esds2s.Services
-
+//14/9/2024
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -38,7 +38,7 @@ import kotlin.coroutines.CoroutineContext
 
 
 //LifecycleService()
-class RecordVoiceService : Service(), ISpeechRecognizerServices, IWasmServiceEventListener {
+class RecordVoiceService3 : Service(), ISpeechRecognizerServices, IWasmServiceEventListener {
 
 
     companion object {
@@ -86,7 +86,7 @@ class RecordVoiceService : Service(), ISpeechRecognizerServices, IWasmServiceEve
             );
 
             scope= CoroutineScope(dispatcher)
-//            startSpeechRecognition()
+            startSpeechRecognition()
             speechRecognizerService?.speechRecognizerListenAgain()
 
         }
@@ -100,10 +100,9 @@ class RecordVoiceService : Service(), ISpeechRecognizerServices, IWasmServiceEve
     override fun onSpeechRecognizerResult(result:String?){
         Log.d("onSpeechRecognizerResult",result!!)
         if(result?.isNotEmpty()==true){
-            sendRequestToGeneratorBasic(result)
-//            onSpeechRecognized(result)
+//            sendRequestToGenerator(result)
+            onSpeechRecognized(result)
         }else{
-
             speechRecognizerService?.speechRecognizerListenAgain()
         }
     }
@@ -112,7 +111,7 @@ class RecordVoiceService : Service(), ISpeechRecognizerServices, IWasmServiceEve
 
         try {
 
-            if(TestConnection.isOnline(this@RecordVoiceService,false)) {
+            if(TestConnection.isOnline(this@RecordVoiceService3,false)) {
 //                lifecycleScope?.launch{
                     try {
                         if (scope?.isActive == true) {
@@ -149,7 +148,7 @@ class RecordVoiceService : Service(), ISpeechRecognizerServices, IWasmServiceEve
                     R.drawable.baseline_signal_wifi_statusbar_connected_no_internet_4_24)
 
                 scope?.launch {
-                    while(scope?.isActive==true && !TestConnection.isOnline(this@RecordVoiceService,false)){
+                    while(scope?.isActive==true && !TestConnection.isOnline(this@RecordVoiceService3,false)){
                         delay(2000)
                     }
                 }
@@ -292,40 +291,7 @@ class RecordVoiceService : Service(), ISpeechRecognizerServices, IWasmServiceEve
             }
         }
     }
-    @SuppressLint("SuspiciousIndentation")
-    private  fun sendRequestToGeneratorBasic(speechText: String) {
-        isResponse = false
 
-        if (TestConnection.isOnline(this, false)) {
-
-            try {
-                scope?.launch {
-                    speechChatControl?.generateBasicTextAudio1(
-                        speechText,
-                        this@RecordVoiceService,
-                    );
-                }
-//                if(scope?.isActive==true)
-//                    scope?.cancel()  // إلغاء الـ Scope الحالي إن وجد
-            } finally {
-//                scope = CoroutineScope(dispatcher)
-//
-//
-//
-//
-//                    scope?.launch(Dispatchers.Main) {
-//                        speechRecognizerService?.speechRecognizerListenAgain()
-//                    }
-
-//                }
-
-            }
-
-        } else {
-            notifyNoInternetConnection()
-            reconnectOnInternet()
-        }
-    }
     @SuppressLint("SuspiciousIndentation")
     private  fun sendRequestToGenerator(speechText: String) {
         isResponse = false
@@ -386,7 +352,7 @@ class RecordVoiceService : Service(), ISpeechRecognizerServices, IWasmServiceEve
     }
     private fun reconnectOnInternet() {
         scope?.launch {
-            while (isActive && !TestConnection.isOnline(this@RecordVoiceService, false)) {
+            while (isActive && !TestConnection.isOnline(this@RecordVoiceService3, false)) {
                 delay(2000)
             }
         }
@@ -450,7 +416,7 @@ class RecordVoiceService : Service(), ISpeechRecognizerServices, IWasmServiceEve
 //        }
     //===========================================================================================
     override fun onRequestIsFailure(error: String) {
-        scope?.launch(Dispatchers.Main) {
+        CoroutineScope(Dispatchers.Main).launch {
             Log.e("onRequestIsFailure", error)
 //            simaphor.withPermit {
                 isResponse = true
@@ -553,7 +519,7 @@ class RecordVoiceService : Service(), ISpeechRecognizerServices, IWasmServiceEve
         try {
             callBack?.onCallBackExecuted(null)
         }finally {
-
+            CoroutineScope(Dispatchers.Main).launch {
                 isResponse = true
                 speechRecognizerService?.speechRecognizerListenAgain()
 
@@ -566,6 +532,7 @@ class RecordVoiceService : Service(), ISpeechRecognizerServices, IWasmServiceEve
 //                  }
 
             }
+        }
     }
     @SuppressLint("SuspiciousIndentation")
     override fun onRequestIsSuccess(responseURL:String) {

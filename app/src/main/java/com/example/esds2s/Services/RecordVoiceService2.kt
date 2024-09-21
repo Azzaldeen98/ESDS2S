@@ -388,7 +388,7 @@ class RecordVoiceService2 : LifecycleService() , IWasmServiceEventListener {
 //                }
 
 //                Log.d("speechText=>",speechText)
-//               speechChatControl?.generateBasicTextAudio(speechText,this@RecordVoiceService);
+    //               speechChatControl?.generateBasicTextAudio(speechText,this@RecordVoiceService);
 
                       try{
                           println("End-runBlocking...");
@@ -715,7 +715,6 @@ class RecordVoiceService2 : LifecycleService() , IWasmServiceEventListener {
             stopSpeechRecognizer();
         return super.stopService(name)
     }
-
     override fun onDestroy() {
         super.onDestroy()
 
@@ -735,7 +734,6 @@ class RecordVoiceService2 : LifecycleService() , IWasmServiceEventListener {
         }
 
     }
-
     private fun stopAudioPlayer(){
      try {
              audioPlayer?.takeIf { it.isPlayer() }?.stop()

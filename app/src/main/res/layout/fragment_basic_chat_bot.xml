@@ -11,26 +11,125 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:gravity="center">
-
-        <!-- TODO: Update blank fragment layout -->
-        <!--    <TextView-->
-        <!--        android:layout_width="wrap_content"-->
-        <!--        android:layout_height="wrap_content"-->
-        <!--        android:text="automated chat bot" />-->
+        android:gravity="start">
 
 
-        <RelativeLayout
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_centerInParent="true"
             android:layout_marginLeft="10dp"
+            android:gravity="start"
+            android:layout_gravity="center"
+            android:orientation="vertical"
             android:layout_marginRight="10dp"
-            android:layout_height="wrap_content">
-
+            android:layout_height="match_parent">
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:layout_marginTop="10dp"
+                android:orientation="vertical">
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="start"
+                    android:layout_marginVertical="10dp"
+                    android:gravity="center"
+                    android:layout_marginHorizontal="10dp"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:id="@+id/label1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="10dp"
+                        android:textSize="20dp"
+                        android:text="Gemini Time:"/>
+                    <TextView
+                        android:id="@+id/geminiTime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="10dp"
+                        android:textSize="20dp"
+                        android:textColor="#FC0303"
+                        android:text="00"/>
+                </LinearLayout>
+                <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:layout_marginVertical="10dp"
+                        android:gravity="center"
+                        android:layout_marginHorizontal="10dp"
+                        android:orientation="horizontal">
+                        <TextView
+                            android:id="@+id/label2"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="10dp"
+                            android:textSize="20dp"
+                            android:text="Query Time: "/>
+                        <TextView
+                            android:id="@+id/queryTime"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="10dp"
+                            android:textSize="20dp"
+                            android:textColor="#FC0303"
+                            android:text="00"/>
+                    </LinearLayout>
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="start"
+                    android:layout_marginVertical="10dp"
+                    android:gravity="center"
+                    android:layout_marginHorizontal="10dp"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="10dp"
+                        android:textSize="20dp"
+                        android:text="Time Difference: "/>
+                    <TextView
+                        android:id="@+id/timeDiff"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="10dp"
+                        android:textSize="20dp"
+                        android:textColor="#FC0303"
+                        android:text="00"/>
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="start"
+                    android:layout_marginVertical="10dp"
+                    android:gravity="center"
+                    android:layout_marginHorizontal="10dp"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="10dp"
+                        android:textSize="20dp"
+                        android:text="Slow Down Execution Time: "/>
+                    <TextView
+                        android:id="@+id/highExecuteTime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="10dp"
+                        android:textSize="20dp"
+                        android:textColor="#FC0303"
+                        android:text="Gemini"/>
+                </LinearLayout>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:orientation="vertical"
+                android:layout_marginTop="10dp"
                 android:gravity="center">
 
                 <EditText
@@ -47,29 +146,105 @@
                     android:gravity="center"
                     android:textStyle="bold"
                     android:paddingVertical="30dp" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:orientation="horizontal">
 
-                <ImageView
-                android:id="@+id/micButton"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
-                android:layout_marginTop="50dp"
-                android:layout_centerVertical="true"
-                android:backgroundTint="@color/purple_200"
-                android:paddingRight="0dp"
-                android:src="@drawable/baseline_mic_24" />
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:gravity="center"
+                        android:layout_marginHorizontal="10dp"
+                        android:orientation="vertical">
+                        <ImageView
+                            android:id="@+id/micButton"
+                            android:layout_width="80dp"
+                            android:layout_height="80dp"
+                            android:layout_margin="30dp"
+                            android:layout_centerVertical="true"
+                            android:backgroundTint="@color/purple_200"
+                            android:paddingRight="0dp"
+                            android:background="@drawable/border_bottom"
+                            android:src="@drawable/baseline_mic_24" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="20dp"
+                            android:text="Gemini - Query"/>
 
-                <ImageView
-                    android:id="@+id/basic_chat_robot_speeker_btn"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    android:layout_marginLeft="120dp"
-                    android:visibility="gone"
-                    android:padding="10dp"
-                    android:background="@drawable/cirecle_border"
-                    android:src="@drawable/baseline_record_voice_over_24"/>
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_marginHorizontal="10dp"
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <ImageView
+                            android:id="@+id/micButton2"
+                            android:layout_width="80dp"
+                            android:layout_height="80dp"
+                            android:layout_centerVertical="true"
+                            android:layout_margin="30dp"
+                            android:background="@drawable/border_bottom"
+                            android:backgroundTint="@color/purple_200"
+                            android:paddingRight="0dp"
+                            android:src="@drawable/baseline_mic_24" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Query"
+                            android:textSize="20dp" />
+
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+<!--                <ImageView-->
+<!--                    android:id="@+id/basic_chat_robot_speeker_btn"-->
+<!--                    android:layout_width="50dp"-->
+<!--                    android:layout_height="50dp"-->
+<!--                    android:layout_marginLeft="120dp"-->
+<!--                    android:visibility="gone"-->
+<!--                    android:padding="10dp"-->
+<!--                    android:background="@drawable/cirecle_border"-->
+<!--                    android:src="@drawable/baseline_record_voice_over_24"/>-->
 
             </LinearLayout>
-        </RelativeLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:layout_marginVertical="10dp"
+                android:gravity="start"
+                android:layout_marginHorizontal="10dp"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="10dp"
+                    android:layout_marginTop="5dp"
+                    android:textSize="25dp"
+                    android:textColor="#FC0303"
+                    android:text="Error:"/>
+                <TextView
+                    android:id="@+id/errorView"
+                    android:layout_width="wrap_content"
+                    android:textColor="#FC0303"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="10dp"
+                    android:textSize="20dp" />
+            </LinearLayout>
+        </LinearLayout>
 
     </LinearLayout>
 </FrameLayout>

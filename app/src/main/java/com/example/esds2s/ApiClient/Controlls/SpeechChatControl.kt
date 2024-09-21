@@ -23,22 +23,21 @@ import com.example.esds2s.ApiClient.BuildConfig
 import com.example.esds2s.ApiClient.Interface.IChatServices
 import com.example.esds2s.ApiClient.Interface.ICustomPlayerListener
 import com.example.esds2s.ContentApp.ContentApp
+import com.example.esds2s.Core.State.SpeechChatBotState
 import com.example.esds2s.Helpers.AudioPlayer
 import com.example.esds2s.Helpers.ExoPlayerMedia
+import com.example.esds2s.Helpers.StorageSpeechModels
 import com.example.esds2s.Interface.IBaseCallbackListener
 import com.example.esds2s.Interface.IListenerStream
 import com.example.esds2s.Interface.IWasmServiceEventListener
+import com.example.esds2s.Models.MeasureNanoTimeModel
 import com.example.esds2s.Models.ResponseModels.WasmAudioResponse
 import com.google.ai.client.generativeai.type.asTextOrNull
 import com.google.type.DateTime.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.sync.Semaphore
-import okhttp3.internal.wait
 import org.json.JSONObject
 import retrofit2.Call
 import java.io.*
@@ -135,9 +134,13 @@ private fun extractEventId(responseString: String?): String? {
 class SpeechChatControl(private val context: Context):BaseControl(context) {
 
     var  geminiApiClient:GeminiApiClient = GeminiApiClient();
-    var  API_URL:String = "https://api-inference.huggingface.co/models/wasmdashai/vits-ar-sa-huba";
+//    var  API_URL:String = "https://api-inference.huggingface.co/models/wasmdashai/vits-ar-sa-huba";
+//    var  API_URL:String = "https://api-inference.huggingface.co/models/wasmdashai/vits-ar-sa-huba-v2";
+//    var  API_URL:String = "https://api-inference.huggingface.co/models/wasmdashai/vits-ar-sa-A";
+    var  BASE_API_URL:String = "https://api-inference.huggingface.co/models/wasmdashai/";
     var  AUTHORIZATION:String = "Bearer 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";
-
+    var  API_URL:String=BASE_API_URL+"vits-ar-sa-A"
+    var  API_URL_ACTION_DEFAULT:String="vits-ar-sa-huba-v2"
     private var exoPlayer : ExoPlayerMedia?=null
     private var audioPlayer : AudioPlayer?=AudioPlayer(context);
     val semaphore = Semaphore(1)
@@ -195,50 +198,635 @@ class SpeechChatControl(private val context: Context):BaseControl(context) {
     fun generateBasicTextAudio(inputText:String, callBack: IWasmServiceEventListener) {
         CoroutineScope(Dispatchers.Main).launch {
 
-                var audioBytes =  withContext(Dispatchers.IO) {
-                    try {
-                        var generat_text = generateText2(inputText)
-                        if(generat_text==null || generat_text.trim().isEmpty())
-                            return@withContext null
-                        var text: String? = removeSymbols(generat_text!!) ?: return@withContext null
-                        println(text)
-                        if (text == null || text.isEmpty() || !containsLetters(text))
-                            return@withContext null
-
-                        return@withContext queryTextToSpeech(generat_text)
-                    } catch (e: Exception) {
+            var audioBytes =  withContext(Dispatchers.IO) {
+                try {
+                    var generat_text = generateText2(inputText)
+                    if(generat_text==null || generat_text.trim().isEmpty())
                         return@withContext null
+                    var text: String? = removeSymbols(generat_text!!) ?: return@withContext null
+                    println(text)
+                    if (text == null || text.isEmpty() || !containsLetters(text))
+                        return@withContext null
+
+                    return@withContext queryTextToSpeech(generat_text)
+                } catch (e: Exception) {
+                    return@withContext null
+                }
+            }
+            try{
+                if (audioBytes == null || audioBytes.isEmpty())
+                    throw Exception("Failed to get audio bytes")
+
+                val filePath = saveIntoTempFile(audioBytes);
+                if(filePath!=null) {
+                    playAudio2(
+                        filePath,
+                        myExoPlayer!!,
+                        semaphore,
+                        object : ICustomPlayerListener<ExoPlayer> {
+                            override fun onErrorListener(mp: ExoPlayer?) {
+                                stopTheProcess = true
+                            }
+
+                            override fun onCompletionListener(mp: ExoPlayer?) {
+//                                                  Log.d("onCompletionListener5", "$audioPlayerIsComplete")
+//                                                  if (audioPlayerIsComplete) {
+//                                                      Log.d("onCompletionListener5", "$audioPlayerIsComplete")
+//                                                      stopTheProcess = true
+//                                                  }
+                            }
+                        })
+                    delay(1000)
+                    while (myExoPlayer?.isPlaying == true) {
+                        delay(1000)
+                    }
+                    callBack?.onRequestIsSuccess2(null)
+//                        }
+//                            callBack?.onRequestIsSuccess(filePath)
+                } else
+                    throw Exception("Failed to save file")
+
+                //                        var player = audioPlayer?.start(tempFile.absolutePath)
+                //                        player?.setOnErrorListener { mp, what, extra ->
+                //
+                //                            try { audioPlayer?.takeIf { it.isPlayer() }?.stop() }
+                //                            finally { callBack?.onRequestIsSuccess2() }
+                //                            true // Return true if the error is considered handled, false otherwise
+                //                        }
+                //                        player?.setOnCompletionListener { mp ->
+                //                            try { audioPlayer?.takeIf { it.isPlayer() }?.stop() }
+                //                            finally { callBack?.onRequestIsSuccess() }
+                //                        }
+                //  println("Received audio bytes length: ${audioBytes.size}")
+
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                callBack?.onRequestIsFailure(e.message!!)
+            }
+        }
+
+    }
+   suspend fun generateBasicTextAudioNew(inputText:String, callBack: IWasmServiceEventListener) {
+
+           try {
+               var audioBytes: ByteArray? = null;
+                   var generat_text = generateText2(inputText)
+
+                   if (generat_text != null || generat_text?.trim()?.isNotEmpty() == true) {
+                       var text: String? = removeSymbols(generat_text!!) ?: null
+                       println(text)
+                       if (text != null && text.trim().isNotEmpty()) {
+                           audioBytes =   queryTextToSpeech(text!!)
+                           if (audioBytes == null || audioBytes?.isEmpty() == true) {
+                               withContext(Dispatchers.Main) {
+                                   callBack?.onRequestIsFailure("Server Error")
+                               }
+                           } else {
+                               val tempFile = createTempFile(null, audioBytes!!);
+                               withContext(Dispatchers.Main) {
+                                   if (tempFile != null && tempFile != null && tempFile.length() > 0 && tempFile.canRead()) {
+                                       exoPlayer?.playMedia(tempFile?.absolutePath!!, true,
+                                           object : ICustomPlayerListener<ExoPlayer> {
+                                               @OptIn(UnstableApi::class)
+                                               override fun onErrorListener(
+                                                   mp: ExoPlayer?,
+                                                   error: Exception
+                                               ) {
+                                                   Log.e("Error", "ExoPlayer is Error")
+                                                   try {
+                                                       if (tempFile?.exists() == true)
+                                                           tempFile?.delete()
+                                                   } finally {
+                                                       callBack?.onRequestIsFailure(error?.message!!)
+                                                   }
+                                               }
+
+                                               override fun onCompletionListener(
+                                                   mp: ExoPlayer?,
+                                                   lastAudioClip: Boolean
+                                               ) {
+
+                                                   try {
+                                                       if (tempFile?.exists() == true)
+                                                           tempFile?.delete()
+                                                   } finally {
+                                                       callBack?.onRequestIsSuccess2(null)
+                                                   }
+                                               }
+                                           })
+                                   } else {
+                                       callBack?.onRequestIsFailure("Invalid audio data file")
+//                                       try {
+//                                           delay(1000)
+//                                           while (isActive && exoPlayer?.isPlayer() == true) {
+//                                               delay(500)
+//                                           }
+//                                           if (tempFile?.exists() == true)
+//                                               tempFile?.delete()
+//                                           else {
+//                                           }
+//                                       } finally {
+//                                           callBack?.onRequestIsSuccess2(null)
+//                                       }
+                                   }
+
+                               }
+                           }
+
+                       } else {
+                           withContext(Dispatchers.Main) {
+                               callBack?.onRequestIsFailure("gemini generate text is null")
+                           }
+                       }
+                   }
+                   else {
+                       withContext(Dispatchers.Main) {
+                           callBack?.onRequestIsFailure("gemini generate text is null")
+                       }
+                   }
+
+           } catch (e: Exception) {
+               e.printStackTrace()
+               withContext(Dispatchers.Main) {
+                   callBack?.onRequestIsFailure(e?.message!!)
+               }
+           }
+
+    }
+    suspend fun generateBasicTextAudioNew2(inputText:String, callBack: IWasmServiceEventListener) {
+
+        try {
+            var audioBytes: ByteArray? = null;
+            var generat_text = generateText2(inputText)
+
+            if (generat_text != null || generat_text?.trim()?.isNotEmpty() == true) {
+                var text: String? = removeSymbols(generat_text!!) ?: null
+                println(text)
+                if (text != null && text.trim().isNotEmpty()) {
+                    audioBytes =   queryTextToSpeech(text!!)
+                    if (audioBytes == null || audioBytes?.isEmpty() == true) {
+                            callBack?.onRequestIsFailure("Server Error")
+                    } else {
+                           val tempFile = createTempFile(null, audioBytes!!);
+
+                            if (tempFile != null && tempFile.canRead()) {
+                                callBack?.onRequestIsSuccess(tempFile?.absolutePath?:"")
+                            }
+                            else {
+                                callBack?.onRequestIsFailure("Invalid audio data file")
+                        }
+                    }
+
+                } else {
+
+                        callBack?.onRequestIsFailure("gemini generate text is null")
+
+                }
+            }
+            else {
+
+                callBack?.onRequestIsFailure("gemini generate text is null")
+            }
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+
+                callBack?.onRequestIsFailure(e?.message!!)
+
+        }
+
+    }
+    suspend  fun generateBasicTextAudio1(inputText:String, callBack: IWasmServiceEventListener) {
+
+            try {
+                var audioBytes:ByteArray?=null;
+                var generat_text = generateText2(inputText)
+                if (generat_text != null || generat_text?.trim()?.isNotEmpty() == true) {
+                    var text: String? = removeSymbols(generat_text!!) ?: null
+                    println(text)
+                    if (text != null && text.trim().isNotEmpty()) {
+                        try{
+                             audioBytes = queryTextToSpeech(text!!)
+                            if (audioBytes == null || audioBytes?.isEmpty()==true){
+                                withContext(Dispatchers.Main) {
+                                    callBack?.onRequestIsFailure("Server Error")
+                                }
+                            }
+                            else {
+                                val tempFile = createTempFile(null, audioBytes!!);
+                                withContext(Dispatchers.Main) {
+                                    if (tempFile != null && tempFile != null && tempFile.length() > 0 && tempFile.canRead()) {
+                                        exoPlayer?.playMedia(tempFile?.absolutePath!!, true,
+                                            object : ICustomPlayerListener<ExoPlayer> {
+                                                @OptIn(UnstableApi::class)
+                                                override fun onErrorListener(
+                                                    mp: ExoPlayer?,
+                                                    error: Exception
+                                                ) {
+                                                    Log.e("Error", "ExoPlayer is Error")
+                                                    try {
+                                                        if (tempFile?.exists() == true)
+                                                            tempFile?.delete()
+                                                    } finally {
+                                                        callBack?.onRequestIsSuccess2(null)
+                                                    }
+
+//                                            callBack?.onRequestIsFailure()
+                                                }
+
+                                                override fun onCompletionListener(
+                                                    mp: ExoPlayer?,
+                                                    lastAudioClip: Boolean
+                                                ) {
+
+                                                    try {
+                                                        if (tempFile?.exists() == true)
+                                                            tempFile?.delete()
+                                                    } finally {
+                                                        callBack?.onRequestIsSuccess2(null)
+                                                    }
+                                                }
+
+
+                                            })
+                                    } else {
+                                        try {
+                                            delay(1000)
+                                            while (isActive && exoPlayer?.isPlayer() == true) {
+                                                delay(500)
+                                            }
+                                            if (tempFile?.exists() == true)
+                                                tempFile?.delete()
+                                            else {
+                                            }
+                                        } finally {
+                                            callBack?.onRequestIsSuccess2(null)
+                                        }
+                                    }
+
+                                }
+                            }
+                        }catch (e:Exception){
+                            withContext(Dispatchers.Main){
+                                callBack?.onRequestIsFailure(e.message!!)
+                            }
+                        }
+
+                    }else{
+                        withContext(Dispatchers.Main){
+                            callBack?.onRequestIsSuccess2(null)
+                        }
+                    }
+                }else{
+                    withContext(Dispatchers.Main){
+                        callBack?.onRequestIsSuccess2(null)
                     }
                 }
-                try{
-                        if (audioBytes == null || audioBytes.isEmpty())
-                             throw Exception("Failed to get audio bytes")
 
-                        val filePath = saveIntoTempFile(audioBytes);
-                        if(filePath!=null)
-                            callBack?.onRequestIsSuccess(filePath)
-                        else
-                            throw Exception("Failed to save file")
-
-                        //                        var player = audioPlayer?.start(tempFile.absolutePath)
-                        //                        player?.setOnErrorListener { mp, what, extra ->
-                        //
-                        //                            try { audioPlayer?.takeIf { it.isPlayer() }?.stop() }
-                        //                            finally { callBack?.onRequestIsSuccess2() }
-                        //                            true // Return true if the error is considered handled, false otherwise
-                        //                        }
-                        //                        player?.setOnCompletionListener { mp ->
-                        //                            try { audioPlayer?.takeIf { it.isPlayer() }?.stop() }
-                        //                            finally { callBack?.onRequestIsSuccess() }
-                        //                        }
-                                            //  println("Received audio bytes length: ${audioBytes.size}")
-
-
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    callBack?.onRequestIsFailure(e.message!!)
+            }catch (e: Exception) {
+                e.printStackTrace()
+                withContext(Dispatchers.Main){
+                    callBack?.onRequestIsSuccess2(null)
                 }
+            }
+
+
+    }
+    suspend  fun generateBasicTextAudio2(inputText:String, callBack: IWasmServiceEventListener) : Flow<MeasureNanoTimeModel> = flow{
+
+            try {
+                var audioBytes:ByteArray?=null;
+                var generat_text:String? =null;
+
+                var startTime = System.currentTimeMillis()
+                    generat_text=generateText2(inputText)
+//                }
+                var elapsedTime =  System.currentTimeMillis()- startTime
+                emit(MeasureNanoTimeModel("gemini",elapsedTime));
+                if (generat_text != null || generat_text?.trim()?.isNotEmpty() == true) {
+                    var text: String? = removeSymbols(generat_text!!) ?: null
+                    println(text)
+                    if (text != null && text.trim().isNotEmpty()) {
+                        try{
+                             startTime = System.currentTimeMillis()
+                             audioBytes = queryTextToSpeech3(text!!)
+                             elapsedTime =  System.currentTimeMillis()- startTime
+                             emit(MeasureNanoTimeModel("query",elapsedTime));
+                            if (audioBytes == null || audioBytes?.isEmpty()==true){
+                                withContext(Dispatchers.Main){
+                                    callBack?.onRequestIsFailure("Server return Null")
+                                }
+                            } else{
+                                startTime = System.currentTimeMillis()
+                                val tempFile = createTempFile(null, audioBytes!!);
+                                withContext(Dispatchers.Main) {
+                                        if (tempFile != null && tempFile != null && tempFile.length() > 0 && tempFile.canRead()) {
+                                            exoPlayer?.playMedia(tempFile?.absolutePath!!, true,
+                                                object : ICustomPlayerListener<ExoPlayer> {
+                                                    @OptIn(UnstableApi::class)
+                                                    override fun onErrorListener(
+                                                        mp: ExoPlayer?,
+                                                        error: Exception
+                                                    ) {
+                                                        Log.e("Error", "ExoPlayer is Error")
+                                                        try {
+                                                            if (tempFile?.exists() == true)
+                                                                tempFile?.delete()
+                                                        } finally {
+                                                            callBack?.onRequestIsSuccess2(null)
+                                                        }
+
+    //                                            callBack?.onRequestIsFailure()
+                                                    }
+
+                                                    override fun onCompletionListener(
+                                                        mp: ExoPlayer?,
+                                                        lastAudioClip: Boolean
+                                                    ) {
+
+                                                        try {
+                                                            if (tempFile?.exists() == true)
+                                                                tempFile?.delete()
+                                                        } finally {
+                                                            callBack?.onRequestIsSuccess2(null)
+                                                        }
+                                                    }
+
+
+                                                })
+                                        } else {
+                                            try {
+                                                delay(1000)
+                                                while (isActive && exoPlayer?.isPlayer() == true) {
+                                                    delay(500)
+                                                }
+                                                if (tempFile?.exists() == true)
+                                                    tempFile?.delete()
+                                                else {
+                                                }
+                                            } finally {
+                                                callBack?.onRequestIsSuccess2(null)
+                                            }
+                                        }
+
+                                    }
+                                elapsedTime =  System.currentTimeMillis()- startTime
+                                emit(MeasureNanoTimeModel("handler",elapsedTime));
+                            }
+                        }catch (e:Exception){
+
+                            withContext(Dispatchers.Main){
+                                callBack?.onRequestIsFailure(e.message?:"")
+                            }
+                        }
+                    }else{
+                        withContext(Dispatchers.Main){
+                            callBack?.onRequestIsSuccess2(null)
+                        }
+                    }
+                }else{
+                    withContext(Dispatchers.Main){
+                        callBack?.onRequestIsSuccess2(null)
+                    }
+                }
+
+            }catch (e: Exception) {
+                e.printStackTrace()
+                withContext(Dispatchers.Main){
+                    callBack?.onRequestIsFailure(e.message?:"")
+                }
+            }
+
+
+    }
+
+    suspend  fun convertBasicTextToAudio(text:String, callBack: IWasmServiceEventListener): Flow<MeasureNanoTimeModel> = flow {
+
+
+        try {
+            var audioBytes:ByteArray?=null;
+            if (text != null || text?.trim()?.isNotEmpty() == true) {
+                println(text)
+                try{
+                       var startTime = System.currentTimeMillis()
+                        audioBytes = queryTextToSpeech3(text!!)
+                       var elapsedTime =  System.currentTimeMillis()- startTime
+                        emit(MeasureNanoTimeModel("query",elapsedTime));
+                        if (audioBytes == null || audioBytes?.isEmpty()==true){
+                                withContext(Dispatchers.Main) {
+                                    callBack?.onRequestIsFailure("Server Error")
+                                }
+                        } else{
+                            startTime = System.currentTimeMillis()
+                                val tempFile = createTempFile(null, audioBytes!!);
+                                withContext(Dispatchers.Main) {
+                                    if (tempFile != null && tempFile != null && tempFile.length() > 0 && tempFile.canRead()) {
+                                        exoPlayer?.playMedia(tempFile?.absolutePath!!, true,
+                                            object : ICustomPlayerListener<ExoPlayer> {
+                                                @OptIn(UnstableApi::class)
+                                                override fun onErrorListener(
+                                                    mp: ExoPlayer?,
+                                                    error: Exception
+                                                ) {
+                                                    Log.e("Error", "ExoPlayer is Error")
+                                                    try {
+                                                        if (tempFile?.exists() == true)
+                                                            tempFile?.delete()
+                                                    } finally {
+                                                        callBack?.onRequestIsSuccess2(null)
+                                                    }
+
+        //                                            callBack?.onRequestIsFailure()
+                                                }
+
+                                                override fun onCompletionListener(
+                                                    mp: ExoPlayer?,
+                                                    lastAudioClip: Boolean
+                                                ) {
+
+                                                    try {
+                                                        if (tempFile?.exists() == true)
+                                                            tempFile?.delete()
+                                                    } finally {
+                                                        callBack?.onRequestIsSuccess2(null)
+                                                    }
+                                                }
+
+
+                                            })
+                                    } else {
+                                        try {
+                                            delay(1000)
+                                            while (isActive && exoPlayer?.isPlayer() == true) {
+                                                delay(500)
+                                            }
+                                            if (tempFile?.exists() == true)
+                                                tempFile?.delete()
+                                            else {
+                                            }
+                                        } finally {
+                                            callBack?.onRequestIsSuccess2(null)
+                                        }
+                                    }
+
+                                }
+                            elapsedTime =  System.currentTimeMillis()- startTime
+                            emit(MeasureNanoTimeModel("handler",elapsedTime));
+                        }
+                }catch (e:Exception){
+                    withContext(Dispatchers.Main){
+                        callBack?.onRequestIsFailure(e.message!!)
+                    }
+                }
+            }else{
+                withContext(Dispatchers.Main){
+                    callBack?.onRequestIsSuccess2(null)
+                }
+            }
+
+        }catch (e: Exception) {
+            e.printStackTrace()
+            withContext(Dispatchers.Main){
+                callBack?.onRequestIsFailure(e.message!!)
+            }
         }
+
+    }
+    suspend fun generateBasicTextAudio2(inputText:String, callBack: IWasmServiceEventListener,
+                                        scope:CoroutineScope) {
+
+
+        var audioBytes =  withContext(Dispatchers.IO) {
+            try {
+                var generat_text = generateText2(inputText)
+                if(generat_text==null || generat_text.trim().isEmpty())
+                    return@withContext null
+                var text: String? = removeSymbols(generat_text!!) ?: return@withContext null
+                println(text)
+                if (text == null || text.isEmpty() || !containsLetters(text))
+                    return@withContext null
+
+                return@withContext queryTextToSpeech(generat_text)
+            }
+            catch (e: Exception) {
+                return@withContext null
+            }
+        }
+        try{
+            if (audioBytes == null || audioBytes.isEmpty())
+                throw Exception("Failed to get audio bytes")
+
+            val filePath = saveIntoTempFile(audioBytes);
+            withContext(Dispatchers.Main) {
+                if(filePath!=null) {
+
+                    exoPlayer?.playMedia(filePath , false,
+                        object : ICustomPlayerListener<ExoPlayer> {
+                            @OptIn(UnstableApi::class)
+                            override fun onErrorListener(
+                                mp: ExoPlayer?,
+                                error: Exception
+                            ) {
+                                Log.e("Error","ExoPlayer is Error")
+                                callBack?.onRequestIsSuccess2(null)
+//                                            callBack?.onRequestIsFailure()
+                            }
+
+                            override fun onCompletionListener(
+                                mp: ExoPlayer?,
+                                lastAudioClip: Boolean
+                            ) {
+
+                                callBack?.onRequestIsSuccess2(null)
+                            }
+
+
+                        })
+                }
+                else {
+
+                    delay(1000)
+                    while (exoPlayer?.isPlayer() == true) {
+                        delay(1000)
+                    }
+                    callBack?.onRequestIsSuccess2(null)
+                }
+
+            }
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            callBack?.onRequestIsFailure(e.message!!)
+        }
+
+
+    }
+
+    fun generateBasicTextAudio3(inputText:String, callBack: IWasmServiceEventListener,
+                                scope:CoroutineScope) {
+     CoroutineScope(Dispatchers.IO).launch {
+
+                 try {
+                     var audioBytes:ByteArray?=null;
+                     var generat_text = generateText2(inputText)
+                     if (generat_text != null || generat_text?.trim()?.isNotEmpty() == true) {
+                         var text: String? = removeSymbols(generat_text!!) ?: null
+                         println(text)
+                         if (text != null && text.isNotEmpty()) {
+                             audioBytes = queryTextToSpeech(generat_text!!)
+                             if (audioBytes == null || audioBytes.isEmpty())
+                                 throw Exception("Failed to get audio bytes")
+
+                             val filePath = saveIntoTempFile(audioBytes);
+                             withContext(Dispatchers.Main) {
+                                 if(filePath!=null) {
+
+                                     exoPlayer?.playMedia(filePath , false,
+                                         object : ICustomPlayerListener<ExoPlayer> {
+                                             @OptIn(UnstableApi::class)
+                                             override fun onErrorListener(
+                                                 mp: ExoPlayer?,
+                                                 error: Exception
+                                             ) {
+                                                 Log.e("Error","ExoPlayer is Error")
+                                                 callBack?.onRequestIsSuccess2(null)
+//                                            callBack?.onRequestIsFailure()
+                                             }
+
+                                             override fun onCompletionListener(
+                                                 mp: ExoPlayer?,
+                                                 lastAudioClip: Boolean
+                                             ) {
+
+                                                 callBack?.onRequestIsSuccess2(null)
+                                             }
+
+
+                                         })
+                                 }
+                                 else {
+
+                                     delay(1000)
+                                     while (exoPlayer?.isPlayer() == true) {
+                                         delay(1000)
+                                     }
+                                     callBack?.onRequestIsSuccess2(null)
+                                 }
+
+                             }
+                         }else{
+                             callBack?.onRequestIsSuccess2(null)
+                         }
+                     }else{
+                         callBack?.onRequestIsSuccess2(null)
+                     }
+
+                 }catch (e: Exception) {
+                 e.printStackTrace()
+                 callBack?.onRequestIsFailure(e.message!!)
+             }
+         }
 
     }
     fun generateStreamTextAudio2(inputText:String, callBack: IWasmServiceEventListener) {
@@ -511,7 +1099,7 @@ class SpeechChatControl(private val context: Context):BaseControl(context) {
 
         Log.d("MonitorEnd", "MonitorEnd")
     }
-    suspend fun generateStreamTextAudio4Last(inputText: String, callBack: IWasmServiceEventListener) {
+    suspend fun generateStreamTextAudio4Last(inputText: String, callBack: IWasmServiceEventListener){
         audioPlayerIsComplete=false
         stopTheProcess=false
 //        var completeAllAudio:Boolean=false
@@ -635,7 +1223,8 @@ class SpeechChatControl(private val context: Context):BaseControl(context) {
                                       while (myExoPlayer?.isPlaying == true) {
                                           delay(1000)
                                       }
-                                  } else if (value is String) {
+                                  }
+                                  else if (value is String) {
                                       stopTheProcess = true
                                       audioPlayerIsComplete = true
                                   }
@@ -1149,7 +1738,7 @@ class SpeechChatControl(private val context: Context):BaseControl(context) {
                                                 override fun onErrorListener(mp: ExoPlayer?) {
                                                     stopTheProcess = true
                                                 }
-                                                override fun onCompletionListener(mp: ExoPlayer?,isComplete:Boolean) {
+                                                override fun onCompletionListener(mp: ExoPlayer?, isComplete:Boolean) {
                                                     Log.d("onCompletionListener5", "$isComplete -- $index")
                                                            audioPlayerIsComplete=true
                                                             if(isComplete){
@@ -1349,7 +1938,7 @@ class SpeechChatControl(private val context: Context):BaseControl(context) {
 
                                                     throw  PlaybackException(error?.message!!,error?.cause!!,error?.hashCode()!!)
                                                 }
-                                                override fun onCompletionListener(mp: ExoPlayer?,lastAudioClip:Boolean) {
+                                                override fun onCompletionListener(mp: ExoPlayer?, lastAudioClip:Boolean) {
                                                     Log.d(
                                                         "onCompletionListener",
                                                         "$lastAudioClip -- $index"
@@ -1520,11 +2109,6 @@ class SpeechChatControl(private val context: Context):BaseControl(context) {
                                                   error.printStackTrace()
                                                   Log.d("ExoPlayer_ErrorListener", error.message!!)
                                                   this@launch.cancel()
-//                                                  throw PlaybackException(
-//                                                      error.message!!,
-//                                                      error.cause!!,
-//                                                      error.hashCode()
-//                                                  )
                                               }
 
                                               override fun onCompletionListener(
@@ -1593,123 +2177,126 @@ class SpeechChatControl(private val context: Context):BaseControl(context) {
     }
     fun generateStreamTextAudio7Last4(inputText: String, dispatcher: CoroutineContext,scope:CoroutineScope) =
         scope.launch(dispatcher){
-        var  audioPlayerIsComplete = false
-        var  stopTheProcess = false
-        var playListener: Player.Listener? = null
+            var  audioPlayerIsComplete = false
+            var  stopTheProcess = false
+            var playListener: Player.Listener? = null
+            var job:Job?=null
+            try {
+                scope.launch(dispatcher) {
+                    var scopeInternal=CoroutineScope(Dispatchers.IO+Job())
+                    try {
+                        geminiApiClient?.sendMessageStream(inputText, object : IListenerStream<String> {
+                            override fun onStreamReader(response: String?, indexFlow: Int, lastIndexFlow: Int) {
+                                Log.d("response", "${response?.trim()}")
+                                if(response!=null && response?.trim()?.isNotEmpty()==true) {
+                                    scope.launch(dispatcher) {
 
-        try {
-            scope.launch(dispatcher) {
-                var scopeInternal=CoroutineScope(Dispatchers.IO+Job())
-                try {
-                    geminiApiClient?.sendMessageStream(inputText, object : IListenerStream<String> {
-                        override fun onStreamReader(response: String?, indexFlow: Int, lastIndexFlow: Int) {
-                            Log.d("response", "${response?.trim()}")
-                            if(response!=null && response?.trim()?.isNotEmpty()==true) {
-                                scope.launch(dispatcher) {
-
-                                    try {
-                                        if (response == ContentApp.END_SYMBOL) {
-    //                                        audioPlayerIsComplete = true
-                                            Log.d("END_SYMBOL", "${response.trim()}")
-                                            semaphore?.withPermit {
-                                                flowAudioFileMap?.put(
-                                                    indexFlow,
-                                                    ContentApp.END_SYMBOL
-                                                )
-                                            }
-                                        }
-                                        else{
-                                            val text = removeSymbols(response.trim()) ?: return@launch
-                                            Log.d("metaData", "${text}")
-                                            if (text?.trim()?.isNotEmpty()==true && containsLetters(text)) {
-                                                val audioBytes = secondQueryTextToSpeech(text)
-                                                if (audioBytes == null) {
-                                                    semaphore?.withPermit { stopTheProcess = true }
-                                                } else {
-                                                    val tempFile: File? = createTempFile(indexFlow, audioBytes)
-                                                    tempFile?.let { flowAudioFileMap?.put(indexFlow, it) }
+                                        try {
+                                            if (response == ContentApp.END_SYMBOL) {
+                                                //                                        audioPlayerIsComplete = true
+                                                Log.d("END_SYMBOL", "${response.trim()}")
+                                                semaphore?.withPermit {
+                                                    flowAudioFileMap?.put(
+                                                        indexFlow,
+                                                        ContentApp.END_SYMBOL
+                                                    )
                                                 }
-
                                             }
+                                            else{
+                                                val text = removeSymbols(response.trim()) ?: return@launch
+                                                Log.d("metaData", "${text}")
+                                                if (text?.trim()?.isNotEmpty()==true && containsLetters(text)) {
+                                                    val audioBytes = secondQueryTextToSpeech(text)
+                                                    if (audioBytes == null) {
+                                                        semaphore?.withPermit { stopTheProcess = true }
+                                                    } else {
+                                                        val tempFile: File? = createTempFile(indexFlow, audioBytes)
+                                                        tempFile?.let { flowAudioFileMap?.put(indexFlow, it) }
+                                                    }
+
+                                                }
+                                            }
+                                        } catch (e: Exception) {
+                                            e.printStackTrace()
+                                            Log.e("onStreamReaderError","Error")
+                                            semaphore?.withPermit { stopTheProcess = true }
                                         }
-                                    } catch (e: Exception) {
-                                        e.printStackTrace()
-                                        Log.e("onStreamReaderError","Error")
-                                        semaphore?.withPermit { stopTheProcess = true }
                                     }
                                 }
                             }
-                        }
-                        override fun onStreamComplete(lastFlowIndex: Int) {}
-                        override fun onStreamError(e: Throwable) {
-                            scope.launch(Dispatchers.Default) {
-                                semaphore?.withPermit { stopTheProcess = true }
+                            override fun onStreamComplete(lastFlowIndex: Int) {}
+                            override fun onStreamError(e: Throwable) {
+                                scope.launch {
+                                    semaphore?.withPermit { stopTheProcess = true }
+                                }
                             }
-                        }
-                    })
+                        })
+                    }
+                    catch (e: Exception) {
+                        Log.e("sendMessageStreamError",e.message!!)
+                        semaphore?.withPermit { stopTheProcess = true }
+                        e.printStackTrace()
+                        return@launch
+                    }
                 }
-                catch (e: Exception) {
-                    Log.e("sendMessageStreamError",e.message!!)
-                    semaphore?.withPermit { stopTheProcess = true }
-//                    scopeInternal?.cancel()
-                    e.printStackTrace()
-                    return@launch
-                }
-            }
-          var job= scope.launch(Dispatchers.Main+Job()) {
-              try {
-                  var index = 0
-                  delay(1000)
-                  while (semaphore?.withPermit { return@withPermit stopTheProcess } == false) {
-                      val value = semaphore?.withPermit { flowAudioFileMap?.get(index) }
-                      if (value != null) {
-                          if (value is File) {
+                delay(1000)
+                job = CoroutineScope(Dispatchers.Default+Job()).async {
+                    return@async try {
+                        var index = 0
+                        while (isActive && semaphore?.withPermit { return@withPermit stopTheProcess } == false) {
+//                     ensureActive()
+                            val value = semaphore?.withPermit { flowAudioFileMap?.get(index) }
+                            if (value != null) {
+                                if (value is File) {
 
-                              val lastAudio = semaphore?.withPermit {
-                                  flowAudioFileMap?.containsValue(ContentApp.END_SYMBOL) == true
-                                          && flowAudioFileMap?.get(index + 1) == ContentApp.END_SYMBOL
-                              }
-                              Log.d("lastAudio", "$lastAudio")
-//                              withContext(Dispatchers.Main) {
-                                  audioPlayerIsComplete = false
-                                  exoPlayer?.playMedia(value.absolutePath,lastAudio ?: false ,
-                                      object : ICustomPlayerListener<ExoPlayer> {
-                                      @OptIn(UnstableApi::class)
-                                      override fun onErrorListener(
-                                          mp: ExoPlayer?,
-                                          error: Exception
-                                      ) {
-                                          audioPlayerIsComplete = true
-                                          stopTheProcess = true
-                                          error.printStackTrace()
-                                          Log.d("ExoPlayer_ErrorListener", error.message!!)
-                                          this@launch.cancel()
-    //                                                  throw PlaybackException(
-    //                                                      error.message!!,
-    //                                                      error.cause!!,
-    //                                                      error.hashCode()
-    //                                                  )
-                                      }
+                                    val lastAudio = semaphore?.withPermit {
+                                        flowAudioFileMap?.containsValue(ContentApp.END_SYMBOL) == true
+                                                && flowAudioFileMap?.get(index + 1) == ContentApp.END_SYMBOL
+                                    }
+                                    Log.d("lastAudio", "$lastAudio")
+                                    withContext(Dispatchers.Main) {
+                                        audioPlayerIsComplete = false
+                                        exoPlayer?.playMedia(value.absolutePath, lastAudio ?: false,
+                                            object : ICustomPlayerListener<ExoPlayer> {
+                                                @OptIn(UnstableApi::class)
+                                                override fun onErrorListener(
+                                                    mp: ExoPlayer?,
+                                                    error: Exception
+                                                ) {
+                                                    audioPlayerIsComplete = true
+                                                    stopTheProcess = true
+                                                    error.printStackTrace()
+                                                    Log.d(
+                                                        "ExoPlayer_ErrorListener",
+                                                        error.message!!
+                                                    )
+                                                    this@async.cancel()
+                                                    //                                                  throw PlaybackException(
+                                                    //                                                      error.message!!,
+                                                    //                                                      error.cause!!,
+                                                    //                                                      error.hashCode()
+                                                    //                                                  )
+                                                }
 
-                                      override fun onCompletionListener(
-                                          mp: ExoPlayer?,
-                                          lastAudioClip: Boolean
-                                      ) {
-                                          Log.d(
-                                              "onCompletionListener",
-                                              "$lastAudioClip -- $index"
-                                          )
+                                                override fun onCompletionListener(
+                                                    mp: ExoPlayer?,
+                                                    lastAudioClip: Boolean
+                                                ) {
+                                                    Log.d(
+                                                        "onCompletionListener",
+                                                        "$lastAudioClip -- $index"
+                                                    )
 
-                                          audioPlayerIsComplete = true
-                                          if (lastAudioClip) {
-                                              scope.launch {
-                                                  semaphore.withPermit { stopTheProcess = true }
-                                              }
-                                              this@launch.cancel()
-                                          }
+                                                    audioPlayerIsComplete = true
+                                                    if (lastAudioClip) {
+                                                        stopTheProcess = true
+                                                        this@async.cancel()
+                                                    }
 
-                                      }
-                                  })
+                                                    }
+
+
+                                            })
 //                                var playListener = playExoPlayer(
 //                                      value.absolutePath,
 //                                      myExoPlayer!!,
@@ -1752,68 +2339,571 @@ class SpeechChatControl(private val context: Context):BaseControl(context) {
 //                                          }
 //                                      })
 
-                                  delay(500L)
-                                  while (exoPlayer?.isPlayer() == true || !audioPlayerIsComplete) {
-                                      delay(1000L)
-                                  }
-//                              playListener?.let { myExoPlayer?.removeListener(it) }
-//                                  return@withContext
-//                              }
-
-                          } else if (value is String) {
-                              Log.d("onEndTask", value)
-                              audioPlayerIsComplete = true
-                              semaphore?.withPermit { stopTheProcess = true }
-                              break
-                          }
-                          index += 1
+                                        delay(500L)
+                                        while (exoPlayer?.isPlayer() == true || !audioPlayerIsComplete) {
+                                            delay(1000L)
+                                        }
+//                                        playListener?.let { myExoPlayer?.removeListener(it) }
+//                                        return@withContext
+//                                    }
+                                }
+                                } else if (value is String) {
+                                    Log.d("onEndTask", value)
+                                    audioPlayerIsComplete = true
+                                    semaphore?.withPermit { stopTheProcess = true }
+                                    break
+                                }
+                                index += 1
 //                          delay(500)
-                      }
-                      else {
-                          delay(1000)
-                      }
-                  }
-              }catch (e: Exception) {
-                  Log.e("ReadResponseAudio",e.message!!)
-                  e.printStackTrace()
-                  return@launch
-              }
-            }
-            job.join()
-
-        } finally {
-            semaphore?.withPermit {
-                flowAudioFileMap?.forEach { (_, value) ->
-                    if (value is File && value.exists()) {
-                        value.delete()
+                            }
+                            else {
+                                delay(1000)
+                            }
+                        }
+                    }catch (e: Exception) {
+                        Log.e("ReadResponseAudio",e.message!!)
+                        e.printStackTrace()
                     }
                 }
-                flowAudioFileMap?.clear()
+                job?.await()
             }
-            scope.launch(Dispatchers.Main) {
-                try {
-                    if (exoPlayer?.isPlayer() == true) {
-                        exoPlayer?.stop()
+            catch (e:java.util.concurrent.CancellationException){
+                Log.e("CancellationException","CancellationScope")
+            }
+            finally {
+                try{
+                    if(job?.isActive==true)
+                        job?.cancelAndJoin()
+                } finally {
+                    semaphore?.withPermit {
+                        flowAudioFileMap?.forEach { (_, value) ->
+                            if (value is File && value.exists()) {
+                                value.delete()
+                            }
+                        }
+                        flowAudioFileMap?.clear()
                     }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    Log.e("Clean ExoPlayer Listener",e.message!!)
+                    scope.launch(Dispatchers.Main) {
+                        try {
+                            if (exoPlayer?.isPlayer() == true) {
+                                exoPlayer?.stop()
+                            }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                            Log.e("Clean ExoPlayer Listener",e.message!!)
+                        }
+                    }
+                }
+                return@launch
+            }
+            Log.d("MonitorEnd", "MonitorEnd")
+        }
+    suspend fun generateStreamTextAudio7Last5(inputText: String, dispatcher: CoroutineContext,scope:CoroutineScope)  {
+
+
+        var job:Job?=null;
+        try{
+            scope.launch(dispatcher) {
+                val responseFlow = geminiApiClient?.sendMessageStreamLastTest2(inputText)
+                responseFlow?.let {
+//               it.toList().forEach({ item ->
+//                   Log.d("ResponseFlow - ${item.index}", item.text)
+//               })
+                    it.onCompletion { cause ->
+                        if (cause != null) {
+                            println("Flow completed with error: ${cause.message}")
+                        }
+                        else {
+                            println("Flow completed successfully")
+                        }
+                    }
+                        .collect { response ->
+                            scope.launch {
+                                Log.d("ResponseFlow - ${response.index}",response.text)
+                                processResponse(response.text,response.index)
+                            }
+                        }
+                }
+            }
+//            job=startPlayer(scope)
+//            job?.join()
+        }
+        finally {
+            try{
+                if(job?.isActive==true)
+                    job?.cancelAndJoin()
+            }
+            finally {
+                semaphore?.withPermit {
+                    flowAudioFileMap?.forEach { (_, value) ->
+                        if (value is File && value.exists()) {
+                            value.delete()
+                        }
+                    }
+                    flowAudioFileMap?.clear()
+                }
+                scope.launch(Dispatchers.Main) {
+                    try {
+                        if (exoPlayer?.isPlayer() == true) {
+                            exoPlayer?.stop()
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        Log.e("Clean ExoPlayer Listener",e.message!!)
+                    }
                 }
             }
         }
-        Log.d("MonitorEnd", "MonitorEnd")
+
     }
-    fun onDestroy(){
-         if(myExoPlayer!=null)
-            myExoPlayer?.release()
-     }
+   suspend fun generateStreamTextAudio7Last6(inputText: String, scope:CoroutineScope)
+   : MutableSharedFlow<SpeechChatBotState>  {
+        semaphore?.withPermit {
+            stopTheProcess=false
+            flowAudioFileMap?.clear()
+        }
+
+        val stateFlow = MutableStateFlow<SpeechChatBotState>(SpeechChatBotState.Initial)
+        var job:Job?=null;
+        try{
+
+            var jop=scope.launch {
+                val responseFlow = geminiApiClient?.sendMessageStreamLastTest2(inputText)
+                responseFlow?.let {
+                    it.onCompletion { cause ->
+                        if (cause != null) {
+                            println("Flow completed with error: ${cause.message}")
+                        }
+                        else {
+                            println("Flow completed successfully")
+                        }
+                    }.collect { response ->
+                        launch {
+//                                Log.d("ResponseFlow - ${response.index}",response.text)
+//                            try {
+
+                                if (response.text == ContentApp.END_SYMBOL) {
+
+                                    Log.d("END_SYMBOL", "${response.text.trim()} - ${response.index}")
+                                    semaphore?.withPermit {
+                                        flowAudioFileMap?.put(
+                                            response.index,
+                                            ContentApp.END_SYMBOL
+                                        )
+                                    }
+
+                                } else {
+
+                                    val text = removeSymbols(response.text.trim()) ?: return@launch
+                                    Log.d("metaData", "${text}")
+                                    if (text?.trim()
+                                            ?.isNotEmpty() == true && containsLetters(text)
+                                    ) {
+                                        val audioBytes = secondQueryTextToSpeech(text)
+                                        if (audioBytes == null) {
+                                            semaphore?.withPermit { stopTheProcess = true }
+                                            this@launch.cancel(CancellationException(""))
+                                        } else {
+                                            val tempFile: File? =
+                                                createTempFile(response.index, audioBytes)
+                                            tempFile?.let {
+                                                flowAudioFileMap?.put(response.index, it)
+                                            }
+                                            Log.e("createTempFile", "${response.index}")
+                                            stateFlow.emit(SpeechChatBotState.Listening)
+                                        }
+
+                                    }
+                                }
+//                            }
+//                            catch (e: Exception) {
+//                                e.printStackTrace()
+//                                Log.e("onStreamReaderError", e.message!!)
+//                                 throw  CancellationException(e.message!!);
+////                                semaphore?.withPermit { stopTheProcess = true }
+////                                scope?.cancel()
+////                                stateFlow.emit(SpeechChatBotState.Error(e.message!!))
+//                            }
+                            }
+//                            .invokeOnCompletion {it->
+//                            Log.e("invokeOnCompletion", "invokeOnCompletion")
+//                            if(it?.cause!=null){
+//                                Log.e("invokeOnCompletion", "is Canceld")
+//                                this@launch.cancel()
+//                            }
+//                        }
+                        }
+                }
+            }
+            delay(1000)
+            scope.launch {
+                var audioPlayerIsComplete=false
+                var index=0
+                var count=0;
+                try {
+                    while (scope?.isActive == true && (count<10 && semaphore?.withPermit { stopTheProcess } == false)) {
+                       Log.d("value", "$index")
+
+                        var value = semaphore?.withPermit {
+                            if (flowAudioFileMap?.isNullOrEmpty()!!) null else flowAudioFileMap?.get(
+                                index
+                            )
+                        }
+
+                        if (value != null) {
+                            if (value is File) {
+
+                                val lastAudio = semaphore?.withPermit {
+                                    flowAudioFileMap?.containsValue(ContentApp.END_SYMBOL) == true
+                                            && flowAudioFileMap?.get(index + 1) == ContentApp.END_SYMBOL
+                                }
+                                Log.d("lastAudio", "$lastAudio")
+
+                                withContext(Dispatchers.Main) {
+                                    exoPlayer?.playMedia(value.absolutePath, lastAudio ?: false,
+                                        object : ICustomPlayerListener<ExoPlayer> {
+                                            @OptIn(UnstableApi::class)
+                                            override fun onErrorListener(
+                                                mp: ExoPlayer?,
+                                                error: java.lang.Exception
+                                            ) {
+
+                                                audioPlayerIsComplete = true
+                                                stopTheProcess = true
+                                                error.printStackTrace()
+                                                Log.d("ExoPlayer_ErrorListener3", error.message!!)
+                                                this@launch.cancel()
+    //                                  stateFlow.emit(PlayerSpeechState.Error(error.message!!))
+    //                                       throw PlaybackException(error.message!!, error.cause!!, error.hashCode())
+                                            }
+
+                                            override fun onCompletionListener(
+                                                mp: ExoPlayer?,
+                                                isTheLastAudioClip: Boolean
+                                            ) {
+                                                Log.d(
+                                                    "onCompletionListener3",
+                                                    "$isTheLastAudioClip -- $index"
+                                                )
+                                                audioPlayerIsComplete = true
+                                                if (isTheLastAudioClip) {
+    //                                          stateFlow.emit(SpeechChatBotState.Completed)
+
+                                                    stopTheProcess = true
+//                                                    runBlocking {
+//                                                        semaphore.withPermit { stopTheProcess = true }
+//                                                    }
+                                                    this@launch.cancel()
+
+                                                }
+                                            }
+                                        })
+
+                                    delay(1000L)
+                                    while (scope?.isActive == true && (exoPlayer?.isPlayer() == true )) {
+                                        delay(1000L)
+                                    }
+                                }
+
+                            } else if (value is String) {
+                                Log.d("onEndTask", value)
+                                audioPlayerIsComplete = true
+                                break
+                            }
+                            index += 1
+
+                        } else {
+                            count++
+                            delay(1000)
+                        }
+                    }
+                }catch (e:CancellationException) {
+                    clearFlowAudioFileMap()
+                    stateFlow.emit(SpeechChatBotState.Completed)
+                }
+            }.invokeOnCompletion {
+
+              scope?.launch{
+                  clearFlowAudioFileMap()
+                 try{
+                     jop?.cancelAndJoin()
+                 }finally{
+                     stateFlow.emit(SpeechChatBotState.Completed)
+                 }
+
+              }
+            }
+
+
+//                delay(1000)
+//                startPlayer2(scope)
+////                state_flow?.collect { state ->
+////                    when (state) {
+////                        PlayerSpeechState.Canceled -> {
+////                            stateFlow.emit(SpeechChatBotState.Completed)
+////                        }
+////                        PlayerSpeechState.Completed -> {
+////                            startPlayer2()
+////                        }
+////                        else -> {
+////
+////                        }
+////                    }
+////
+////                }
+//            }
+        }
+        catch (e:CancellationException) {
+            clearFlowAudioFileMap()
+          stateFlow.emit(SpeechChatBotState.Completed)
+        } catch (e:Exception) {
+            clearFlowAudioFileMap()
+            stateFlow.emit(SpeechChatBotState.Error(e.message!!))
+
+
+//            try{
+////                if(job?.isActive==true)
+////                    job?.cancelAndJoin()
+//            }
+//            finally {
+////                semaphore?.withPermit {
+//////                    flowAudioFileMap?.forEach { (_, value) ->
+//////                        if (value is File && value.exists()) {
+//////                            value.delete()
+//////                        }
+//////                    }
+////                    flowAudioFileMap?.clear()
+////                }
+////                scope.launch(Dispatchers.Main) {
+////                    try {
+////                        if (exoPlayer?.isPlayer() == true) {
+////                            exoPlayer?.stop()
+////                        }
+////                    } catch (e: Exception) {
+////                        e.printStackTrace()
+////                        Log.e("Clean ExoPlayer Listener",e.message!!)
+////                    }
+////                }
+//            }
+        }
+            return  stateFlow;
+    }
+    suspend fun generateStreamTextAudio7Last7(inputText: String, scope:CoroutineScope) {
+
+        semaphore?.withPermit {
+            stopTheProcess=false
+            flowAudioFileMap?.clear()
+        }
+
+        var job:Job?=null;
+        var jobStream:Job?=null;
+        try{
+            jobStream=scope.launch {
+                val responseFlow = geminiApiClient?.sendMessageStreamLastTest2(inputText)
+                responseFlow?.let {
+//                    it.onCompletion { cause ->
+//                        if (cause != null) {
+//                            println("Flow completed with error: ${cause.message}")
+//                        }
+//                        else {
+//                            println("Flow completed successfully")
+//                        }
+//                    }
+                        it.collect { response ->
+                        launch {
+//                                Log.d("ResponseFlow - ${response.index}",response.text)
+                          try {
+
+                                if (response.text == ContentApp.END_SYMBOL) {
+                                Log.d("END_SYMBOL", "${response.text.trim()} - ${response.index}")
+                                semaphore?.withPermit {
+                                    flowAudioFileMap?.put(
+                                        response.index,
+                                        ContentApp.END_SYMBOL
+                                    )
+                                }
+
+                            } else {
+
+                                val text = removeSymbols(response.text.trim()) ?: return@launch
+                                Log.d("metaData", "${text}")
+                                if (text?.trim()
+                                        ?.isNotEmpty() == true && containsLetters(text)
+                                ) {
+                                    val audioBytes = secondQueryTextToSpeech(text)
+                                    if (audioBytes != null) {
+//                                        semaphore?.withPermit { stopTheProcess = true }
+//                                        this@launch.cancel(CancellationException(""))
+//                                    } else {
+                                        val tempFile: File? = createTempFile(response.index, audioBytes)
+                                        tempFile?.let { flowAudioFileMap?.put(response.index, it) }
+                                        Log.e("createTempFile", "${response.index}")
+//                                        stateFlow.emit(SpeechChatBotState.Listening)
+                                    }
+
+                                }
+                            }
+
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                                Log.e("onStreamReaderError", e.message!!)
+//                                 throw  CancellationException(e.message!!);
+                                semaphore?.withPermit { stopTheProcess = true }
+//                                scope?.cancel()
+//                                stateFlow.emit(SpeechChatBotState.Error(e.message!!))
+                            }
+                        }
+//                            .invokeOnCompletion {it->
+//                            Log.e("invokeOnCompletion", "invokeOnCompletion")
+//                            if(it?.cause!=null){
+//                                Log.e("invokeOnCompletion", "is Canceld")
+//                                this@launch.cancel()
+//                            }
+//                        }
+                    }
+                }
+            }
+            var job=scope.launch {
+                var audioPlayerIsComplete=false
+                var index=0
+                var count=0;
+
+                delay(1000)
+
+                try {
+                    Log.d("stopTheProcess","${stopTheProcess!!}")
+                    while (isActive == true && (count<20 && semaphore?.withPermit { stopTheProcess } == false)) {
+                        Log.d("value", "$index")
+
+                        var value = semaphore?.withPermit {
+                            if (flowAudioFileMap?.isNullOrEmpty()!!) null else flowAudioFileMap?.get(index)
+                        }
+
+                        if (value != null) {
+                            count=0
+                            if (value is File) {
+
+                                val lastAudio = semaphore?.withPermit {
+                                    flowAudioFileMap?.containsValue(ContentApp.END_SYMBOL) == true
+                                            && flowAudioFileMap?.get(index + 1) == ContentApp.END_SYMBOL
+                                }
+                                Log.d("lastAudio", "$lastAudio")
+                                withContext(Dispatchers.Main) {
+                                    exoPlayer?.playMedia(value.absolutePath, lastAudio ?: false,
+                                            object : ICustomPlayerListener<ExoPlayer> {
+                                                @OptIn(UnstableApi::class)
+                                                override fun onErrorListener(
+                                                    mp: ExoPlayer?,
+                                                    error: java.lang.Exception
+                                                ) {
+
+                                                    audioPlayerIsComplete = true
+                                                    stopTheProcess = true
+                                                    error.printStackTrace()
+                                                    Log.d(
+                                                        "ExoPlayer_ErrorListener3",
+                                                        error.message!!
+                                                    )
+                                                    this@launch.cancel()
+                                                    //                                  stateFlow.emit(PlayerSpeechState.Error(error.message!!))
+                                                    //                                       throw PlaybackException(error.message!!, error.cause!!, error.hashCode())
+                                                }
+
+                                                override fun onCompletionListener(
+                                                    mp: ExoPlayer?,
+                                                    isTheLastAudioClip: Boolean
+                                                ) {
+                                                    Log.d(
+                                                        "onCompletionListener3",
+                                                        "$isTheLastAudioClip -- $index"
+                                                    )
+                                                    audioPlayerIsComplete = true
+                                                    if (isTheLastAudioClip) {
+                                                        stopTheProcess = true
+                                                        this@launch.cancel()
+                                                    }
+                                                }
+                                            })
+                                    delay(1000L)
+                                    while (isActive && exoPlayer?.isPlayer() == true) {
+                                        delay(1000L)
+                                    }
+                                }
+
+                            } else if (value is String) {
+                                Log.d("onEndTask", value)
+                                audioPlayerIsComplete = true
+                                break
+                            }
+                            index += 1
+
+                        } else {
+                            count++
+                            Log.d("count", "$count")
+                            delay(1000)
+                        }
+                    }
+                }catch (e:CancellationException) {
+                    e.printStackTrace()
+                }
+            }
+            job.join()
+        } finally {
+            clearFlowAudioFileMap()
+            if(job?.isActive==true)
+                job?.cancelAndJoin()
+            if(jobStream?.isActive==true)
+                jobStream?.cancelAndJoin()
+        }
+    }
+    private  suspend fun  clearFlowAudioFileMap(){
+
+    semaphore?.withPermit {
+        flowAudioFileMap?.forEach { (_, value) ->
+            if (value is File && value.exists()) {
+                value.delete()
+            }
+        }
+        flowAudioFileMap?.clear()
+    }
+}
+    private suspend fun processResponse(response:String, indexFlow:Int){
+        try {
+            if (response == ContentApp.END_SYMBOL) {
+                //                                        audioPlayerIsComplete = true
+                Log.d("END_SYMBOL", "${response.trim()} - $indexFlow")
+                semaphore?.withPermit {
+                    flowAudioFileMap?.put(
+                        indexFlow,
+                        ContentApp.END_SYMBOL
+                    )
+                }
+            } else{
+                val text = removeSymbols(response.trim()) ?: return
+                Log.d("metaData", "${text}")
+                if (text?.trim()?.isNotEmpty()==true && containsLetters(text)) {
+                    val audioBytes = secondQueryTextToSpeech(text)
+                    if (audioBytes == null) {
+                        semaphore?.withPermit { stopTheProcess = true }
+                    } else {
+                        val tempFile: File? = createTempFile(indexFlow, audioBytes)
+                        tempFile?.let { flowAudioFileMap?.put(indexFlow, it) }
+                        Log.e("createTempFile","$indexFlow")
+                    }
+
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Log.e("onStreamReaderError","Error")
+            semaphore?.withPermit { stopTheProcess = true }
+        }
+    }
     private suspend fun secondQueryTextToSpeech(input: String): ByteArray? {
         val apiUrl = API_URL
         val authorization = AUTHORIZATION
-
         val maxRetries = 3
         var currentAttempt = 0
-
         while (currentAttempt < maxRetries) {
             try {
                 currentAttempt++
@@ -1827,20 +2917,18 @@ class SpeechChatControl(private val context: Context):BaseControl(context) {
 
                 val jsonInputString = "{\"inputs\": \"$input\"}"
 
-                conn.outputStream.use { os ->
-                    OutputStreamWriter(os, "UTF-8").use { writer ->
-                        writer.write(jsonInputString)
-                        writer.flush()
-                    }
-                }
-
-
-
-
 //                conn.outputStream.use { os ->
-//                    val inputBytes = jsonInputString.toByteArray(Charsets.UTF_8)
-//                    os.write(inputBytes, 0, inputBytes.size)
+//                    OutputStreamWriter(os, "UTF-8").use { writer ->
+//                        writer.write(jsonInputString)
+//                        writer.flush()
+//                    }
 //                }
+
+
+                conn.outputStream.use { os ->
+                    val inputBytes = jsonInputString.toByteArray(Charsets.UTF_8)
+                    os.write(inputBytes, 0, inputBytes.size)
+                }
 
                 val responseCode = conn.responseCode
                 if (responseCode == HttpURLConnection.HTTP_OK) {
@@ -1853,19 +2941,188 @@ class SpeechChatControl(private val context: Context):BaseControl(context) {
                 Log.e("WasmApiAudio", "An error occurred: ${e.message}")
                 if (e.message?.contains("SAFETY") == true) {
                     Log.e("WasmApiAudio", "Content generation stopped due to safety reasons.")
-
                 }else if (currentAttempt >= maxRetries) {
                     e.printStackTrace()
                     return null
                 } else {
                     Log.w("WasmApiAudio", "Retrying... Attempt $currentAttempt")
-                    delay(1000)
+                    delay(500)
                 }
             }
         }
-
         return null
     }
+    private suspend  fun  startPlayer2(scope: CoroutineScope) {
+        var  audioPlayerIsComplete=false
+        var index=0
+
+//           try {
+               while (scope?.isActive == true
+                   && semaphore?.withPermit { return@withPermit stopTheProcess } == false) {
+//                   Log.d("value", "$index")
+
+                   var value = semaphore?.withPermit { flowAudioFileMap?.get(index) }
+
+                   Log.d("value", "$value")
+                   if (value != null) {
+                       if (value is File) {
+
+                           val lastAudio = semaphore?.withPermit {
+                               flowAudioFileMap?.containsValue(ContentApp.END_SYMBOL) == true
+                                       && flowAudioFileMap?.get(index + 1) == ContentApp.END_SYMBOL
+                           }
+                           Log.d("lastAudio", "$lastAudio")
+
+                           withContext(Dispatchers.Main) {
+                               exoPlayer?.playMedia(value.absolutePath, lastAudio ?: false,
+                                   object : ICustomPlayerListener<ExoPlayer> {
+                                       @OptIn(UnstableApi::class)
+                                       override fun onErrorListener(
+                                           mp: ExoPlayer?,
+                                           error: java.lang.Exception
+                                       ) {
+
+                                           audioPlayerIsComplete = true
+                                           stopTheProcess = true
+                                           error.printStackTrace()
+                                           Log.d("ExoPlayer_ErrorListener", error.message!!)
+                                           scope?.cancel()
+//                                  stateFlow.emit(PlayerSpeechState.Error(error.message!!))
+//                                       throw PlaybackException(error.message!!, error.cause!!, error.hashCode())
+                                       }
+
+                                       override fun onCompletionListener(
+                                           mp: ExoPlayer?,
+                                           isTheLastAudioClip: Boolean
+                                       ) {
+                                           Log.d(
+                                               "onCompletionListener",
+                                               "$isTheLastAudioClip -- $index"
+                                           )
+                                           audioPlayerIsComplete = true
+                                           if (isTheLastAudioClip) {
+//                                          stateFlow.emit(PlayerSpeechState.Completed)
+
+//                                               stopTheProcess = true
+                                               scope?.launch { semaphore.withPermit { stopTheProcess = true } }
+//                                          stateFlow.emit(PlayerSpeechState.Canceled)
+                                               scope?.cancel()
+
+
+                                           }
+                                       }
+                                   })
+
+                               delay(1000L)
+                               while (scope?.isActive == true && (exoPlayer?.isPlayer() == true || !audioPlayerIsComplete)) {
+                                   delay(1000L)
+                               }
+                           }
+
+                       } else if (value is String) {
+                           Log.d("onEndTask", value)
+                           audioPlayerIsComplete = true
+                           semaphore?.withPermit { stopTheProcess = true }
+                       }
+
+                       index += 1
+
+
+//               }
+//           }catch (e:CancellationException){
+//               e.printStackTrace()
+//               this@flow.emit(SpeechChatBotState.Completed)
+//           }catch (e:Exception){
+//               e.printStackTrace()
+//               this@flow.emit(SpeechChatBotState.Error(e.message!!))
+                   }
+                   else{
+                       delay(1000)
+                   }
+               }
+//        return  stateFlow
+    }
+    private suspend fun  startPlayer(scope: CoroutineScope) {
+            var  audioPlayerIsComplete=false
+
+//           try {
+//               while (scope?.isActive == true && semaphore?.withPermit { return@withPermit stopTheProcess } == false) {
+//                   val value = semaphore?.withPermit { flowAudioFileMap?.get(index) }
+//                   if (value != null) {
+//                       if (value is File) {
+//
+//                           val lastAudio = semaphore?.withPermit {
+//                               flowAudioFileMap?.containsValue(ContentApp.END_SYMBOL) == true
+//                                       && flowAudioFileMap?.get(index + 1) == ContentApp.END_SYMBOL
+//                           }
+//                           Log.d("lastAudio", "$lastAudio")
+//
+//                           exoPlayer?.playMedia(value.absolutePath, lastAudio ?: false,
+//                               object : ICustomPlayerListener<ExoPlayer> {
+//                                   @OptIn(UnstableApi::class)
+//                                   override fun onErrorListener(mp: ExoPlayer?, error: Exception) {
+//                                       audioPlayerIsComplete = true
+//                                       stopTheProcess = true
+//                                       error.printStackTrace()
+//                                       Log.d("ExoPlayer_ErrorListener", error.message!!)
+//                                       scope?.cancel()
+////                                       throw PlaybackException(error.message!!, error.cause!!, error.hashCode())
+//                                   }
+//                                   override fun onCompletionListener(mp: ExoPlayer?, lastAudioClip: Boolean) {
+//                                       Log.d("onCompletionListener", "$lastAudioClip -- $index")
+//                                       audioPlayerIsComplete = true
+//                                       if (!lastAudioClip) {
+//                                           startPlayer(index+1,scope)
+//                                       } else {
+//                                           stopTheProcess = true
+//                                            //  CoroutineScope().launch { semaphore.withPermit { stopTheProcess = true } }
+//                                           scope?.cancel()
+//                                       }
+//
+//                                   }
+//                               })
+//                           delay(500L)
+////                           while (scope?.isActive == true && (exoPlayer?.isPlayer() == true || !audioPlayerIsComplete)) {
+////                               delay(1000L)
+////                           }
+//                       } else if (value is String) {
+//                           Log.d("onEndTask", value)
+//                           audioPlayerIsComplete = true
+////                           semaphore?.withPermit { stopTheProcess = true }
+//
+//                       }
+////                       index += 1
+//                   } else {
+//                       delay(1000)
+//                   }
+//               }
+//           }catch (e:CancellationException){
+//               e.printStackTrace()
+//               this@flow.emit(SpeechChatBotState.Completed)
+//           }catch (e:Exception){
+//               e.printStackTrace()
+//               this@flow.emit(SpeechChatBotState.Error(e.message!!))
+//           }
+        }
+
+    private suspend fun createTempFile(flow_index:Int?=null, audioBytes:ByteArray):File?= withContext(Dispatchers.IO){
+        try {
+            var tempFile = File.createTempFile("stream_temp_audio"+(flow_index?:""), ".wav", context.cacheDir)
+            tempFile.deleteOnExit();
+            val fos = FileOutputStream(tempFile)
+            fos.write(audioBytes)
+            fos.close()
+            return@withContext tempFile
+        }catch (e:Exception){
+            e.printStackTrace()
+            return@withContext null
+        }
+
+    }
+    fun onDestroy(){
+         if(myExoPlayer!=null)
+            myExoPlayer?.release()
+     }
     suspend fun generateStreamTextAudio8Last(inputText: String,dispatcher: CoroutineContext){
         var scope=CoroutineScope(dispatcher)
             audioPlayerIsComplete=false
@@ -1960,69 +3217,6 @@ class SpeechChatControl(private val context: Context):BaseControl(context) {
                     }
                 }
 //                var jop = CoroutineScope(Dispatchers.IO).
-        var jop= scope.launch {
-                    var audioPlayerIsComplete=false
-                    println("PlayerAudio")
-                    var index=0;
-                    var count=0;
-                    delay(1000)
-                    while (!stopTheProcess){
-//                        println("PlayerAudio:$index")
-                        var value = semaphore?.withPermit {
-                            if(flowAudioFileMap?.isNullOrEmpty()==false && flowAudioFileMap?.containsKey(index)==true) {
-                                return@withPermit flowAudioFileMap?.getValue(index)
-                            }
-                            return@withPermit null
-                        }
-                        if(value != null) {
-                            if (value is File) {
-                                withContext(Dispatchers.Main) {
-                                    semaphore?.withPermit {
-                                        var isComplete=false;
-                                        if(flowAudioFileMap?.containsValue(ContentApp.END_SYMBOL)==true){
-                                            isComplete= this@SpeechChatControl.flowAudioFileMap?.get(index+1) is String
-                                        }
-                                        audioPlayerIsComplete=false
-                                        playListener = playExoPlayer(
-                                            value?.absolutePath!!,
-                                            myExoPlayer!!,
-                                            isComplete,
-                                            object : ICustomPlayerListener<ExoPlayer> {
-                                                override fun onErrorListener(mp: ExoPlayer?) {
-                                                    stopTheProcess = true
-                                                }
-                                                override fun onCompletionListener(mp: ExoPlayer?,isComplete:Boolean) {
-                                                    Log.d("onCompletionListener5", "$isComplete -- $index")
-                                                    audioPlayerIsComplete=true
-                                                    if(isComplete){
-                                                        stopTheProcess = true
-                                                    }
-                                                }
-                                            })
-                                    }
-                                    delay(1000L)
-                                    while (semaphore?.withPermit{ myExoPlayer?.isPlaying } == true || !audioPlayerIsComplete) {
-                                        delay(500L)
-                                    }
-                                }
-                            }
-                            else if (value is String) {
-                                Log.d("onEndTask",value)
-                                semaphore?.withPermit {
-                                    stopTheProcess = true
-                                    audioPlayerIsComplete = true
-                                }
-                                break
-                            }
-                            index+=1
-                        }
-                        delay(200)
-                    }
-
-                    Log.d("onEndTask","End")
-                    return@launch
-                }
-        scope?.wait()
 
             }catch (e:IOException){
                 e.printStackTrace()
@@ -2462,7 +3656,8 @@ class SpeechChatControl(private val context: Context):BaseControl(context) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 geminiApiClient?.sendMessageStream(inputText, object : IListenerStream<String> {
-                    override fun onStreamReader(response: String?,lastFlow:Boolean) {
+                    @SuppressLint("SuspiciousIndentation")
+                    override fun onStreamReader(response: String?, lastFlow:Boolean) {
                         if (response != null) {
                             response?.let {
                                 var text: String? = removeSymbols(it) ?: return@let
@@ -2562,9 +3757,7 @@ class SpeechChatControl(private val context: Context):BaseControl(context) {
                 flowAudioFileMap?.clear()
 
             jopStreamFlow=CoroutineScope(Dispatchers.IO).launch {
-
                 try {
-
                     geminiApiClient?.sendMessageStream(inputText, object : IListenerStream<String> {
                         override fun onStreamReader(response: String?,flowIndex:Int,lastFlowIndex:Int) {
                             try {
@@ -2662,8 +3855,7 @@ class SpeechChatControl(private val context: Context):BaseControl(context) {
                             cancelJop(callBack)
                         }
                     })
-                }
-                catch (e: Exception) {
+                } catch (e: Exception) {
                     e.printStackTrace()
                     Log.e("Cancellation Stream Flow Exception",e.message!!)
                     cancelJop(callBack)
@@ -2677,7 +3869,6 @@ class SpeechChatControl(private val context: Context):BaseControl(context) {
                     while (true) {
                         delay(1000)
                         semaphore.withPermit {
-//                            println("isStartSpeak: $isStartSpeak")
                             if (isStartSpeak && flowAudioFileMap?.isNullOrEmpty() == false && flowAudioFileMap?.containsKey(index) == true) {
                                 Log.d("getFlowAudioFileMap","${flowAudioFileMap?.count()}")
                                 var value = flowAudioFileMap?.get(index++)?:null
@@ -2750,14 +3941,8 @@ class SpeechChatControl(private val context: Context):BaseControl(context) {
                                     Log.d("CompletedPlayFlowsAudio", "${flowAudioFileMap?.count()}")
                                     this@launch?.cancel()
                                 }
-                            }
-
-//                            else {
-////                                callBack?.onRequestIsSuccess2(null)
-//                                this@launch?.cancel()
-//                            }
-
                         }
+                    }
                 } catch (e:CancellationException) {
                     e.printStackTrace()
                     Log.e("Cancellation Stream Audio Exception", e.message!!)
@@ -3514,7 +4699,7 @@ class SpeechChatControl(private val context: Context):BaseControl(context) {
                         }
                         ExoPlayer.STATE_ENDED -> {
                             println("ExoPlayer.STATE_ENDED     90-")
-//                                    callback?.onCompletionListener(exoPlayer!!)
+                                    callback?.onCompletionListener(exoPlayer!!)
                         }
                         else -> {
                             println("ExoPlayer.UNKNOWN_STATE     -")
@@ -3795,12 +4980,21 @@ class SpeechChatControl(private val context: Context):BaseControl(context) {
 //        }
 //    }
 
+    private   fun queryTextToSpeech3(input: String): ByteArray?  {
 
-    private   fun queryTextToSpeech(input: String): ByteArray?  {
-        val apiUrl = API_URL
-        val authorization =AUTHORIZATION
 
         return try {
+
+            val model= StorageSpeechModels.getModel(context)?:null
+            var model_name=if(model!=null) model?.model?:"" else API_URL_ACTION_DEFAULT;
+            Log.d("model",model_name)
+            if(model_name?.isNullOrEmpty()==true)
+                throw Exception("Speech Model is Error");
+
+            var apiUrl="${BASE_API_URL}${model_name}"
+            Log.d("URL",apiUrl)
+            val authorization =AUTHORIZATION
+
             val url = URL(apiUrl)
             val conn = url.openConnection() as HttpURLConnection
             conn.requestMethod = "POST"
@@ -3815,13 +5009,64 @@ class SpeechChatControl(private val context: Context):BaseControl(context) {
                 os.write(inputBytes, 0, inputBytes.size)
             }
 
-            conn.inputStream.use { it.readBytes() }
-        } catch (e: ConnectException) {
+            val responseCode = conn.responseCode
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                conn.inputStream.use { it.readBytes() }
+            } else {
+                Log.e("WasmApiAudio", "Failed with HTTP response code: $responseCode")
+                throw java.lang.Exception("Failed with HTTP response code: $responseCode")
+            }
+//            conn.inputStream.use { it.readBytes() }
+//        } catch (e: ConnectException) {
+//            e.printStackTrace()
+//            throw  ConnectException()
+//        } catch (e: FileNotFoundException) {
+//            e.printStackTrace()
+//            throw FileNotFoundException()
+        } catch (e: Exception) {
             e.printStackTrace()
-            throw  ConnectException()
-        } catch (e: FileNotFoundException) {
-            e.printStackTrace()
-            throw FileNotFoundException()
+            Log.e("WasmApiAudio",e.message.toString())
+            throw java.lang.Exception(e.message.toString())
+        }
+    }
+    private   fun queryTextToSpeech(input: String): ByteArray?  {
+
+        return try {
+
+//            val model= StorageSpeechModels.getModel(context)?:null
+//            var model_name=API_URL_ACTION_DEFAULT //if(model!=null) model?.model!! else API_URL_ACTION_DEFAULT;
+
+            var apiUrl="${BASE_API_URL}${API_URL_ACTION_DEFAULT}"
+            val authorization =AUTHORIZATION
+            Log.d("apiUrl",apiUrl)
+            val url = URL(apiUrl)
+            val conn = url.openConnection() as HttpURLConnection
+            conn.requestMethod = "POST"
+            conn.setRequestProperty("Authorization", authorization)
+            conn.setRequestProperty("Content-Type", "application/json")
+            conn.doOutput = true
+
+            val jsonInputString = "{\"inputs\": \"$input\"}"
+
+            conn.outputStream.use { os ->
+                val inputBytes = jsonInputString.toByteArray(Charsets.UTF_8)
+                os.write(inputBytes, 0, inputBytes.size)
+            }
+
+            val responseCode = conn.responseCode
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                 conn.inputStream.use { it.readBytes() }
+            } else {
+                Log.e("WasmApiAudio", "Failed with HTTP response code: $responseCode")
+                null
+            }
+//            conn.inputStream.use { it.readBytes() }
+//        } catch (e: ConnectException) {
+//            e.printStackTrace()
+//            throw  ConnectException()
+//        } catch (e: FileNotFoundException) {
+//            e.printStackTrace()
+//            throw FileNotFoundException()
         } catch (e: Exception) {
             e.printStackTrace()
             Log.e("WasmApiAudio",e.message.toString())
@@ -3895,20 +5140,7 @@ class SpeechChatControl(private val context: Context):BaseControl(context) {
             }
         }
     }
-    private suspend fun createTempFile(flow_index:Int, audioBytes:ByteArray):File?= withContext(Dispatchers.IO){
-     try {
-         var tempFile = File.createTempFile("stream_temp_audio${flow_index}", ".wav", context.cacheDir)
-         tempFile.deleteOnExit();
-         val fos = FileOutputStream(tempFile)
-         fos.write(audioBytes)
-         fos.close()
-         return@withContext tempFile
-     }catch (e:Exception){
-         e.printStackTrace()
-         return@withContext null
-     }
 
-    }
     private suspend fun saveIntoTempFile(audioBytes:ByteArray):String?{
         var tempFile=createTempFile(0,audioBytes)
         if(tempFile!=null && tempFile.length()>0 && tempFile.canRead())

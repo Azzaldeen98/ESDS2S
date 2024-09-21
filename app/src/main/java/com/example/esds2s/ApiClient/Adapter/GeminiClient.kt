@@ -4,6 +4,7 @@ package com.example.esds2s.ApiClient.Adapter
 import android.annotation.SuppressLint
 import com.example.esds2s.ContentApp.ContentApp
 import com.example.esds2s.Interface.IListenerStream
+import com.example.esds2s.Models.FlowStreamResponseModel
 import com.google.ai.client.generativeai.Chat
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.GenerateContentResponse
@@ -69,7 +70,7 @@ class GeminiApiClient() {
 
     @SuppressLint("SuspiciousIndentation")
     suspend fun sendMessage(text:String): String? {
-        val response = chat?.sendMessage("$text $docs")
+        val response = chat?.sendMessage("$text")
 //        println(response?.text)
 //        println(response?.candidates?.first()?.content?.parts?.first()?.asTextOrNull())
         return  response?.text;
@@ -122,7 +123,8 @@ class GeminiApiClient() {
                         println("responseFlow: Completed with error: ${cause.message}")
                         callBack.onStreamError(cause) // استدعاء دالة للتعامل مع الخطأ
                     }
-                }.collect { response ->
+                }
+                .collect { response ->
                     val content = response.candidates.firstOrNull()?.content?.parts?.firstOrNull()
                         ?.asTextOrNull()
                     content?.trim().let { it ->
@@ -156,6 +158,8 @@ class GeminiApiClient() {
                 }
         }
     }
+
+
     suspend fun sendMessageStream3(text:String, callBack: IListenerStream<String>)  {
         var isCallBackReader = false;
         val responseBuilder = StringBuilder()
@@ -457,13 +461,80 @@ class GeminiApiClient() {
                 }
 
     }
-     fun sendMessageStreamLastTest(text:String):Flow<GenerateContentResponse>  {
-        var isCallBackReader = false;
-        val responseBuilder = StringBuilder()
-        var index=0;
-        val response: Flow<GenerateContentResponse> = chat.sendMessageStream(text)
-        return response
+    suspend fun sendMessageStreamLastTest(text: String) : Flow<GenerateContentResponse>? {
+        try {
+            return chat?.sendMessageStream(text)
+        } catch (e: Exception) {
+            throw e
+        }
     }
+    suspend fun sendMessageStreamLastTest2(text: String): Flow<FlowStreamResponseModel> = flow {
+        var isCallBackReader = false
+        val responseBuilder = StringBuilder()
+        var index = 0
+        try {
+            chat?.let {
+
+                it.sendMessageStream(text)
+                    .flowOn(Dispatchers.IO)
+                    .onCompletion { cause ->
+                        if (cause == null) {
+                            if (!isCallBackReader && responseBuilder.toString().trim().isNotEmpty()) {
+                                emit(FlowStreamResponseModel(text = responseBuilder.toString().trim(), index = index++))
+                                responseBuilder.clear()
+                            }
+                            emit(FlowStreamResponseModel(text = ContentApp.END_SYMBOL, index = index++))
+                            println("responseFlow: Completed successfully")
+                        }
+                        else {
+                            println("responseFlow: Completed with error: ${cause.message}")
+                            throw IllegalArgumentException(cause)
+                        }
+                    }.collect { response ->
+                        val content =
+                            response.candidates.firstOrNull()?.content?.parts?.firstOrNull()
+                                ?.asTextOrNull()
+                        content?.trim()?.let {
+                            if (it.isNotEmpty()) {
+                                isCallBackReader = false
+                                var cleanedText = it.replace("*", "").replace(Regex("\\s+"), " ")
+                                responseBuilder.append(cleanedText).append(" ")
+                                if (isEndOfSentence(responseBuilder.toString()) || responseBuilder.length >= 50) {
+                                    val lines =
+                                        spiltSentence(responseBuilder.toString())?.filter { it.isNotEmpty() }
+                                    lines?.let {
+                                        var line = ""
+                                        for (sentence in it) {
+                                            line += "$sentence "
+                                            if (line.length >= 10) {
+                                                isCallBackReader = true
+                                                emit(
+                                                    FlowStreamResponseModel(
+                                                        text = line,
+                                                        index = index++
+                                                    )
+                                                )
+                                                responseBuilder.clear()
+                                                line = ""
+                                            } else {
+                                                isCallBackReader = false
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+//                        delay(200)
+                    }
+            }
+        } catch (e: Exception) {
+            throw e
+        }
+}
+
+
+    }
+
     fun isWordComplete(text: String): Boolean {
         val lastChar = text.lastOrNull()
         return lastChar != null && !lastChar.isLetter()
@@ -473,119 +544,8 @@ class GeminiApiClient() {
 //            var txt=text.replace(Regex("\\s+"), " ")
              return text.split(Regex("[،!؟?,.]"))
         }
-//    suspend fun sendMessageStreamFlow(text:String){
-////        text.chunked(10) // Break text into chunks of 10 characters
-////            .forEach { chunk ->
-////                emit(chunk) // Emit each chunk as a flow element
-////                delay(100) // Simulate delay between chunks
-////            }
-//        chat?.let {
-//
-//            var isCallBackReader=false;
-//            val responseBuilder = StringBuilder()
-//            // $docs
-//                val responseFlow: Flow<GenerateContentResponse> = chat.sendMessageStream("$text ")
-//            responseFlow.flowOn(Dispatchers.IO)
-//                .scan("") { accumulatedText, newText ->
-//                    val updatedText = "$accumulatedText $newText"
-//                    if (isEndOfSentence(updatedText)) {
-//                        println("Complete sentence: $updatedText")
-//                        "" // Reset for the next sentence
-//                    } else {
-//                        updatedText
-//                    }
-//                }
-//                .filter { it.isNotEmpty() }
-//                .collect { completeSentence ->
-//                    // Process complete sentence here
-//                    completeSentence?.trim().let {
-//
-//                            if(!it.isNullOrEmpty()) {
-//                                if (isEndOfSentence(it)) {
-//                                    isCallBackReader = true
-//                                    println("isEndOfSentence: ${responseBuilder.append(it).toString().trim()}")
-//                                    responseBuilder.clear()
-//                                    delay(100)
-//                                }
-//                                else if (it.lineSequence().toList().isNotEmpty()) {
-//                                    for (item in it.lineSequence()) {
-//                                        isCallBackReader=true
-//                                        println("Line:$item")
-////                                        responseBuilder.append(it)
-//                                        delay(100)
-//                                    }
-//                                }
-//                                else {
-//                                    isCallBackReader = false
-//                                    println("responseFlow: ${it}")
-//                                    responseBuilder.append(it) // النص غير مكتمل
-//                                }
-//                            }
-//                }
-////                responseFlow.flowOn(Dispatchers.IO) // Ensure flow is collected on IO dispatcher
-////                    .onCompletion { cause ->
-////                        if (cause == null) {
-////                            println("isCallBackReader: $isCallBackReader ")
-////                            if(!isCallBackReader && responseBuilder.isNotEmpty()) {
-////                                responseBuilder.clear()
-////                            }
-////
-//////                                callBack.onStreamReader("####")
-////
-////                            println("responseFlow: Completed successfully") // أو أي إجراء آخر عند اكتمال الدفق بنجاح
-////
-////                        } else {
-////                            println("responseFlow: Completed with error: ${cause.message}") // التعامل مع الأخطاء إن وجدت
-////
-////                        }
-////                    }
-////                    .collect { response ->
-////                        val content = response.candidates.firstOrNull()?.content?.parts?.firstOrNull()?.asTextOrNull()
-////                        content?.trim().let {
-////
-////                            if(!it.isNullOrEmpty()) {
-////                                if (isEndOfSentence(it)) {
-////                                    isCallBackReader = true
-////                                    println("isEndOfSentence: ${responseBuilder.append(it).toString().trim()}")
-////                                    responseBuilder.clear()
-////                                    delay(100)
-////                                }
-////                                else if (it.lineSequence().toList().isNotEmpty()) {
-////                                    for (item in it.lineSequence()) {
-////                                        isCallBackReader=true
-////                                        println("Line:$item")
-//////                                        responseBuilder.append(it)
-////                                        delay(100)
-////                                    }
-////                                } else {
-////                                    isCallBackReader = false
-////                                    println("responseFlow: ${it}")
-////                                    responseBuilder.append(it) // النص غير مكتمل
-////                                }
-////                            }
-////
-////
-//////                            val lines = it.split("\n")
-//////                            for (line in lines) {
-//////                                if (line.isNotBlank()) {
-//////                                    println("responseFlow: $line") // Print each line for debugging
-//////                                    callBack.onStreamReader(line)
-//////                                }
-//////                            }
-//////                    .scan("") { accumulatedText, newText ->
-//////                        val updatedText = if (accumulatedText.isNotEmpty()) "$accumulatedText $newText" else newText?.toString()
-//////                        if (isEndOfSentence(updatedText)) {
-//////                            updatedText.trim() // نص مكتمل
-//////                        } else {
-//////                            updatedText // النص غير مكتمل
-//////                        }
-//////                    }
-//////                    .filter { it.isNotEmpty() }
-////                        }
-////                    }
-////        }
-//    }
-//    // تحديد إذا كانت الجملة قد انتهت
+
+
     fun isEndOfSentence(text: String): Boolean {
         return text.endsWith(".") || text.endsWith("!") || text.endsWith("?") || text.endsWith("،")
                 || text.endsWith(",")   || text.endsWith("؟")
@@ -596,7 +556,7 @@ class GeminiApiClient() {
 ////        //        val responseBuilder = StringBuilder()
 ////    }
 //
-}
+
 
 //class GeminiApiClient {
 //    private lateinit var apiKey: String

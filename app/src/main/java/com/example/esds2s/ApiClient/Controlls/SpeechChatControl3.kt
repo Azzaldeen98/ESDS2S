@@ -1072,7 +1072,7 @@ class SpeechChatControl3(private val context: Context):BaseControl(context) {
                                                 override fun onErrorListener(mp: ExoPlayer?) {
                                                     stopTheProcess = true
                                                 }
-                                                override fun onCompletionListener(mp: ExoPlayer?,isComplete:Boolean) {
+                                                override fun onCompletionListener(mp: ExoPlayer?, isComplete:Boolean) {
                                                     Log.d("onCompletionListener5", "$isComplete -- $index")
                                                            audioPlayerIsComplete=true
                                                             if(isComplete){
@@ -1273,7 +1273,7 @@ class SpeechChatControl3(private val context: Context):BaseControl(context) {
 
                                                     throw  PlaybackException(error?.message!!,error?.cause!!,error?.hashCode()!!)
                                                 }
-                                                override fun onCompletionListener(mp: ExoPlayer?,lastAudioClip:Boolean) {
+                                                override fun onCompletionListener(mp: ExoPlayer?, lastAudioClip:Boolean) {
                                                     Log.d(
                                                         "onCompletionListener",
                                                         "$lastAudioClip -- $index"
@@ -1641,7 +1641,7 @@ class SpeechChatControl3(private val context: Context):BaseControl(context) {
                                                 override fun onErrorListener(mp: ExoPlayer?) {
                                                     stopTheProcess = true
                                                 }
-                                                override fun onCompletionListener(mp: ExoPlayer?,isComplete:Boolean) {
+                                                override fun onCompletionListener(mp: ExoPlayer?, isComplete:Boolean) {
                                                     Log.d("onCompletionListener5", "$isComplete -- $index")
                                                     audioPlayerIsComplete=true
                                                     if(isComplete){

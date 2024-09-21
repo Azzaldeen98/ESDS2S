@@ -27,6 +27,9 @@
         android:theme="@style/Theme.ESDS2S"
         tools:targetApi="31">
         <activity
+            android:name=".Activies.SpeachActivity"
+            android:exported="false" />
+        <activity
             android:name=".Activies.MainActivity2"
             android:exported="false" />
         <activity
@@ -61,8 +64,6 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
-
-
     </application>
 
 </manifest>

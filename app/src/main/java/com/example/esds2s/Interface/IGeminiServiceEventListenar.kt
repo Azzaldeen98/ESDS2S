@@ -6,6 +6,6 @@ interface IGeminiServiceEventListener:IBaseServiceEventListener<GeminiResponse> 
 }
 
 interface IWasmServiceEventListener:IBaseServiceEventListener<String> {
-    fun onRequestIsSuccess2(callBack:IBaseCallbackListener<Any?>?)
+    fun onRequestIsSuccess2(callBack:IBaseCallbackListener<Any?>?){}
 
 }
